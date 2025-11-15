@@ -3,7 +3,6 @@ import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { Department } from 'src/department/schemas/department.schema';
 import { Position } from 'src/position/schemas/position.schema';
 
-
 export type EmployeeDocument = HydratedDocument<Employee>;
 
 /**
@@ -76,3 +75,4 @@ export const EmployeeSchema = SchemaFactory.createForClass(Employee);
 // Add indexes for fields that are frequently queried
 EmployeeSchema.index({ email: 1 });
 EmployeeSchema.index({ 'employmentDetails.employeeId': 1 });
+EmployeeSchema.index({ 'role': 1 });

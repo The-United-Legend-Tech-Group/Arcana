@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { EmployeeModule } from './employee/employee.module';
 import { OrganizationStructureModule } from './organization-structure/organization-structure.module';
 import { NotificationModule } from './notification/notification.module';
+import { ProfileChangeRequestModule } from './profile-change-request/profile-change-request.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { NotificationModule } from './notification/notification.module';
     EmployeeModule,
     OrganizationStructureModule,
     NotificationModule,
+    ProfileChangeRequestModule,
 
   ],
   controllers: [AppController],

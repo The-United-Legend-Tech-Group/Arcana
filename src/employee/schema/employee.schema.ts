@@ -74,6 +74,4 @@ export class Employee {
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);
 
 // Add indexes for fields that are frequently queried
-EmployeeSchema.index({ email: 1 });
-EmployeeSchema.index({ 'employmentDetails.employeeId': 1 });
 EmployeeSchema.index({ 'role': 1 });

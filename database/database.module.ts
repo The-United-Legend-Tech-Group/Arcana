@@ -5,19 +5,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   AttendanceRecord,
   AttendanceRecordSchema,
-} from '..\\attendance\\src\\schemas\\attendance-record.schema';
+} from '../time-mangment-subsystem/attendance/src/schemas/attendance-record.schema';
 import {
   ShiftAssignment,
   ShiftAssignmentSchema,
-} from '..\\attendance\\src\\schemas\\shift-assignment.schema';
+} from '../time-mangment-subsystem/attendance/src/schemas/shift-assignment.schema';
 import {
   ShiftType,
   ShiftTypeSchema,
-} from '..\\attendance\\src\\schemas\\shift-type.schema';
+} from '../time-mangment-subsystem/attendance/src/schemas/shift-type.schema';
 import {
   TimeSlot,
   TimeSlotSchema,
-} from '..\\attendance\\src\\schemas\\time-slots.schema';
+} from '../time-mangment-subsystem/attendance/src/schemas/time-slots.schema';
 
 @Global()
 @Module({
@@ -28,16 +28,18 @@ import {
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const uri = config.get<string>('MONGO_URI');
-        if (uri) return { uri };
+        // Prefer a full connection string if provided (supports both names)
+        const fullUri = config.get<string>('MONGODB_URI') || config.get<string>('MONGO_URI');
+        if (fullUri) return { uri: fullUri };
 
+        // Otherwise build from components
         const user = encodeURIComponent(config.get<string>('MONGO_USER') || '');
         const pass = encodeURIComponent(config.get<string>('MONGO_PASS') || '');
         const host = config.get<string>('MONGO_HOST') || '';
         const db = config.get<string>('MONGO_DB') || 'test';
-        const options =
-          config.get<string>('MONGO_OPTIONS') || '?retryWrites=true&w=majority';
-        return { uri: `mongodb+srv://${user}:${pass}@${host}/${db}${options}` };
+        const options = config.get<string>('MONGO_OPTIONS') || '?retryWrites=true&w=majority';
+        const credentials = user || pass ? `${user}:${pass}@` : '';
+        return { uri: `mongodb+srv://${credentials}${host}/${db}${options}` };
       },
     }),
 

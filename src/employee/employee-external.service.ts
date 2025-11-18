@@ -1,26 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Employee, EmployeeDocument } from './schema/employee.schema';
+import { EmployeeRepository } from './repository/employee.repository';
 
 @Injectable()
 export class EmployeeExternalService {
-  constructor(
-    @InjectModel(Employee.name)
-    private readonly employeeModel: Model<EmployeeDocument>,
-  ) {}
+  constructor(private readonly repository: EmployeeRepository) {}
 
   private idStr(v: any) {
     return v ? String(v) : null;
   }
 
   async getForSubsystem(employeeId: string, subsystem: string) {
-    const isObjectId = typeof employeeId === 'string' && /^[0-9a-fA-F]{24}$/.test(employeeId);
-    const query = isObjectId
-      ? { $or: [{ 'employmentDetails.employeeId': employeeId }, { _id: employeeId }] }
-      : { 'employmentDetails.employeeId': employeeId };
-
-    const employee = await this.employeeModel.findOne(query).lean().exec();
+    const employee = await this.repository.findByEmploymentIdOrId(employeeId);
     if (!employee) {
       throw new NotFoundException('Employee not found');
     }

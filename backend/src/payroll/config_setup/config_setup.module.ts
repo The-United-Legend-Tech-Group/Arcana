@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigSetupService } from './config_setup.service';
 import { ConfigSetupController } from './config_setup.controller';
-import { DatabaseModule } from '../../database/database.module';
+import { DatabaseModule } from '../../../database/database.module';
 
 // Schema imports
 import { Allowance, AllowanceSchema } from './schemas/allowance.schema';

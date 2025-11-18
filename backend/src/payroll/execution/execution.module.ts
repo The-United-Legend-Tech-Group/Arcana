@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ExecutionService } from './execution.service';
 import { ExecutionController } from './execution.controller';
-import { DatabaseModule } from '../../database/database.module';
+import { DatabaseModule } from '../../../database/database.module';
 
 // Schema imports
 import { PayrollRun, PayrollRunSchema } from './schemas/payrollRun.schema';

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Employee } from 'src/employee/schema/employee.schema';
-import { PerformanceTemplate } from 'src/performance/schema/performance-template.schema';
+import { Employee } from '../../employee/schema/employee.schema';
+import { PerformanceTemplate } from './performance-template.schema';
 import { Performance } from './performance.schema';
 
 /**

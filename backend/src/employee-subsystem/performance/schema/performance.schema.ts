@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Employee } from 'src/employee/schema/employee.schema';
-import { PerformanceCycle } from 'src/performance/schema/performance-cycle.schema';
-import { PerformanceTemplate } from 'src/performance/schema/performance-template.schema';
+import { Employee } from '../../employee/schema/employee.schema';
+import { PerformanceCycle } from './performance-cycle.schema';
+import { PerformanceTemplate } from './performance-template.schema';
 
 //for a single rated criterion
 

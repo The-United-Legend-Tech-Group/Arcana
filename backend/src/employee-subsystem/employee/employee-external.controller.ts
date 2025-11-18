@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ExternalEmployeeRequestDto } from './dto/external-employee-request.dto';
 import { EmployeeExternalService } from './employee-external.service';
-import { ApiKeyGuard } from 'src/employee/guards/api-key.guard';
+import { ApiKeyGuard } from '../notification/guards/api-key.guard';
 
 @Controller('employee')
 @UseGuards(ApiKeyGuard)

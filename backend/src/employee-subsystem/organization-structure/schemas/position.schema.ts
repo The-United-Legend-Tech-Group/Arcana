@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Department } from 'src/organization-structure/schemas/department.schema';
+import { Department } from './department.schema';
 
 @Schema({
   timestamps: true,

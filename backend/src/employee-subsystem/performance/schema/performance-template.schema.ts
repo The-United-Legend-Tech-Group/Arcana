@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Employee } from 'src/employee/schema/employee.schema';
+import { Employee } from '../../employee/schema/employee.schema';
 
 /**
  * Class for rating scale levels (e.g., 1 - Poor, 5 - Excellent)

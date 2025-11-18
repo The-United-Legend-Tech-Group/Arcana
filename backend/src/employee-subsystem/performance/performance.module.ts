@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Performance, PerformanceSchema } from 'src/performance/schema/performance.schema';
-import { PerformanceCycle, PerformanceCycleSchema } from 'src/performance/schema/performance-cycle.schema';
-import { PerformanceTemplate, PerformanceTemplateSchema } from 'src/performance/schema/performance-template.schema';
+import { Performance, PerformanceSchema } from './schema/performance.schema';
+import { PerformanceCycle, PerformanceCycleSchema } from './schema/performance-cycle.schema';
+import { PerformanceTemplate, PerformanceTemplateSchema } from './schema/performance-template.schema';
 
 @Module({
   imports: [

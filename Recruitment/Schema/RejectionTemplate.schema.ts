@@ -18,7 +18,7 @@ export class RejectionTemplate {
   @Prop({ type: String, required: true })
   body: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User' })
+  @Prop({ type: Types.ObjectId, ref: 'Employee' })
   createdBy: Types.ObjectId;
 }
 

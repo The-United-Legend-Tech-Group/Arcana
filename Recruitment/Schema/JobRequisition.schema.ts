@@ -6,8 +6,7 @@ import { HydratedDocument, Types, Schema as MongooseSchema } from 'mongoose';
 export type JobRequisitionDocument = HydratedDocument<JobRequisition>;
 
 @Schema({ 
-  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
-  collection: 'jobrequisitions'
+  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 })
 export class JobRequisition {
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: 'Job' })
@@ -34,7 +33,7 @@ export class JobRequisition {
   @Prop({ type: [String], default: [] })
   skills: string[];
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Employee', required: true })
   createdBy: Types.ObjectId;
 
   @Prop({ type: Date, default: Date.now })

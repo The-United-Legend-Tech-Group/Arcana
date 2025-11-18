@@ -21,7 +21,7 @@ export const StageSchema = SchemaFactory.createForClass(Stage);
 
 export type HiringTemplateDocument = HydratedDocument<HiringTemplate>;
 
-@Schema({ timestamps: true, collection: 'hiringtemplates' })
+@Schema({ timestamps: true })
 export class HiringTemplate {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'JobRequisition', required: true })
   requisitionId: Types.ObjectId;

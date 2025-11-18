@@ -6,7 +6,7 @@ export class CommunicationLogs {
   @Prop({ type: Types.ObjectId, ref: 'Candidate', required: true })
   candidateId: Types.ObjectId; // links communication to a candidate
 
-  @Prop({ type: Types.ObjectId, ref: 'Requisition' })
+  @Prop({ type: Types.ObjectId, ref: 'JobRequisition' })
   requisitionId: Types.ObjectId; // optional: the job requisition related to this communication
 
   @Prop({ type: Types.ObjectId, ref: 'RejectionTemplate' })

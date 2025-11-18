@@ -7,7 +7,7 @@ export class Evaluation {
   @Prop({ type: Types.ObjectId, ref: 'CandidateApplication', required: true })
   applicationId: Types.ObjectId; // the candidate application being evaluated
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // or 'HREmployee' if that model exists
+  @Prop({ type: Types.ObjectId, ref: 'Employee', required: true }) // or 'HREmployee' if that model exists
   interviewerId: Types.ObjectId; // interviewer giving the evaluation
 
   @Prop({

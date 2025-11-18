@@ -4,7 +4,7 @@ import { HydratedDocument, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type CandidateDocument = HydratedDocument<Candidate>;
 
-@Schema({ timestamps: true, collection: 'candidates' })
+@Schema({ timestamps: true })
 export class Candidate {
   @Prop({ type: String, required: true, trim: true })
   name: string;
@@ -18,7 +18,6 @@ export class Candidate {
     unique: true,
     trim: true,
     lowercase: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address']
   })
   email: string;
 
@@ -29,7 +28,6 @@ export class Candidate {
     type: String,
     required: false,
     trim: true,
-    match: [/^\+?[0-9]{7,15}$/, 'Please provide a valid phone number']
   })
   phoneNumber: string;
 

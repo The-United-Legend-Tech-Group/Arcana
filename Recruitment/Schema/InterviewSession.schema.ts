@@ -5,10 +5,10 @@ import { Criteria, CriteriaSchema } from './Criteria(Subdocument).schema'; // im
 
 @Schema({ timestamps: true })
 export class InterviewSession {
-  @Prop({ type: Types.ObjectId, ref: 'Requisition', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'JobRequisition', required: true })
   requisitionId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Candidate', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'CandidateApplication', required: true })
   candidateApplicationId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })

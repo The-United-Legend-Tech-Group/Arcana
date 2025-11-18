@@ -3,61 +3,9 @@ import * as mongoose from 'mongoose';
 import { Employee } from '../../employee/schema/employee.schema';
 import { PerformanceCycle } from './performance-cycle.schema';
 import { PerformanceTemplate } from './performance-template.schema';
-
-//for a single rated criterion
-
-class CriterionRating {
-  @Prop({ required: true })
-  criterion: string;
-
-  @Prop({ type: Number })
-  rating: number;
-
-  @Prop()
-  managerComment: string;
-}
-
-//for a full section's results
-
-class EvaluationSection {
-  @Prop({ required: true })
-  sectionTitle: string;
-
-  @Prop({ type: [CriterionRating], _id: false })
-  criteriaRatings: CriterionRating[];
-}
-
-/** for employee acknowledgement */
-class EmployeeAcknowledgement {
-  @Prop({ type: Date, default: Date.now })
-  acknowledgedAt: Date;
-
-  @Prop()
-  employeeComment: string;
-}
-
-// for performance disputes
-
-class Dispute {
-  @Prop({ type: Date, default: Date.now })
-  submittedAt: Date;
-
-  @Prop({ required: true })
-  reason: string;
-
-  @Prop({
-    required: true,
-    enum: ['PendingHR', 'Resolved'],
-    default: 'PendingHR',
-  })
-  status: string;
-
-  @Prop()
-  hrDecision: string;
-
-  @Prop({ type: Number })
-  finalRating: number;
-}
+import { EvaluationSection } from './evaluation-section.schema';
+import { EmployeeAcknowledgement } from './employee-acknowledgement.schema';
+import { Dispute } from './dispute.schema';
 
 @Schema({
   timestamps: true,

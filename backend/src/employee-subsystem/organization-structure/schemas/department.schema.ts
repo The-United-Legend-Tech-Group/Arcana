@@ -4,7 +4,7 @@ import { Employee } from '../../employee/schema/employee.schema';
 
 @Schema({
   timestamps: true,
-  collection: 'departments',
+  collection: 'organization-schema',
 })
 export class Department {
   @Prop({ required: true, unique: true, trim: true })

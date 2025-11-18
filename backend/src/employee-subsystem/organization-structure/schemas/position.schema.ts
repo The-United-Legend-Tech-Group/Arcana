@@ -4,7 +4,7 @@ import { Department } from './department.schema';
 
 @Schema({
   timestamps: true,
-  collection: 'positions',
+  collection: 'organization-schema',
 })
 export class Position {
   @Prop({ required: true, trim: true })

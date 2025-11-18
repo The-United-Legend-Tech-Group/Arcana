@@ -1,39 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Employee } from '../../employee/schema/employee.schema';
-
-/**
- * Class for rating scale levels (e.g., 1 - Poor, 5 - Excellent)
- */
-class RatingScaleLevel {
-  @Prop({ required: true })
-  score: number;
-
-  @Prop({ required: true })
-  label: string;
-}
-
-/**
- * Class for individual evaluation criteria
- */
-class EvaluationCriterion {
-  @Prop({ required: true })
-  criterion: string; // e.g., 'Teamwork'
-
-  @Prop()
-  description: string;
-}
-
-/**
- * Class for sections of the appraisal (e.g., 'Goals', 'Competencies')
- */
-class TemplateSection {
-  @Prop({ required: true })
-  sectionTitle: string;
-
-  @Prop({ type: [EvaluationCriterion], _id: false })
-  evaluationCriteria: EvaluationCriterion[];
-}
+import { RatingScaleLevel } from './rating-scale-level.schema';
+import { TemplateSection } from './template-section.schema';
 
 @Schema({
   timestamps: true,

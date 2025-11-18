@@ -5,20 +5,6 @@ import { Position } from '../../organization-structure/schemas/position.schema';
 
 export type EmployeeDocument = HydratedDocument<Employee>;
 
-/**
- * Employment details.
- */
-class EmploymentDetails {
-  @Prop({ required: true, unique: true })
-  employeeId: string;
-
-  @Prop({ required: true })
-  hireDate: Date;
-
-  @Prop({ required: true })
-  employmentType: string; //Fulltime, Partime or whatever is decided later
-}
-
 @Schema({
   timestamps: true, //createdAt and updatedAt
   collection: 'employees',
@@ -55,8 +41,14 @@ export class Employee {
   })
   role: string;
 
-  @Prop({ type: EmploymentDetails, _id: false })
-  employmentDetails: EmploymentDetails;
+  @Prop({ required: true, unique: true })
+  employeeId: string;
+
+  @Prop({ required: true })
+  hireDate: Date;
+
+  @Prop({ required: true })
+  employmentType: string; // Fulltime, Partime or similar
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Position' })
   positionId: Position;

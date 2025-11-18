@@ -4,7 +4,6 @@ import { Employee } from './employee.schema';
 
 @Schema({
   timestamps: true,
-  collection: 'profileChangeRequests',
 })
 export class ProfileChangeRequest {
   @Prop({

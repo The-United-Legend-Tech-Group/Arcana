@@ -12,7 +12,7 @@ export class Approval {
   })
   type: 'finance' | 'manager' | 'HR';
 
-  @Prop({ type: Types.ObjectId, ref: 'HREmployee' })
+  @Prop({ type: Types.ObjectId, ref: 'Employee' })
   approvedBy?: Types.ObjectId;
 
   @Prop({ type: Date })

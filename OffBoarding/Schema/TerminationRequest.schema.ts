@@ -3,7 +3,6 @@ import { HydratedDocument, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type TerminationRequestDocument = HydratedDocument<TerminationRequest>;
 
-@Schema({ collection: 'terminationrequests' })
 export class TerminationRequest {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   employeeId: Types.ObjectId;

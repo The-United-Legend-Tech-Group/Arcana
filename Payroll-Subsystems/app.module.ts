@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TrackingModule } from './tracking/tracking.module';
-import { ConfigSetupModule } from './config_setup/config_setup.module';
-import { ExecutionModule } from './execution/execution.module';
+import { TrackingModule } from './src/tracking/tracking.module';
+import { ConfigSetupModule } from './src/config_setup/config_setup.module';
+import { ExecutionModule } from './src/execution/execution.module';
 
 @Module({
   imports: [TrackingModule, ConfigSetupModule, ExecutionModule],

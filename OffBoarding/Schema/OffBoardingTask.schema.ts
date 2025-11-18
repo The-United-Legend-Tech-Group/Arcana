@@ -4,7 +4,7 @@ import { HydratedDocument, Types, Schema as MongooseSchema } from 'mongoose';
 
 export type OffboardingTaskDocument = HydratedDocument<OffboardingTask>;
 
-@Schema({ timestamps: true, collection: 'offboardingtasks' })
+@Schema({ timestamps: true})
 export class OffboardingTask {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'OffboardingTracker', required: true })
   offboardingTrackerId: Types.ObjectId;

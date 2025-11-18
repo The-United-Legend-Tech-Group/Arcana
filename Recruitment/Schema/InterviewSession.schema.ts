@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Feedback, FeedbackSchema } from './FeedBack(Subdocument).schema'; // import Feedback
-import { CriteriaSnapshot, CriteriaSnapshotSchema } from './Criteria(Subdocument).schema'; // import CriteriaSnapshot
+import { Criteria, CriteriaSchema } from './Criteria(Subdocument).schema'; // import CriteriaSnapshot
 
 @Schema({ timestamps: true })
 export class InterviewSession {
@@ -17,7 +17,7 @@ export class InterviewSession {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   interviewerIds: Types.ObjectId[];
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true })//JOE
   timeSlotId: String;
 
   @Prop({ type: Date })
@@ -30,25 +30,25 @@ export class InterviewSession {
   endTime: Date;
 
   @Prop({ type: String, enum: ['in-person', 'online'], default: 'online' })
-  mode: string;
+  mode: String;
 
   @Prop({ type: String })
-  location: string;
+  location: String;
 
   @Prop({ 
     type: String, 
     enum: ['scheduled', 'rescheduled', 'cancelled', 'completed'], 
     default: 'scheduled' 
   })
-  status: string;
+  status: String;
 
   @Prop({ type: [FeedbackSchema], default: [] })
   feedback: Feedback[];
 
-  @Prop({ type: [CriteriaSnapshotSchema], default: [] })
-sessionCriteria: CriteriaSnapshot[]; // all interviewers see these
+  @Prop({ type: [CriteriaSchema], default: [] })
+sessionCriteria: Criteria[]; // all interviewers see these
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Evaluation' }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Assessment' }] })
   evaluations: Types.ObjectId[];
 }
 

@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true }) // automatically manage creation and update times
-export class CandidateCommunication {
+export class CommunicationLogs {
   @Prop({ type: Types.ObjectId, ref: 'Candidate', required: true })
   candidateId: Types.ObjectId; // links communication to a candidate
 
@@ -13,13 +13,12 @@ export class CandidateCommunication {
   templateId: Types.ObjectId; // optional: the template used for this communication
 
   @Prop({ type: String, enum: ['Email', 'SMS'], default: 'Email' })
-  communicationType: string; // type of communication sent
-
+  communicationType: String; // type of communication sent
   @Prop({ type: Date, default: Date.now })
   sentAt: Date; // when the communication was sent
 
   @Prop({ type: String, trim: true })
-  subject: string; // optional subject, trimmed to avoid accidental spaces
+  subject: String; // optional subject, trimmed to avoid accidental spaces
 
   @Prop({ type: String, trim: true })
   body: string; // optional message body, trimmed
@@ -28,5 +27,5 @@ export class CandidateCommunication {
   status: string; // whether the communication was sent successfully
 }
 
-export type CandidateCommunicationDocument = CandidateCommunication & Document;
-export const CandidateCommunicationSchema = SchemaFactory.createForClass(CandidateCommunication);
+export type CommunicationLogsDocument = CommunicationLogs & Document;
+export const CommunicationLogsSchema = SchemaFactory.createForClass(CommunicationLogs);

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ _id: false }) // subdocument only
-export class CriteriaSnapshot {
+export class Criteria {
   @Prop({ type: String, required: true, trim: true })
   name: string; // name of the criterion
 
@@ -12,4 +12,4 @@ export class CriteriaSnapshot {
   maxScore: number; // maximum possible score for this criterion
 }
 
-export const CriteriaSnapshotSchema = SchemaFactory.createForClass(CriteriaSnapshot);
+export const CriteriaSchema = SchemaFactory.createForClass(Criteria);

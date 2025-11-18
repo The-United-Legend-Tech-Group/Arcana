@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { CriteriaSnapshot, CriteriaSnapshotSchema } from './Criteria(Subdocument).schema';
+import { Criteria, CriteriaSchema } from './Criteria(Subdocument).schema';
 
 @Schema({ timestamps: true })
 export class Evaluation {
@@ -11,14 +11,14 @@ export class Evaluation {
   interviewerId: Types.ObjectId; // interviewer giving the evaluation
 
   @Prop({
-    type: [CriteriaSnapshotSchema],
+    type: [CriteriaSchema],
     required: true,
     validate: {
-      validator: (arr: CriteriaSnapshot[]) => arr.length > 0,
+      validator: (arr: Criteria[]) => arr.length > 0,
       message: 'At least one evaluation criterion is required.',
     },
   })
-  criteria: CriteriaSnapshot[]; // list of criteria scored by the interviewer
+  criteria: Criteria[]; // list of criteria scored by the interviewer
 }
 
 export type EvaluationDocument = Evaluation & Document;

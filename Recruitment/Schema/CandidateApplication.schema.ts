@@ -23,7 +23,7 @@ export class CandidateApplication {
   @Prop({ type: [ReferralSchema], default: [] })
   referrals: Referral[];
 
-  @Prop({ type: Types.ObjectId, ref: 'CandidateCommunication' })
+  @Prop({ type: Types.ObjectId, ref: 'CommunicationLogs' })
   communicationLogID: Types.ObjectId; // link to communication logs
 
   @Prop({ type: Number, default: 0 })

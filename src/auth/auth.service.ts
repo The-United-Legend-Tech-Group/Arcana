@@ -2,43 +2,29 @@ import { ConflictException, Injectable, NotFoundException, UnauthorizedException
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/registration.dto';
-import { Types, Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { Employee, EmployeeDocument } from 'src/employee/schema/employee.schema';
+import { Types } from 'mongoose';
+import { AuthRepository } from './repository/auth.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(Employee.name)
-    private employeeModel: Model<EmployeeDocument>,
+    private authRepository: AuthRepository,
     private jwtService: JwtService,
   ) {}
 
   async register(user: RegisterDto): Promise<string> {
-    const existingUser = await this.employeeModel.findOne({ email: user.email }).exec();
+    const existingUser = await this.authRepository.findByEmail(user.email);
     if (existingUser) {
       throw new ConflictException('email already exists');
     }
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    // Map DTO fields to schema fields. Schema expects `passwordHash`.
-    const created = new this.employeeModel({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      contactPhone: user.contactPhone,
-      profilePictureUrl: user.profilePictureUrl,
-      email: user.email,
-      passwordHash: hashedPassword,
-      role: user.role ?? 'Employee',
-      employmentDetails: user.employmentDetails,
-  positionId: user.positionId ? new Types.ObjectId(user.positionId) : undefined,
-    });
 
-    await created.save();
+    await this.authRepository.create(user, hashedPassword);
     return 'registered successfully';
   }
 
   async signIn(email: string, password: string): Promise<{ access_token: string; payload: { userid: Types.ObjectId; role: string } }> {
-    const user = await this.employeeModel.findOne({ email }).select('+passwordHash').exec();
+    const user = await this.authRepository.findByEmailWithPassword(email);
     if (!user) {
       throw new NotFoundException('User not found');
     }

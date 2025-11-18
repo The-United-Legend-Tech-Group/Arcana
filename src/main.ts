@@ -8,6 +8,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   await app.listen(process.env.PORT ?? 3000);
+  console.log(`Employee Subsystem listening on port ${process.env.PORT ?? 3000}`);
 }
 
 bootstrap();

@@ -5,6 +5,7 @@ This document explains two common approaches for running and exposing Swagger AP
 ## Models
 
 - **Unified-Port Model**
+
   - Description: All subsystem modules are registered in a single NestJS `AppModule` and the application is started once. Swagger aggregates all controllers and exposes a single combined API doc (e.g. `/api/docs`).
   - How we implemented it in this repository: `backend/src/main.ts` creates a single Swagger document when starting the full `AppModule` and exposes it at `/api/docs`.
 
@@ -15,6 +16,7 @@ This document explains two common approaches for running and exposing Swagger AP
 ## Pros & Cons
 
 - Unified-Port Model
+
   - Pros:
     - Single Swagger UI showing all APIs — convenient for integration testing and QA.
     - Simpler local run (one process to manage).
@@ -35,6 +37,7 @@ This document explains two common approaches for running and exposing Swagger AP
 ## Recommended workflow
 
 - Development / Feature Work
+
   - Run the subsystem you're working on standalone (Per-Subsystem Ports Model). This minimizes overhead and speeds up iteration.
   - Use the subsystem Swagger (e.g. `http://localhost:3001/time/docs`) to test endpoints quickly.
 
@@ -66,8 +69,9 @@ npm run start
 ```
 
 Notes:
-  - On Windows PowerShell adjust syntax accordingly (use `$env:START_SUBSYSTEM='time'` etc.).
-  - If you prefer compiled builds:
+
+- On Windows PowerShell adjust syntax accordingly (use `$env:START_SUBSYSTEM='time'` etc.).
+- If you prefer compiled builds:
 
 ```bash
 npm run build
@@ -92,6 +96,7 @@ node dist/main.js
 ## Deployment notes
 
 - Both models are deployable. In production you may choose either:
+
   - Unified deployment (single service that includes all subsystems), or
   - Multiple services (one per subsystem) that communicate over internal network or API gateway.
 
@@ -105,7 +110,9 @@ node dist/main.js
 - Add health endpoints and readiness checks for integration tests.
 
 ---
+
 If you want, I can:
+
 - Add a short `docs/README.md` entry that lists exact commands per OS for each subsystem, or
 - Add a small aggregator script that fetches individual OpenAPI JSON files and writes a single combined `openapi.json` for local use.
 

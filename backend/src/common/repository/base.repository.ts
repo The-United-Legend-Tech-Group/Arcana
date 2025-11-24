@@ -4,25 +4,36 @@ import {
   FilterQuery,
   UpdateQuery,
   QueryOptions,
+  HydratedDocument,
+  PopulateOptions,
 } from 'mongoose';
 
-export interface IRepository<T> {
-  create(dto: Partial<T>): Promise<T>;
-  findOne(filter: FilterQuery<T>): Promise<T | null>;
-  findById(id: string): Promise<T | null>;
-  find(filter?: FilterQuery<T>): Promise<T[]>;
+export interface IRepository<T extends Document> {
+  create(dto: Partial<T>): Promise<HydratedDocument<T>>;
+  findOne(
+    filter: FilterQuery<T>,
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T> | null>;
+  findById(
+    id: string,
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T> | null>;
+  find(
+    filter?: FilterQuery<T>,
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T>[]>;
   update(
     filter: FilterQuery<T>,
     update: UpdateQuery<T>,
     options?: QueryOptions,
-  ): Promise<T | null>;
+  ): Promise<HydratedDocument<T> | null>;
   updateById(
     id: string,
     update: UpdateQuery<T>,
     options?: QueryOptions,
-  ): Promise<T | null>;
+  ): Promise<HydratedDocument<T> | null>;
   delete(filter: FilterQuery<T>): Promise<{ deletedCount?: number }>;
-  deleteById(id: string): Promise<any>;
+  deleteById(id: string): Promise<HydratedDocument<T> | null>;
 }
 
 export class BaseRepository<T extends Document> implements IRepository<T> {
@@ -32,28 +43,49 @@ export class BaseRepository<T extends Document> implements IRepository<T> {
     this.model = model;
   }
 
-  async create(dto: Partial<T>): Promise<T> {
-    const created = new this.model(dto as any);
+  async create(dto: Partial<T>): Promise<HydratedDocument<T>> {
+    const created = new this.model(dto);
     return created.save();
   }
 
-  async findOne(filter: FilterQuery<T>): Promise<T | null> {
-    return this.model.findOne(filter).exec();
+  async findOne(
+    filter: FilterQuery<T>,
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T> | null> {
+    const query = this.model.findOne(filter);
+    if (populate) {
+      query.populate(populate);
+    }
+    return query.exec();
   }
 
-  async findById(id: string): Promise<T | null> {
-    return this.model.findById(id).exec();
+  async findById(
+    id: string,
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T> | null> {
+    const query = this.model.findById(id);
+    if (populate) {
+      query.populate(populate);
+    }
+    return query.exec();
   }
 
-  async find(filter: FilterQuery<T> = {}): Promise<T[]> {
-    return this.model.find(filter).exec();
+  async find(
+    filter: FilterQuery<T> = {},
+    populate?: PopulateOptions | PopulateOptions[],
+  ): Promise<HydratedDocument<T>[]> {
+    const query = this.model.find(filter);
+    if (populate) {
+      query.populate(populate);
+    }
+    return query.exec();
   }
 
   async update(
     filter: FilterQuery<T>,
     update: UpdateQuery<T>,
     options: QueryOptions = { new: true },
-  ): Promise<T | null> {
+  ): Promise<HydratedDocument<T> | null> {
     return this.model.findOneAndUpdate(filter, update, options).exec();
   }
 
@@ -61,16 +93,16 @@ export class BaseRepository<T extends Document> implements IRepository<T> {
     id: string,
     update: UpdateQuery<T>,
     options: QueryOptions = { new: true },
-  ): Promise<T | null> {
+  ): Promise<HydratedDocument<T> | null> {
     return this.model.findByIdAndUpdate(id, update, options).exec();
   }
 
   async delete(filter: FilterQuery<T>): Promise<{ deletedCount?: number }> {
-    const res = await this.model.deleteMany(filter).exec();
-    return { deletedCount: (res as any).deletedCount };
+    const result = await this.model.deleteMany(filter).exec();
+    return { deletedCount: result.deletedCount };
   }
 
-  async deleteById(id: string): Promise<any> {
+  async deleteById(id: string): Promise<HydratedDocument<T> | null> {
     return this.model.findByIdAndDelete(id).exec();
   }
 }

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { bootstrapTimeManagement } from './time-mangement/main';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { AppConfigService } from './config/app-config.service';
 
 async function bootstrap() {
   // If you want to start only the time-management subsystem for local testing,
@@ -16,8 +17,9 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule);
+  const configService = app.get<AppConfigService>(AppConfigService);
 
-  // Global validation pipe for DTO validation (useful for Swagger testing)
+  // Global validation pipe for DTO validation
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // Swagger for the full application — aggregates all modules/controllers
@@ -33,7 +35,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(configService.port);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Application failed to start:', error);
+  process.exit(1);
+});

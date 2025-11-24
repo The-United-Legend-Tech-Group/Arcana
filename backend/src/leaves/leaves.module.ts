@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { DatabaseModule } from '../../database/database.module';
 import { Attachment, AttachmentSchema } from './models/attachment.schema';
 import {
   LeaveAdjustment,
@@ -26,7 +25,6 @@ import { LeavesService } from './leaves.service';
 
 @Module({
   imports: [
-    DatabaseModule,
     MongooseModule.forFeature([
       { name: Attachment.name, schema: AttachmentSchema },
       { name: LeaveAdjustment.name, schema: LeaveAdjustmentSchema },

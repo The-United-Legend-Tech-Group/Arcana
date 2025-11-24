@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { DatabaseModule } from '../../database/database.module';
-
 import {
   AttendanceRecord,
   AttendanceRecordSchema,
@@ -17,7 +15,6 @@ import { TimeService } from './time.service';
 
 @Module({
   imports: [
-    DatabaseModule,
     // Register feature schemas local to the time-management subsystem
     MongooseModule.forFeature([
       { name: AttendanceRecord.name, schema: AttendanceRecordSchema },

@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import mongooseConfigFactory from './mongoose.config';
 
 @Global()
 @Module({
@@ -10,9 +9,10 @@ import mongooseConfigFactory from './mongoose.config';
     ConfigModule,
     // Centralized connection — app-wide
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('database.uri'),
+      }),
       inject: [ConfigService],
-      useFactory: mongooseConfigFactory,
     }),
 
     // No schemas registered here — each subsystem should register its own schemas

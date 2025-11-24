@@ -1,21 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { bootstrapTimeManagement } from './time-mangement/main';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppConfigService } from './config/app-config.service';
 
 async function bootstrap() {
-  // If you want to start only the time-management subsystem for local testing,
-  // set environment variable `START_SUBSYSTEM=time` (and optionally `TIME_PORT`).
-  if (process.env.START_SUBSYSTEM === 'time') {
-    const port = process.env.TIME_PORT
-      ? parseInt(process.env.TIME_PORT, 10)
-      : 3001;
-    await bootstrapTimeManagement(port);
-    return;
-  }
-
   const app = await NestFactory.create(AppModule);
   const configService = app.get<AppConfigService>(AppConfigService);
 

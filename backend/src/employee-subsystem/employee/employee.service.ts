@@ -3,12 +3,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EmployeeProfile } from './models/employee-profile.schema';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { EmployeeProfileRepository } from './repository/employee-profile.repository';
+import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 
 @Injectable()
 export class EmployeeService {
     constructor(
         @InjectModel(EmployeeProfile.name)
         private employeeProfileModel: Model<EmployeeProfile>,
+        private readonly employeeProfileRepository: EmployeeProfileRepository,
     ) { }
 
     async onboard(createEmployeeDto: CreateEmployeeDto): Promise<EmployeeProfile> {
@@ -21,5 +24,13 @@ export class EmployeeService {
             }
             throw error;
         }
+    }
+
+    async updateContactInfo(id: string, updateContactInfoDto: UpdateContactInfoDto): Promise<EmployeeProfile> {
+        const updatedEmployee = await this.employeeProfileRepository.updateById(id, updateContactInfoDto);
+        if (!updatedEmployee) {
+            throw new ConflictException('Employee not found');
+        }
+        return updatedEmployee;
     }
 }

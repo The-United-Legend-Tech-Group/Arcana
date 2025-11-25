@@ -1,6 +1,7 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { EmployeeService } from './employee.service';
 
 
@@ -12,5 +13,11 @@ export class EmployeeController {
     @UseGuards(ApiKeyGuard)
     async onboard(@Body() createEmployeeDto: CreateEmployeeDto) {
         return this.employeeService.onboard(createEmployeeDto);
+    }
+
+    @Patch(':id/contact-info')
+    @UseGuards(ApiKeyGuard)
+    async updateContactInfo(@Param('id') id: string, @Body() updateContactInfoDto: UpdateContactInfoDto) {
+        return this.employeeService.updateContactInfo(id, updateContactInfoDto);
     }
 }

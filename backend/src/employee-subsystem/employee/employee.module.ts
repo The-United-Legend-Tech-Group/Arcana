@@ -6,6 +6,7 @@ import {
 } from './models/employee-profile.schema';
 import { EmployeeController } from './employee.controller';
 import { EmployeeService } from './employee.service';
+import { EmployeeProfileRepository } from './repository/employee-profile.repository';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { EmployeeService } from './employee.service';
     ]),
   ],
   controllers: [EmployeeController],
-  providers: [EmployeeService],
-  exports: [MongooseModule],
+  providers: [EmployeeService, EmployeeProfileRepository],
+  exports: [MongooseModule, EmployeeProfileRepository],
 })
 export class EmployeeModule { }

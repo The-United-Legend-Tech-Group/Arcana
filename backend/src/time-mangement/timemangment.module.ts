@@ -14,6 +14,8 @@ import { ShiftType, ShiftTypeSchema } from './models/shift-type.schema';
 import { Shift, ShiftSchema } from './models/shift.schema';
 import { TimeController } from './time.controller';
 import { TimeService } from './time.service';
+import { ShiftRepository } from './repository/shift.repository';
+import { ShiftAssignmentRepository } from './repository/shift-assignment.repository';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { TimeService } from './time.service';
     ]),
   ],
   controllers: [TimeController],
-  providers: [TimeService],
-  exports: [MongooseModule, TimeService],
+  providers: [TimeService, ShiftRepository, ShiftAssignmentRepository],
+  exports: [MongooseModule, TimeService, ShiftRepository, ShiftAssignmentRepository],
 })
 export class TimeMangementModule {}

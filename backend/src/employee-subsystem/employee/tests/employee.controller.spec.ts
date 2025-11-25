@@ -5,7 +5,7 @@ import { CreateEmployeeDto } from '../dto/create-employee.dto';
 import { UpdateContactInfoDto } from '../dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from '../dto/update-employee-profile.dto';
 import { CreateProfileChangeRequestDto } from '../dto/create-profile-change-request.dto';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, BadRequestException } from '@nestjs/common';
 import { ApiKeyGuard } from '../../guards/api-key.guard';
 import { authorizationGuard } from '../../guards/authorization.guard';
 
@@ -19,6 +19,7 @@ describe('EmployeeController', () => {
         updateProfile: jest.fn(),
         createProfileChangeRequest: jest.fn(),
         getTeamSummary: jest.fn(),
+        assignRoles: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -212,6 +213,31 @@ describe('EmployeeController', () => {
 
             expect(await controller.getTeamSummary(managerId)).toBe(result);
             expect(mockEmployeeService.getTeamSummary).toHaveBeenCalledWith(managerId);
+        });
+    });
+
+    describe('assignRoles', () => {
+        it('should assign roles and permissions to an employee', async () => {
+            const id = 'emp1';
+            const assignRolesDto = {
+                roles: ['HR Admin'],
+                permissions: ['read_profiles', 'edit_profiles'],
+            } as any;
+
+            const result = { _id: 'r1', employeeProfileId: id, ...assignRolesDto };
+            mockEmployeeService.assignRoles.mockResolvedValue(result);
+
+            expect(await controller.assignRoles(id, assignRolesDto)).toBe(result);
+            expect(mockEmployeeService.assignRoles).toHaveBeenCalledWith(id, assignRolesDto);
+        });
+
+        it('should throw BadRequestException when assignment is invalid', async () => {
+            const id = 'emp1';
+            const assignRolesDto = { roles: ['INVALID_ROLE'] } as any;
+
+            mockEmployeeService.assignRoles.mockRejectedValue(new BadRequestException('Invalid role'));
+
+            await expect(controller.assignRoles(id, assignRolesDto)).rejects.toThrow(BadRequestException);
         });
     });
 });

@@ -6,6 +6,7 @@ import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
+import { AssignRolesDto } from './dto/assign-roles.dto';
 import { EmployeeService } from './employee.service';
 
 
@@ -36,6 +37,13 @@ export class EmployeeController {
         @Body() createProfileChangeRequestDto: CreateProfileChangeRequestDto,
     ) {
         return this.employeeService.createProfileChangeRequest(id, createProfileChangeRequestDto);
+    }
+
+    @Post(':id/roles')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async assignRoles(@Param('id') id: string, @Body() assignRolesDto: AssignRolesDto) {
+        return this.employeeService.assignRoles(id, assignRolesDto);
     }
 
     @Get('team/summary')

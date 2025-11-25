@@ -7,7 +7,8 @@ import { EmployeeProfileRepository } from './repository/employee-profile.reposit
 import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
-import { MaritalStatus } from './enums/employee-profile.enums';
+import { MaritalStatus, SystemRole } from './enums/employee-profile.enums';
+import { EmployeeSystemRoleRepository } from './repository/employee-system-role.repository';
 import { EmployeeProfileChangeRequestRepository } from './repository/ep-change-request.repository';
 
 @Injectable()
@@ -16,7 +17,8 @@ export class EmployeeService {
         @InjectModel(EmployeeProfile.name)
         private employeeProfileModel: Model<EmployeeProfile>,
         private readonly employeeProfileRepository: EmployeeProfileRepository,
-        private readonly employeeProfileChangeRequestRepository: EmployeeProfileChangeRequestRepository,
+            private readonly employeeProfileChangeRequestRepository: EmployeeProfileChangeRequestRepository,
+            private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     ) { }
 
     async onboard(createEmployeeDto: CreateEmployeeDto): Promise<EmployeeProfile> {
@@ -29,6 +31,39 @@ export class EmployeeService {
             }
             throw error;
         }
+    }
+
+    async assignRoles(employeeId: string, assignRolesDto: any) {
+        // ensure target employee exists
+        const employee = await this.employeeProfileRepository.findById(employeeId);
+        if (!employee) {
+            throw new BadRequestException('Employee not found');
+        }
+
+        const { roles = [], permissions = [] } = assignRolesDto || {};
+
+        // validate roles are known
+        const allowed = Object.values(SystemRole) as string[];
+        for (const r of roles) {
+            if (!allowed.includes(r)) {
+                throw new BadRequestException(`Invalid role: ${r}`);
+            }
+        }
+
+        // upsert assignment
+        const existing = await this.employeeSystemRoleRepository.findOne({ employeeProfileId: employeeId });
+        const payload = {
+            employeeProfileId: employeeId,
+            roles,
+            permissions,
+            isActive: true,
+        } as any;
+
+        if (existing) {
+            return this.employeeSystemRoleRepository.update({ _id: existing._id }, { $set: payload });
+        }
+
+        return this.employeeSystemRoleRepository.create(payload);
     }
 
     async updateContactInfo(id: string, updateContactInfoDto: UpdateContactInfoDto): Promise<EmployeeProfile> {

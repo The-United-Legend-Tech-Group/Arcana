@@ -92,4 +92,14 @@ export class OrganizationStructureController {
     async submitChangeRequest(@Body() dto: CreateStructureChangeRequestDto): Promise<StructureChangeRequest> {
         return this.organizationStructureService.submitChangeRequest(dto);
     }
+
+    @Get('managers/:managerId/team')
+    @UseGuards(ApiKeyGuard, authorizationGuard)
+    @Roles(Role.DEPARTMENT_HEAD, Role.HR_MANAGER)
+    @ApiSecurity('api-key')
+    @ApiOperation({ summary: "Get a manager's team structure and reporting lines (Managers)" })
+    @ApiResponse({ status: 200, description: "Manager's team structure", type: Object })
+    async getManagerTeam(@Param('managerId') managerId: string): Promise<any> {
+        return this.organizationStructureService.getManagerTeamStructure(managerId);
+    }
 }

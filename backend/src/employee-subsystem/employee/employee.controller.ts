@@ -33,6 +33,12 @@ export class EmployeeController {
         return this.employeeService.updateProfile(id, updateEmployeeProfileDto);
     }
 
+    @Patch(':id/profile/admin')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async adminUpdateProfile(@Param('id') id: string, @Body() updateEmployeeProfileDto: UpdateEmployeeProfileDto) {
+        return this.employeeService.adminUpdateProfile(id, updateEmployeeProfileDto);
+    }
     @Patch(':id/status')
     @UseGuards(ApiKeyGuard)
     async updateStatus(@Param('id') id: string, @Body() updateEmployeeStatusDto: UpdateEmployeeStatusDto) {

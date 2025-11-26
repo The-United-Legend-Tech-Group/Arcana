@@ -17,6 +17,7 @@ describe('EmployeeController', () => {
         onboard: jest.fn(),
         updateContactInfo: jest.fn(),
         updateProfile: jest.fn(),
+        adminUpdateProfile: jest.fn(),
         createProfileChangeRequest: jest.fn(),
         getTeamSummary: jest.fn(),
         getTeamProfiles: jest.fn(),
@@ -140,6 +141,33 @@ describe('EmployeeController', () => {
             mockEmployeeService.updateProfile.mockRejectedValue(new ConflictException('Employee not found'));
 
             await expect(controller.updateProfile(id, updateEmployeeProfileDto)).rejects.toThrow(ConflictException);
+        });
+    });
+
+    describe('adminUpdateProfile (HR Admin)', () => {
+        it('should update any part of an employee profile as HR admin', async () => {
+            const id = '1';
+            const updateEmployeeProfileDto: UpdateEmployeeProfileDto = {
+                biography: 'Updated by HR',
+                profilePictureUrl: 'http://example.com/hr-pic.jpg',
+            } as any;
+
+            const result = { _id: id, ...updateEmployeeProfileDto };
+            mockEmployeeService.adminUpdateProfile.mockResolvedValue(result);
+
+            expect(await controller.adminUpdateProfile(id, updateEmployeeProfileDto)).toBe(result);
+            expect(mockEmployeeService.adminUpdateProfile).toHaveBeenCalledWith(id, updateEmployeeProfileDto);
+        });
+
+        it('should throw ConflictException if admin update fails', async () => {
+            const id = '1';
+            const updateEmployeeProfileDto: UpdateEmployeeProfileDto = {
+                biography: 'Attempt by HR',
+            } as any;
+
+            mockEmployeeService.adminUpdateProfile.mockRejectedValue(new ConflictException('Update failed'));
+
+            await expect(controller.adminUpdateProfile(id, updateEmployeeProfileDto)).rejects.toThrow(ConflictException);
         });
     });
 

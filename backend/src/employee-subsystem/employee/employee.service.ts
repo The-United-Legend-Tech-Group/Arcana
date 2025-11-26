@@ -83,6 +83,23 @@ export class EmployeeService {
         return updatedEmployee;
     }
 
+    // HR admin: update any part of an employee's profile
+    async adminUpdateProfile(id: string, updateEmployeeProfileDto: UpdateEmployeeProfileDto): Promise<EmployeeProfile> {
+        const employee = await this.employeeProfileRepository.findById(id);
+        if (!employee) {
+            throw new NotFoundException('Employee not found');
+        }
+
+        // Apply the provided updates directly. This route is intended for HR admins
+        // who are allowed to edit any profile fields. Validation/guards are handled
+        // by the controller/authorization layer.
+        const updatedEmployee = await this.employeeProfileRepository.updateById(id, updateEmployeeProfileDto as any);
+        if (!updatedEmployee) {
+            throw new ConflictException('Employee not found during update');
+        }
+        return updatedEmployee;
+    }
+
     async createProfileChangeRequest(
         employeeId: string,
         createProfileChangeRequestDto: CreateProfileChangeRequestDto,

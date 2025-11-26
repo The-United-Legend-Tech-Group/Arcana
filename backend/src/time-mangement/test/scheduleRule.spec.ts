@@ -26,7 +26,11 @@ describe('TimeService - ScheduleRule flows', () => {
       create: jest
         .fn()
         .mockImplementation((dto) =>
-          Promise.resolve({ _id: 'rule1', active: dto?.active ?? true, ...dto }),
+          Promise.resolve({
+            _id: 'rule1',
+            active: dto?.active ?? true,
+            ...dto,
+          }),
         ),
       find: jest.fn().mockResolvedValue([]),
     };
@@ -34,12 +38,18 @@ describe('TimeService - ScheduleRule flows', () => {
     mockShiftAssignmentRepo = {
       updateById: jest
         .fn()
-        .mockImplementation((id, update) => Promise.resolve({ _id: id, ...update })),
+        .mockImplementation((id, update) =>
+          Promise.resolve({ _id: id, ...update }),
+        ),
     };
 
     mockShiftRepo = { find: jest.fn().mockResolvedValue([]) };
 
-    service = new TimeService(mockShiftRepo, mockShiftAssignmentRepo, mockScheduleRuleRepo);
+    service = new TimeService(
+      mockShiftRepo,
+      mockShiftAssignmentRepo,
+      mockScheduleRuleRepo,
+    );
   });
 
   it('creates a schedule rule via repository', async () => {
@@ -63,7 +73,10 @@ describe('TimeService - ScheduleRule flows', () => {
   });
 
   it('attaches a schedule rule to an assignment', async () => {
-    const res = await service.attachScheduleRuleToAssignment('assign1', 'rule1');
+    const res = await service.attachScheduleRuleToAssignment(
+      'assign1',
+      'rule1',
+    );
 
     expect(mockShiftAssignmentRepo.updateById).toHaveBeenCalledWith('assign1', {
       scheduleRuleId: 'rule1',

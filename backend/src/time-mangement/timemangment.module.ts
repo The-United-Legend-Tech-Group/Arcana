@@ -12,7 +12,10 @@ import {
 } from './models/shift-assignment.schema';
 import { ShiftType, ShiftTypeSchema } from './models/shift-type.schema';
 import { Shift, ShiftSchema } from './models/shift.schema';
-import { ScheduleRule, ScheduleRuleSchema } from './models/schedule-rule.schema';
+import {
+  ScheduleRule,
+  ScheduleRuleSchema,
+} from './models/schedule-rule.schema';
 import { TimeController } from './time.controller';
 import { TimeService } from './time.service';
 import { ShiftRepository } from './repository/shift.repository';

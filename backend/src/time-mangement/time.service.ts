@@ -134,7 +134,7 @@ export class TimeService {
       $or: [{ endDate: null }, { endDate: { $gte: s } }],
     } as any);
   }
-  
+
   // Schedule rule APIs
   async createScheduleRule(dto: CreateScheduleRuleDto) {
     if (!this.scheduleRuleRepo) {
@@ -150,7 +150,10 @@ export class TimeService {
     return this.scheduleRuleRepo.find({});
   }
 
-  async attachScheduleRuleToAssignment(assignmentId: string, scheduleRuleId: string) {
+  async attachScheduleRuleToAssignment(
+    assignmentId: string,
+    scheduleRuleId: string,
+  ) {
     return this.shiftAssignmentRepo.updateById(assignmentId, {
       scheduleRuleId,
     } as any);

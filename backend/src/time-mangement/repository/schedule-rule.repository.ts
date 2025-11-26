@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import type { ScheduleRule, ScheduleRuleDocument } from '../models/schedule-rule.schema';
+import type {
+  ScheduleRule,
+  ScheduleRuleDocument,
+} from '../models/schedule-rule.schema';
 import { BaseRepository } from '../../common/repository/base.repository';
 
 @Injectable()

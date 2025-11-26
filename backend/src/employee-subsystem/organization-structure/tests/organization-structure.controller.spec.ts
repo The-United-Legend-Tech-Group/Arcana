@@ -13,12 +13,35 @@ describe('OrganizationStructureController (unit)', () => {
 		getChangeRequestById: jest.fn(),
 		approveChangeRequest: jest.fn(),
 		rejectChangeRequest: jest.fn(),
+		submitChangeRequest: jest.fn(),
 		getOrganizationHierarchy: jest.fn(),
+		getManagerTeamStructure: jest.fn(),
 	};
 
 	beforeEach(() => {
 		controller = new OrganizationStructureController(mockService as any);
 		jest.clearAllMocks();
+	});
+
+	it('getManagerTeam returns manager team structure from service', async () => {
+		const sample = {
+			manager: { _id: 'mgr-1', employeeNumber: 'EMP-001', firstName: 'Jane', lastName: 'Doe', primaryPositionId: 'pos-1' },
+			team: {
+				id: 'pos-1',
+				title: 'Manager',
+				children: [
+					{ id: 'pos-2', title: 'Staff', children: [], employees: [{ employeeNumber: 'EMP-002', firstName: 'John' }] },
+				],
+				employees: [{ employeeNumber: 'EMP-001', firstName: 'Jane' }],
+			},
+		};
+
+		mockService.getManagerTeamStructure.mockResolvedValue(sample);
+
+		const result = await controller.getManagerTeam('mgr-1');
+
+		expect(mockService.getManagerTeamStructure).toHaveBeenCalledWith('mgr-1');
+		expect(result).toBe(sample);
 	});
 
 	it('returns pending change requests', async () => {
@@ -77,5 +100,28 @@ describe('OrganizationStructureController (unit)', () => {
 
 		expect(mockService.getOrganizationHierarchy).toHaveBeenCalled();
 		expect(result).toBe(tree);
+	});
+
+	it('submitChangeRequest calls service with dto and returns saved request', async () => {
+		const dto = {
+			requestedByEmployeeId: 'emp-123',
+			requestType: StructureRequestType.NEW_POSITION,
+			targetPositionId: 'pos-456',
+			details: 'Request to add a new position',
+			reason: 'Project growth',
+		} as any;
+
+		const saved = {
+			requestNumber: 'SCR-999',
+			...dto,
+			status: StructureRequestStatus.SUBMITTED,
+		} as any;
+
+		mockService.submitChangeRequest.mockResolvedValue(saved);
+
+		const result = await controller.submitChangeRequest(dto);
+
+		expect(mockService.submitChangeRequest).toHaveBeenCalledWith(dto);
+		expect(result).toBe(saved);
 	});
 });

@@ -5,7 +5,7 @@ import { CreateEmployeeDto } from '../dto/create-employee.dto';
 import { UpdateContactInfoDto } from '../dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from '../dto/update-employee-profile.dto';
 import { CreateProfileChangeRequestDto } from '../dto/create-profile-change-request.dto';
-import { ConflictException, BadRequestException } from '@nestjs/common';
+import { ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ApiKeyGuard } from '../../guards/api-key.guard';
 import { authorizationGuard } from '../../guards/authorization.guard';
 
@@ -17,10 +17,17 @@ describe('EmployeeController', () => {
         onboard: jest.fn(),
         updateContactInfo: jest.fn(),
         updateProfile: jest.fn(),
+        adminUpdateProfile: jest.fn(),
         createProfileChangeRequest: jest.fn(),
         getTeamSummary: jest.fn(),
+        getTeamProfiles: jest.fn(),
+        getProfile: jest.fn(),
         assignRoles: jest.fn(),
         updateStatus: jest.fn(),
+        listProfileChangeRequests: jest.fn(),
+        getProfileChangeRequest: jest.fn(),
+        approveProfileChangeRequest: jest.fn(),
+        rejectProfileChangeRequest: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -138,6 +145,33 @@ describe('EmployeeController', () => {
         });
     });
 
+    describe('adminUpdateProfile (HR Admin)', () => {
+        it('should update any part of an employee profile as HR admin', async () => {
+            const id = '1';
+            const updateEmployeeProfileDto: UpdateEmployeeProfileDto = {
+                biography: 'Updated by HR',
+                profilePictureUrl: 'http://example.com/hr-pic.jpg',
+            } as any;
+
+            const result = { _id: id, ...updateEmployeeProfileDto };
+            mockEmployeeService.adminUpdateProfile.mockResolvedValue(result);
+
+            expect(await controller.adminUpdateProfile(id, updateEmployeeProfileDto)).toBe(result);
+            expect(mockEmployeeService.adminUpdateProfile).toHaveBeenCalledWith(id, updateEmployeeProfileDto);
+        });
+
+        it('should throw ConflictException if admin update fails', async () => {
+            const id = '1';
+            const updateEmployeeProfileDto: UpdateEmployeeProfileDto = {
+                biography: 'Attempt by HR',
+            } as any;
+
+            mockEmployeeService.adminUpdateProfile.mockRejectedValue(new ConflictException('Update failed'));
+
+            await expect(controller.adminUpdateProfile(id, updateEmployeeProfileDto)).rejects.toThrow(ConflictException);
+        });
+    });
+
     describe('requestProfileCorrection', () => {
         it('should create a profile change request', async () => {
             const id = '1';
@@ -214,6 +248,98 @@ describe('EmployeeController', () => {
 
             expect(await controller.getTeamSummary(managerId)).toBe(result);
             expect(mockEmployeeService.getTeamSummary).toHaveBeenCalledWith(managerId);
+        });
+    });
+
+    describe('getTeamProfiles', () => {
+        it('should return team profiles for manager', async () => {
+            const managerId = 'mgr1';
+            const result = {
+                managerId,
+                items: [
+                    { _id: 'e1', firstName: 'John', lastName: 'Doe', positionId: 'pos1' },
+                ],
+            };
+
+            mockEmployeeService.getTeamProfiles.mockResolvedValue(result);
+
+            expect(await controller.getTeamProfiles(managerId)).toBe(result);
+            expect(mockEmployeeService.getTeamProfiles).toHaveBeenCalledWith(managerId);
+        });
+    });
+
+    describe('getProfile', () => {
+        it('should return the full profile and systemRole', async () => {
+            const id = 'emp1';
+            const result = { profile: { _id: id, firstName: 'John', lastName: 'Doe' }, systemRole: { _id: 'r1', roles: ['USER'] } };
+
+            mockEmployeeService.getProfile.mockResolvedValue(result);
+
+            expect(await controller.getProfile(id)).toBe(result);
+            expect(mockEmployeeService.getProfile).toHaveBeenCalledWith(id);
+        });
+
+        it('should throw NotFoundException when employee does not exist', async () => {
+            const id = 'missing';
+            mockEmployeeService.getProfile.mockRejectedValue(new NotFoundException('Employee not found'));
+
+            await expect(controller.getProfile(id)).rejects.toThrow(NotFoundException);
+        });
+    });
+
+    describe('profile change requests (HR review)', () => {
+        it('should list profile change requests (no status)', async () => {
+            const result = [
+                { requestId: 'r1', requestDescription: 'Change name', status: 'PENDING' },
+                { requestId: 'r2', requestDescription: 'Change marital status', status: 'PENDING' },
+            ];
+
+            mockEmployeeService.listProfileChangeRequests.mockResolvedValue(result);
+
+            expect(await controller.listProfileChangeRequests(undefined as any)).toBe(result);
+            expect(mockEmployeeService.listProfileChangeRequests).toHaveBeenCalledWith(undefined);
+        });
+
+        it('should list profile change requests (with status)', async () => {
+            const status = 'PENDING';
+            const result = [{ requestId: 'r1', requestDescription: 'Change name', status }];
+
+            mockEmployeeService.listProfileChangeRequests.mockResolvedValue(result);
+
+            expect(await controller.listProfileChangeRequests(status as any)).toBe(result);
+            expect(mockEmployeeService.listProfileChangeRequests).toHaveBeenCalledWith(status);
+        });
+
+        it('should get a single profile change request', async () => {
+            const requestId = 'req1';
+            const result = { requestId, requestDescription: 'Change name', status: 'PENDING' };
+
+            mockEmployeeService.getProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.getProfileChangeRequest(requestId)).toBe(result);
+            expect(mockEmployeeService.getProfileChangeRequest).toHaveBeenCalledWith(requestId);
+        });
+
+        it('should approve a profile change request', async () => {
+            const requestId = 'req-approve-1';
+            const applied = { _id: 'emp1', firstName: 'Updated' };
+            const result = { requestId, status: 'APPROVED', appliedTo: applied };
+
+            mockEmployeeService.approveProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.approveProfileChangeRequest(requestId)).toBe(result);
+            expect(mockEmployeeService.approveProfileChangeRequest).toHaveBeenCalledWith(requestId);
+        });
+
+        it('should reject a profile change request with reason', async () => {
+            const requestId = 'req-reject-1';
+            const reason = 'Insufficient documentation';
+            const result = { requestId, status: 'REJECTED', processingNote: reason };
+
+            mockEmployeeService.rejectProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.rejectProfileChangeRequest(requestId, { reason })).toBe(result);
+            expect(mockEmployeeService.rejectProfileChangeRequest).toHaveBeenCalledWith(requestId, reason);
         });
     });
 

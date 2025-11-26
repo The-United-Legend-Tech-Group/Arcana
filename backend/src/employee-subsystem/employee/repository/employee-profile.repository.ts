@@ -67,4 +67,28 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
         const results = await this.model.aggregate(pipeline).exec();
         return results;
     }
+
+    async getTeamMembersByManagerId(managerId: string) {
+        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
+        if (!manager || !manager.primaryPositionId) return [];
+
+        const positionId = manager.primaryPositionId;
+
+        // Exclude sensitive personal fields
+        const projection: any = {
+            nationalId: 0,
+            password: 0,
+            personalEmail: 0,
+            mobilePhone: 0,
+            homePhone: 0,
+            address: 0,
+            accessProfileId: 0,
+        };
+
+        return this.model
+            .find({ supervisorPositionId: positionId })
+            .select(projection)
+            .lean()
+            .exec();
+    }
 }

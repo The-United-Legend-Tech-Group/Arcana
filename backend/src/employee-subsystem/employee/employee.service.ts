@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, BadRequestException } from '@nestjs/common';
+import { ConflictException, Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { EmployeeProfile } from './models/employee-profile.schema';
@@ -8,7 +8,7 @@ import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
-import { MaritalStatus, SystemRole, EmployeeStatus } from './enums/employee-profile.enums';
+import { MaritalStatus, SystemRole, EmployeeStatus, ProfileChangeStatus } from './enums/employee-profile.enums';
 import { EmployeeSystemRoleRepository } from './repository/employee-system-role.repository';
 import { EmployeeProfileChangeRequestRepository } from './repository/ep-change-request.repository';
 
@@ -163,5 +163,69 @@ export class EmployeeService {
         );
 
         return updatedEmployee;
+    }
+
+    // HR: list profile change requests (optionally by status)
+    async listProfileChangeRequests(status?: ProfileChangeStatus) {
+        const filter: any = {};
+        if (status) filter.status = status;
+        return this.employeeProfileChangeRequestRepository.find(filter);
+    }
+
+    async getProfileChangeRequest(requestId: string) {
+        const req = await this.employeeProfileChangeRequestRepository.findOne({ requestId });
+        if (!req) throw new NotFoundException('Profile change request not found');
+        return req;
+    }
+
+    async approveProfileChangeRequest(requestId: string) {
+        const req: any = await this.employeeProfileChangeRequestRepository.findOne({ requestId });
+        if (!req) throw new NotFoundException('Profile change request not found');
+        if (req.status !== ProfileChangeStatus.PENDING) {
+            throw new BadRequestException('Only pending requests can be approved');
+        }
+
+        // Collect updates from request payload if present
+        const updates: any = {};
+        if (req.requestedMaritalStatus) {
+            const allowed = Object.values(MaritalStatus) as string[];
+            if (!allowed.includes(req.requestedMaritalStatus)) {
+                throw new BadRequestException('Invalid requested marital status');
+            }
+            updates.maritalStatus = req.requestedMaritalStatus;
+        }
+
+        if (req.requestedLegalName) {
+            const name = req.requestedLegalName as any;
+            if (name.firstName) updates.firstName = name.firstName;
+            if (name.middleName !== undefined) updates.middleName = name.middleName;
+            if (name.lastName) updates.lastName = name.lastName;
+            if (name.fullName) updates.fullName = name.fullName;
+        }
+
+        if (Object.keys(updates).length === 0) {
+            throw new BadRequestException('No changes to apply from this request');
+        }
+
+        const employeeId = String(req.employeeProfileId);
+        const updatedEmployee = await this.employeeProfileRepository.updateById(employeeId, updates);
+        if (!updatedEmployee) throw new ConflictException('Target employee not found');
+
+        await this.employeeProfileChangeRequestRepository.update({ requestId }, { $set: { status: ProfileChangeStatus.APPROVED, processedAt: new Date() } });
+
+        return { requestId, status: ProfileChangeStatus.APPROVED, appliedTo: updatedEmployee };
+    }
+
+    async rejectProfileChangeRequest(requestId: string, reason?: string) {
+        const req = await this.employeeProfileChangeRequestRepository.findOne({ requestId });
+        if (!req) throw new NotFoundException('Profile change request not found');
+        if (req.status !== ProfileChangeStatus.PENDING) {
+            throw new BadRequestException('Only pending requests can be rejected');
+        }
+
+        const payload: any = { status: ProfileChangeStatus.REJECTED, processedAt: new Date() };
+        if (reason) payload.processingNote = reason;
+
+        return this.employeeProfileChangeRequestRepository.update({ requestId }, { $set: payload });
     }
 }

@@ -9,6 +9,7 @@ import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
 import { AssignRolesDto } from './dto/assign-roles.dto';
 import { EmployeeService } from './employee.service';
+import { ProfileChangeStatus } from './enums/employee-profile.enums';
 
 
 @Controller('employee')
@@ -58,5 +59,34 @@ export class EmployeeController {
     @Roles(Role.DEPARTMENT_HEAD)
     async getTeamSummary(@Query('managerId') managerId: string) {
         return this.employeeService.getTeamSummary(managerId);
+    }
+
+    // HR Admin: review profile change requests
+    @Get('profile-change-requests')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async listProfileChangeRequests(@Query('status') status?: ProfileChangeStatus) {
+        return this.employeeService.listProfileChangeRequests(status as any);
+    }
+
+    @Get('profile-change-requests/:requestId')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async getProfileChangeRequest(@Param('requestId') requestId: string) {
+        return this.employeeService.getProfileChangeRequest(requestId);
+    }
+
+    @Patch('profile-change-requests/:requestId/approve')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async approveProfileChangeRequest(@Param('requestId') requestId: string) {
+        return this.employeeService.approveProfileChangeRequest(requestId);
+    }
+
+    @Patch('profile-change-requests/:requestId/reject')
+    @UseGuards(authorizationGuard)
+    @Roles(Role.HR_ADMIN)
+    async rejectProfileChangeRequest(@Param('requestId') requestId: string, @Body() body: { reason?: string }) {
+        return this.employeeService.rejectProfileChangeRequest(requestId, body?.reason);
     }
 }

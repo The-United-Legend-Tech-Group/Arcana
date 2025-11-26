@@ -21,6 +21,10 @@ describe('EmployeeController', () => {
         getTeamSummary: jest.fn(),
         assignRoles: jest.fn(),
         updateStatus: jest.fn(),
+        listProfileChangeRequests: jest.fn(),
+        getProfileChangeRequest: jest.fn(),
+        approveProfileChangeRequest: jest.fn(),
+        rejectProfileChangeRequest: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -214,6 +218,62 @@ describe('EmployeeController', () => {
 
             expect(await controller.getTeamSummary(managerId)).toBe(result);
             expect(mockEmployeeService.getTeamSummary).toHaveBeenCalledWith(managerId);
+        });
+    });
+
+    describe('profile change requests (HR review)', () => {
+        it('should list profile change requests (no status)', async () => {
+            const result = [
+                { requestId: 'r1', requestDescription: 'Change name', status: 'PENDING' },
+                { requestId: 'r2', requestDescription: 'Change marital status', status: 'PENDING' },
+            ];
+
+            mockEmployeeService.listProfileChangeRequests.mockResolvedValue(result);
+
+            expect(await controller.listProfileChangeRequests(undefined as any)).toBe(result);
+            expect(mockEmployeeService.listProfileChangeRequests).toHaveBeenCalledWith(undefined);
+        });
+
+        it('should list profile change requests (with status)', async () => {
+            const status = 'PENDING';
+            const result = [{ requestId: 'r1', requestDescription: 'Change name', status }];
+
+            mockEmployeeService.listProfileChangeRequests.mockResolvedValue(result);
+
+            expect(await controller.listProfileChangeRequests(status as any)).toBe(result);
+            expect(mockEmployeeService.listProfileChangeRequests).toHaveBeenCalledWith(status);
+        });
+
+        it('should get a single profile change request', async () => {
+            const requestId = 'req1';
+            const result = { requestId, requestDescription: 'Change name', status: 'PENDING' };
+
+            mockEmployeeService.getProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.getProfileChangeRequest(requestId)).toBe(result);
+            expect(mockEmployeeService.getProfileChangeRequest).toHaveBeenCalledWith(requestId);
+        });
+
+        it('should approve a profile change request', async () => {
+            const requestId = 'req-approve-1';
+            const applied = { _id: 'emp1', firstName: 'Updated' };
+            const result = { requestId, status: 'APPROVED', appliedTo: applied };
+
+            mockEmployeeService.approveProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.approveProfileChangeRequest(requestId)).toBe(result);
+            expect(mockEmployeeService.approveProfileChangeRequest).toHaveBeenCalledWith(requestId);
+        });
+
+        it('should reject a profile change request with reason', async () => {
+            const requestId = 'req-reject-1';
+            const reason = 'Insufficient documentation';
+            const result = { requestId, status: 'REJECTED', processingNote: reason };
+
+            mockEmployeeService.rejectProfileChangeRequest.mockResolvedValue(result);
+
+            expect(await controller.rejectProfileChangeRequest(requestId, { reason })).toBe(result);
+            expect(mockEmployeeService.rejectProfileChangeRequest).toHaveBeenCalledWith(requestId, reason);
         });
     });
 

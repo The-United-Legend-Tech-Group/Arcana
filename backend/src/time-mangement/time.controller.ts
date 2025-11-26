@@ -15,6 +15,7 @@ import { AssignShiftDto } from './dto/assign-shift.dto';
 import { UpdateShiftStatusDto } from './dto/update-shift-status.dto';
 import { AssignShiftScopedDto } from './dto/assign-shift-scoped.dto';
 import { UpdateShiftAssignmentsStatusDto } from './dto/update-shift-assignments-status.dto';
+import { CreateScheduleRuleDto } from './dto/create-schedule-rule.dto';
 
 @ApiTags('time')
 @Controller('time')
@@ -79,5 +80,26 @@ export class TimeController {
   @ApiOperation({ summary: 'Get all shift definitions' })
   getAllShifts() {
     return this.service.getAllShifts();
+  }
+
+  @Post('schedule-rules')
+  @ApiOperation({ summary: 'Create a schedule rule (pattern-based)' })
+  createScheduleRule(@Body() dto: CreateScheduleRuleDto) {
+    return this.service.createScheduleRule(dto);
+  }
+
+  @Get('schedule-rules')
+  @ApiOperation({ summary: 'List schedule rules' })
+  getScheduleRules() {
+    return this.service.getScheduleRules();
+  }
+
+  @Patch('shifts/assignments/:id/schedule-rule')
+  @ApiOperation({ summary: 'Attach a schedule rule to a shift assignment' })
+  attachScheduleRule(
+    @Param('id') id: string,
+    @Body() body: { scheduleRuleId: string },
+  ) {
+    return this.service.attachScheduleRuleToAssignment(id, body.scheduleRuleId);
   }
 }

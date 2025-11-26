@@ -5,12 +5,15 @@ import { AssignShiftDto } from './dto/assign-shift.dto';
 import { UpdateShiftStatusDto } from './dto/update-shift-status.dto';
 import { ShiftRepository } from './repository/shift.repository';
 import { ShiftAssignmentRepository } from './repository/shift-assignment.repository';
+import { ScheduleRuleRepository } from './repository/schedule-rule.repository';
+import { CreateScheduleRuleDto } from './dto/create-schedule-rule.dto';
 
 @Injectable()
 export class TimeService {
   constructor(
     private readonly shiftRepo: ShiftRepository,
     private readonly shiftAssignmentRepo: ShiftAssignmentRepository,
+    private readonly scheduleRuleRepo?: ScheduleRuleRepository,
   ) {}
 
   /* Existing simple time record creation kept for backwards compatibility */
@@ -129,6 +132,27 @@ export class TimeService {
       employeeId,
       startDate: { $lte: e },
       $or: [{ endDate: null }, { endDate: { $gte: s } }],
+    } as any);
+  }
+  
+  // Schedule rule APIs
+  async createScheduleRule(dto: CreateScheduleRuleDto) {
+    if (!this.scheduleRuleRepo) {
+      throw new Error('ScheduleRuleRepository not available');
+    }
+    return this.scheduleRuleRepo.create(dto as any);
+  }
+
+  async getScheduleRules() {
+    if (!this.scheduleRuleRepo) {
+      throw new Error('ScheduleRuleRepository not available');
+    }
+    return this.scheduleRuleRepo.find({});
+  }
+
+  async attachScheduleRuleToAssignment(assignmentId: string, scheduleRuleId: string) {
+    return this.shiftAssignmentRepo.updateById(assignmentId, {
+      scheduleRuleId,
     } as any);
   }
   async getAllShifts() {

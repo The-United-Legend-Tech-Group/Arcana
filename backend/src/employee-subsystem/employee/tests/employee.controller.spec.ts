@@ -5,7 +5,7 @@ import { CreateEmployeeDto } from '../dto/create-employee.dto';
 import { UpdateContactInfoDto } from '../dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from '../dto/update-employee-profile.dto';
 import { CreateProfileChangeRequestDto } from '../dto/create-profile-change-request.dto';
-import { ConflictException, BadRequestException } from '@nestjs/common';
+import { ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ApiKeyGuard } from '../../guards/api-key.guard';
 import { authorizationGuard } from '../../guards/authorization.guard';
 
@@ -21,6 +21,7 @@ describe('EmployeeController', () => {
         createProfileChangeRequest: jest.fn(),
         getTeamSummary: jest.fn(),
         getTeamProfiles: jest.fn(),
+        getProfile: jest.fn(),
         assignRoles: jest.fn(),
         updateStatus: jest.fn(),
         listProfileChangeRequests: jest.fn(),
@@ -264,6 +265,25 @@ describe('EmployeeController', () => {
 
             expect(await controller.getTeamProfiles(managerId)).toBe(result);
             expect(mockEmployeeService.getTeamProfiles).toHaveBeenCalledWith(managerId);
+        });
+    });
+
+    describe('getProfile', () => {
+        it('should return the full profile and systemRole', async () => {
+            const id = 'emp1';
+            const result = { profile: { _id: id, firstName: 'John', lastName: 'Doe' }, systemRole: { _id: 'r1', roles: ['USER'] } };
+
+            mockEmployeeService.getProfile.mockResolvedValue(result);
+
+            expect(await controller.getProfile(id)).toBe(result);
+            expect(mockEmployeeService.getProfile).toHaveBeenCalledWith(id);
+        });
+
+        it('should throw NotFoundException when employee does not exist', async () => {
+            const id = 'missing';
+            mockEmployeeService.getProfile.mockRejectedValue(new NotFoundException('Employee not found'));
+
+            await expect(controller.getProfile(id)).rejects.toThrow(NotFoundException);
         });
     });
 

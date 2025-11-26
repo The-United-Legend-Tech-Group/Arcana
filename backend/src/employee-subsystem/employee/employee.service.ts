@@ -250,4 +250,23 @@ export class EmployeeService {
 
         return this.employeeProfileChangeRequestRepository.update({ requestId }, { $set: payload });
     }
+
+    // Fetch full employee profile along with system role assignment
+    async getProfile(employeeId: string) {
+        const employee = await this.employeeProfileRepository.findById(employeeId);
+        if (!employee) {
+            throw new NotFoundException('Employee not found');
+        }
+
+        const systemRole = await this.employeeSystemRoleRepository.findOne({ employeeProfileId: employeeId } as any);
+
+        // Return combined view; omit any sensitive fields if present
+        const profileObj: any = employee.toObject ? employee.toObject() : employee;
+        if (profileObj.password) delete profileObj.password;
+
+        return {
+            profile: profileObj,
+            systemRole: systemRole || null,
+        };
+    }
 }

@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTimeDto } from './dto/create-time.dto';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { AssignShiftDto } from './dto/assign-shift.dto';
 import { UpdateShiftStatusDto } from './dto/update-shift-status.dto';
 import { ShiftRepository } from './repository/shift.repository';
 import { ShiftAssignmentRepository } from './repository/shift-assignment.repository';
+import { ScheduleRuleRepository } from './repository/schedule-rule.repository';
+import { CreateScheduleRuleDto } from './dto/create-schedule-rule.dto';
 
 @Injectable()
 export class TimeService {
   constructor(
     private readonly shiftRepo: ShiftRepository,
     private readonly shiftAssignmentRepo: ShiftAssignmentRepository,
+    private readonly scheduleRuleRepo?: ScheduleRuleRepository,
   ) {}
 
   /* Existing simple time record creation kept for backwards compatibility */
@@ -129,6 +131,55 @@ export class TimeService {
       employeeId,
       startDate: { $lte: e },
       $or: [{ endDate: null }, { endDate: { $gte: s } }],
+    } as any);
+  }
+
+  // Schedule rule APIs
+  async createScheduleRule(dto: CreateScheduleRuleDto) {
+    if (!this.scheduleRuleRepo) {
+      throw new Error('ScheduleRuleRepository not available');
+    }
+
+    // If shiftTypes or dates are provided, encode them into the pattern field
+    // so we don't need to modify the ScheduleRule schema. Pattern is a free-form
+    // string and can carry structured JSON for business rules like:
+    // { shiftTypes: [...], startDate: 'YYYY-MM-DD', endDate: 'YYYY-MM-DD' }
+    const payload: any = { name: dto.name, active: dto.active };
+
+    if (dto.pattern && !(dto.shiftTypes || dto.startDate || dto.endDate)) {
+      payload.pattern = dto.pattern;
+    } else {
+      // Build structured pattern if structured fields present
+      const rule: any = {};
+      if (dto.pattern) rule.pattern = dto.pattern;
+      if (dto.shiftTypes) rule.shiftTypes = dto.shiftTypes;
+      if (dto.startDate) rule.startDate = dto.startDate;
+      if (dto.endDate) rule.endDate = dto.endDate;
+
+      // If there's any structured content, stringify it into pattern
+      if (Object.keys(rule).length) {
+        payload.pattern = JSON.stringify(rule);
+      } else {
+        payload.pattern = '';
+      }
+    }
+
+    return this.scheduleRuleRepo.create(payload as any);
+  }
+
+  async getScheduleRules() {
+    if (!this.scheduleRuleRepo) {
+      throw new Error('ScheduleRuleRepository not available');
+    }
+    return this.scheduleRuleRepo.find({});
+  }
+
+  async attachScheduleRuleToAssignment(
+    assignmentId: string,
+    scheduleRuleId: string,
+  ) {
+    return this.shiftAssignmentRepo.updateById(assignmentId, {
+      scheduleRuleId,
     } as any);
   }
   async getAllShifts() {

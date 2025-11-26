@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import type { Shift, ShiftDocument } from '../models/shift.schema';
+import type {
+  ScheduleRule,
+  ScheduleRuleDocument,
+} from '../models/schedule-rule.schema';
 import { BaseRepository } from '../../common/repository/base.repository';
 
 @Injectable()
-export class ShiftRepository extends BaseRepository<ShiftDocument> {
-  constructor(@InjectModel('Shift') model: Model<ShiftDocument>) {
+export class ScheduleRuleRepository extends BaseRepository<ScheduleRuleDocument> {
+  constructor(@InjectModel('ScheduleRule') model: Model<ScheduleRuleDocument>) {
     super(model);
   }
 

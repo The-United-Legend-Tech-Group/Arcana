@@ -8,6 +8,8 @@ jest.mock('../repository/shift-assignment.repository', () => ({
   ShiftAssignmentRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
+import { ShiftAssignmentStatus } from '../models/enums/index';
+
 import { TimeService } from '../time.service';
 
 describe('TimeService - Shift flows', () => {
@@ -77,14 +79,14 @@ describe('TimeService - Shift flows', () => {
 
   it('updates shift assignment status by id', async () => {
     const res = await service.updateShiftAssignmentStatus('assign1', {
-      status: 'APPROVED',
+      status: ShiftAssignmentStatus.APPROVED,
     } as any);
 
     expect(mockShiftAssignmentRepo.updateById).toHaveBeenCalledWith('assign1', {
-      status: 'APPROVED',
+      status: ShiftAssignmentStatus.APPROVED,
     });
     expect(res).toHaveProperty('_id', 'assign1');
-    expect(res).toHaveProperty('status', 'APPROVED');
+    expect(res).toHaveProperty('status', ShiftAssignmentStatus.APPROVED);
   });
 
   it('queries assignments for an employee within a term', async () => {

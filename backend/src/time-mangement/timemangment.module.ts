@@ -12,10 +12,15 @@ import {
 } from './models/shift-assignment.schema';
 import { ShiftType, ShiftTypeSchema } from './models/shift-type.schema';
 import { Shift, ShiftSchema } from './models/shift.schema';
+import {
+  ScheduleRule,
+  ScheduleRuleSchema,
+} from './models/schedule-rule.schema';
 import { TimeController } from './time.controller';
 import { TimeService } from './time.service';
 import { ShiftRepository } from './repository/shift.repository';
 import { ShiftAssignmentRepository } from './repository/shift-assignment.repository';
+import { ScheduleRuleRepository } from './repository/schedule-rule.repository';
 
 @Module({
   imports: [
@@ -26,15 +31,23 @@ import { ShiftAssignmentRepository } from './repository/shift-assignment.reposit
       { name: ShiftAssignment.name, schema: ShiftAssignmentSchema },
       { name: ShiftType.name, schema: ShiftTypeSchema },
       { name: Shift.name, schema: ShiftSchema },
+      { name: ScheduleRule.name, schema: ScheduleRuleSchema },
     ]),
   ],
   controllers: [TimeController],
-  providers: [TimeService, ShiftRepository, ShiftAssignmentRepository],
+  providers: [
+    TimeService,
+    ShiftRepository,
+    ShiftAssignmentRepository,
+    // Schedule rule repository
+    ScheduleRuleRepository,
+  ],
   exports: [
     MongooseModule,
     TimeService,
     ShiftRepository,
     ShiftAssignmentRepository,
+    ScheduleRuleRepository,
   ],
 })
 export class TimeMangementModule {}

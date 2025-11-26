@@ -139,7 +139,32 @@ export class TimeService {
     if (!this.scheduleRuleRepo) {
       throw new Error('ScheduleRuleRepository not available');
     }
-    return this.scheduleRuleRepo.create(dto as any);
+
+    // If shiftTypes or dates are provided, encode them into the pattern field
+    // so we don't need to modify the ScheduleRule schema. Pattern is a free-form
+    // string and can carry structured JSON for business rules like:
+    // { shiftTypes: [...], startDate: 'YYYY-MM-DD', endDate: 'YYYY-MM-DD' }
+    const payload: any = { name: dto.name, active: dto.active };
+
+    if (dto.pattern && !(dto.shiftTypes || dto.startDate || dto.endDate)) {
+      payload.pattern = dto.pattern;
+    } else {
+      // Build structured pattern if structured fields present
+      const rule: any = {};
+      if (dto.pattern) rule.pattern = dto.pattern;
+      if (dto.shiftTypes) rule.shiftTypes = dto.shiftTypes;
+      if (dto.startDate) rule.startDate = dto.startDate;
+      if (dto.endDate) rule.endDate = dto.endDate;
+
+      // If there's any structured content, stringify it into pattern
+      if (Object.keys(rule).length) {
+        payload.pattern = JSON.stringify(rule);
+      } else {
+        payload.pattern = '';
+      }
+    }
+
+    return this.scheduleRuleRepo.create(payload as any);
   }
 
   async getScheduleRules() {

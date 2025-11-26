@@ -23,15 +23,13 @@ describe('TimeService - ScheduleRule flows', () => {
 
   beforeEach(() => {
     mockScheduleRuleRepo = {
-      create: jest
-        .fn()
-        .mockImplementation((dto) =>
-          Promise.resolve({
-            _id: 'rule1',
-            active: dto?.active ?? true,
-            ...dto,
-          }),
-        ),
+      create: jest.fn().mockImplementation((dto) =>
+        Promise.resolve({
+          _id: 'rule1',
+          active: dto?.active ?? true,
+          ...dto,
+        }),
+      ),
       find: jest.fn().mockResolvedValue([]),
     };
 
@@ -53,12 +51,27 @@ describe('TimeService - ScheduleRule flows', () => {
   });
 
   it('creates a schedule rule via repository', async () => {
-    const dto = { name: '4on3off', pattern: '4on-3off' } as any;
+    const dto = {
+      name: '4on3off',
+      pattern: '4on-3off',
+      shiftTypes: ['Normal', 'Rotational'],
+      startDate: '2025-11-01',
+      endDate: '2025-11-30',
+    } as any;
+
     const res = await service.createScheduleRule(dto);
 
-    expect(mockScheduleRuleRepo.create).toHaveBeenCalledWith(dto);
+    // service should have encoded structured fields into the pattern string
+    expect(mockScheduleRuleRepo.create).toHaveBeenCalled();
+    const calledArg = mockScheduleRuleRepo.create.mock.calls[0][0];
+    expect(calledArg).toHaveProperty('name', '4on3off');
+    expect(typeof calledArg.pattern).toBe('string');
+    // parsed pattern should contain the structured rule
+    const parsed = JSON.parse(calledArg.pattern);
+    expect(parsed.shiftTypes).toEqual(['Normal', 'Rotational']);
+    expect(parsed.startDate).toBe('2025-11-01');
+    expect(parsed.endDate).toBe('2025-11-30');
     expect(res).toHaveProperty('_id', 'rule1');
-    expect(res).toHaveProperty('name', '4on3off');
   });
 
   it('lists schedule rules', async () => {

@@ -19,9 +19,6 @@ export class EmployeeProfile extends UserProfileBase {
   @Prop({ type: String })
   workEmail?: string;
 
-  @Prop({ type: String, select: false })
-  password?: string;
-
   @Prop({ type: String })
   biography?: string;
 
@@ -31,6 +28,7 @@ export class EmployeeProfile extends UserProfileBase {
   @Prop({ type: Date })
   contractEndDate?: Date;
 
+  
   @Prop({
     type: String,
     enum: Object.values(ContractType),

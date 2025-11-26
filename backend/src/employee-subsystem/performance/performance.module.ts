@@ -22,6 +22,9 @@ import { AppraisalCycleController } from './appraisal-cycle.controller';
 import { AppraisalTemplateController } from './appraisal-template.controller';
 import { AppraisalTemplateService } from './appraisal-template.service';
 import { AppraisalTemplateRepository } from './repository/appraisal-template.repository';
+import { AppraisalRecordRepository } from './repository/appraisal-record.repository';
+import { AppraisalRecordService } from './appraisal-record.service';
+import { AppraisalRecordController } from './appraisal-record.controller';
 
 import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
 import { AppraisalAssignmentRepository } from './repository/appraisal-assignment.repository';
@@ -45,6 +48,7 @@ import { AppraisalAssignmentService } from './appraisal-assignment.service';
     AppraisalTemplateController,
     PerformanceDashboardController,
     AppraisalAssignmentController,
+    AppraisalRecordController,
   ],
   providers: [
     AppraisalCycleRepository,
@@ -54,6 +58,8 @@ import { AppraisalAssignmentService } from './appraisal-assignment.service';
     AppraisalAssignmentRepository,
     PerformanceDashboardService,
     AppraisalAssignmentService,
+    AppraisalRecordRepository,
+    AppraisalRecordService,
   ],
   exports: [MongooseModule],
 })

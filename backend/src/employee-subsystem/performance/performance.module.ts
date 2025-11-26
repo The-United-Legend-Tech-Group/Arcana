@@ -16,6 +16,9 @@ import {
   AppraisalAssignment,
   AppraisalAssignmentSchema,
 } from './models/appraisal-assignment.schema';
+import { AppraisalCycleRepository } from './repository/appraisal-cycle.repository';
+import { AppraisalCycleService } from './appraisal-cycle.service';
+import { AppraisalCycleController } from './appraisal-cycle.controller';
 
 @Module({
   imports: [
@@ -26,6 +29,8 @@ import {
       { name: AppraisalAssignment.name, schema: AppraisalAssignmentSchema },
     ]),
   ],
+  controllers: [AppraisalCycleController],
+  providers: [AppraisalCycleRepository, AppraisalCycleService],
   exports: [MongooseModule],
 })
-export class PerformanceModule {}
+export class PerformanceModule { }

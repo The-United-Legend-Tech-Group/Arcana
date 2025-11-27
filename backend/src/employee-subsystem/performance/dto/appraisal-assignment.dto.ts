@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AppraisalAssignmentStatus } from '../enums/performance.enums';
 import { IsArray, ArrayMinSize } from 'class-validator';
 
@@ -67,4 +67,33 @@ export class BulkAssignDto {
     @IsArray()
     @ArrayMinSize(1)
     items: BulkAssignItemDto[];
+}
+
+export class AppraisalProgressQueryDto {
+    @ApiProperty({ description: 'Cycle ID', required: true })
+    @IsMongoId()
+    @IsNotEmpty()
+    cycleId: string;
+
+    @ApiProperty({ description: 'Department ID', required: false })
+    @IsOptional()
+    @IsMongoId()
+    departmentId?: string;
+}
+
+export class SendReminderDto {
+    @ApiProperty({ description: 'Cycle ID', required: true })
+    @IsMongoId()
+    @IsNotEmpty()
+    cycleId: string;
+
+    @ApiProperty({ description: 'Department ID', required: false })
+    @IsOptional()
+    @IsMongoId()
+    departmentId?: string;
+
+    @ApiProperty({ description: 'Filter by status', enum: AppraisalAssignmentStatus, required: false })
+    @IsOptional()
+    @IsEnum(AppraisalAssignmentStatus)
+    status?: AppraisalAssignmentStatus;
 }

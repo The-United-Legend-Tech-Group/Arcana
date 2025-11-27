@@ -20,6 +20,15 @@ export class AppraisalAssignmentRepository extends BaseRepository<AppraisalAssig
             .exec();
     }
 
+    async findAssignments(filter: any): Promise<AppraisalAssignmentDocument[]> {
+        return this.model.find(filter)
+            .populate('employeeProfileId', 'firstName lastName email position')
+            .populate('managerProfileId', 'firstName lastName email')
+            .populate('templateId', 'name')
+            .populate('cycleId', 'name')
+            .exec();
+    }
+
     async insertMany(dtos: Partial<AppraisalAssignmentDocument>[]): Promise<AppraisalAssignmentDocument[]> {
         const res = await this.model.insertMany(dtos as any);
         return res as unknown as AppraisalAssignmentDocument[];

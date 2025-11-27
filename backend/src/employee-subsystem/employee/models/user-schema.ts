@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { Gender, MaritalStatus } from '../enums/employee-profile.enums';
-import { EmployeeSystemRole } from './employee-system-role.schema';
 
 @Schema({ _id: false })
 export class Address {
@@ -46,7 +45,7 @@ export class UserProfileBase {
   dateOfBirth?: Date;
 
   // Contact
-  @Prop({ type: String })
+  @Prop({ type: String, unique: true })
   personalEmail?: string;
 
   @Prop({ type: String })
@@ -60,6 +59,9 @@ export class UserProfileBase {
 
   @Prop({ type: String })
   profilePictureUrl?: string;
+
+  @Prop({ type: String, select: false })
+  password?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'EmployeeSystemRole' })
   accessProfileId?: Types.ObjectId;

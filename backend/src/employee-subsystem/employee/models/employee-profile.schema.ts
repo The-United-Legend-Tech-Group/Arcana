@@ -1,16 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import {
-  ContractType,
-  EmployeeStatus,
-  WorkType,
-} from '../enums/employee-profile.enums';
+import { ContractType, EmployeeStatus, WorkType } from '../enums/employee-profile.enums';
 import { AppraisalRatingScaleType } from '../../performance/enums/performance.enums';
-import { Department } from '../../organization-structure/models/department.schema';
-import { Position } from '../../organization-structure/models/position.schema';
-import { AppraisalCycle } from '../../performance/models/appraisal-cycle.schema';
-import { AppraisalRecord } from '../../performance/models/appraisal-record.schema';
-import { AppraisalTemplate } from '../../performance/models/appraisal-template.schema';
 import { payGrade } from '../../../payroll/config_setup/models/payGrades.schema';
 import { UserProfileBase } from './user-schema';
 
@@ -25,7 +16,7 @@ export class EmployeeProfile extends UserProfileBase {
   @Prop({ type: Date, required: true })
   dateOfHire: Date;
 
-  @Prop({ type: String })
+  @Prop({ type: String, unique: true })
   workEmail?: string;
 
   @Prop({ type: String })

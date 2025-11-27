@@ -13,6 +13,9 @@ describe('AppraisalDisputeController', () => {
     findByAppraisalId: jest.fn(),
     findByCycleId: jest.fn(),
     update: jest.fn(),
+    findOpen: jest.fn(),
+    assignReviewer: jest.fn(),
+    resolve: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -76,6 +79,38 @@ describe('AppraisalDisputeController', () => {
 
       expect(await controller.findByCycle('c1')).toEqual(result);
       expect(mockService.findByCycleId).toHaveBeenCalledWith('c1');
+    });
+  });
+
+  describe('findOpen', () => {
+    it('should return open disputes', async () => {
+      const result = [{ _id: 'd3' }];
+      mockService.findOpen.mockResolvedValue(result);
+
+      expect(await controller.findOpen()).toEqual(result);
+      expect(mockService.findOpen).toHaveBeenCalled();
+    });
+  });
+
+  describe('assignReviewer', () => {
+    it('should assign a reviewer and mark under review', async () => {
+      const dto = { assignedReviewerEmployeeId: 'r1' } as any;
+      const result = { _id: 'd1', assignedReviewerEmployeeId: 'r1', status: 'UNDER_REVIEW' };
+      mockService.assignReviewer.mockResolvedValue(result);
+
+      expect(await controller.assignReviewer('d1', dto)).toEqual(result);
+      expect(mockService.assignReviewer).toHaveBeenCalledWith('d1', dto);
+    });
+  });
+
+  describe('resolve', () => {
+    it('should resolve a dispute and notify raiser', async () => {
+      const dto = { status: 'ADJUSTED', resolutionSummary: 'Adjusted rating', resolvedByEmployeeId: 'hr1' } as any;
+      const result = { _id: 'd1', status: 'ADJUSTED', resolutionSummary: 'Adjusted rating' };
+      mockService.resolve.mockResolvedValue(result);
+
+      expect(await controller.resolve('d1', dto)).toEqual(result);
+      expect(mockService.resolve).toHaveBeenCalledWith('d1', dto);
     });
   });
 

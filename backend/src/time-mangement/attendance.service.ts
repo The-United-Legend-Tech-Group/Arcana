@@ -51,6 +51,52 @@ export class AttendanceService {
     };
   }
 
+  /**
+   * Build a performance event payload from punch/penalty/metadata.
+   * This method is public so the Performance module can call it when needed.
+   * @Comprehensive-Wall28,@Youssef-Amrr
+   */
+  public buildPerformanceEvent(
+    eventType: 'LATE_CHECKIN' | 'REPEATED_LATENESS' | 'ON_TIME_CHECKIN' | 'EARLY_LEAVE' | 'OVERTIME' | string,
+    employeeId: string,
+    ts: Date,
+    opts?: {
+      shiftId?: string;
+      shiftStart?: Date;
+      shiftEnd?: Date;
+      minutesLate?: number;
+      penaltyMinutes?: number;
+      repeatedCount?: number;
+      deviceId?: string;
+      terminalId?: string;
+      location?: string;
+      raw?: any;
+      correlationId?: string;
+    },
+  ) {
+    const o = opts || {};
+    return {
+      eventType,
+      employeeId,
+      eventTimestamp: ts.toISOString(),
+      shiftId: o.shiftId,
+      shiftStart: o.shiftStart ? o.shiftStart.toISOString() : undefined,
+      shiftEnd: o.shiftEnd ? o.shiftEnd.toISOString() : undefined,
+      minutesLate: o.minutesLate,
+      penaltyMinutes: o.penaltyMinutes,
+      repeatedCount: o.repeatedCount,
+      periodStart: o.repeatedCount ? new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString() : undefined,
+      metadata: {
+        deviceId: o.deviceId,
+        terminalId: o.terminalId,
+        location: o.location,
+        correlationId: o.correlationId,
+        source: 'time-subsystem',
+      },
+      raw: o.raw || null,
+    } as any;
+  }
+
   async punch(dto: PunchDto) {
     if (!this.attendanceRepo)
       throw new Error('AttendanceRepository not available');
@@ -210,7 +256,13 @@ export class AttendanceService {
       );
     }
 
-    const punch = { type: dto.type, time: ts } as any;
+    const punch = {
+      type: dto.type,
+      time: ts,
+      location: (dto as any).location,
+      terminalId: (dto as any).terminalId,
+      deviceId: (dto as any).deviceId,
+    } as any;
 
     if (!existing) {
       const payload: any = {
@@ -292,47 +344,51 @@ export class AttendanceService {
       missed = true;
     }
 
-    // Detect repeated lateness: check if clock-in is after shift start (9:00 AM)
+    // Detect repeated lateness and build performance event when appropriate
+    let performanceEvent: any = null;
     if (dto.type === PunchType.IN) {
-      const clockInTime = new Date(ts);
-      const SHIFT_START_HOUR = 9;
-
-      if (clockInTime.getHours() >= SHIFT_START_HOUR) {
-        // This is a late clock-in
+      // Simple lateness detection: compare against expected/check-in thresholds when available
+      // We will reuse any earlier penaltyInfo calculation where provided, otherwise fallback to 9:00 check
+      const isLateSimple = penaltyInfo ? penaltyInfo.isLate : ts.getUTCHours() >= 9;
+      if (isLateSimple) {
+        // count previous late instances in the last 30 days
         const allRecords = await this.attendanceRepo.find({
           employeeId: dto.employeeId,
         } as any);
 
-        let lateCount = 0;
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        // Count late clock-ins in the past 30 days
+        let lateCount = 0;
         (allRecords || []).forEach((record: any) => {
-          const recordDate = new Date(record.createdAt || record._id);
-          if (recordDate >= thirtyDaysAgo) {
-            const recordPunches = record.punches || [];
-            recordPunches.forEach((p: any) => {
-              if (p.type === PunchType.IN) {
-                const punchTime = new Date(p.time);
-                if (punchTime.getHours() >= SHIFT_START_HOUR) {
+          const recordPunches = record.punches || [];
+          recordPunches.forEach((p: any) => {
+            if (p.type === PunchType.IN) {
+              const punchTime = new Date(p.time);
+              if (punchTime >= thirtyDaysAgo) {
+                // naive: consider hour >=9 as late or rely on stored flag if present
+                if (p.__isLate || punchTime.getUTCHours() >= 9) {
                   lateCount++;
                 }
               }
-            });
-          }
+            }
+          });
         });
 
-        // Flag as repeated lateness if 3 or more late instances in 30 days
+        // Build a performance event payload
+        const lateMinutes = penaltyInfo ? penaltyInfo.minutesLate : Math.max(0, ts.getUTCHours() - 9) * 60;
+        performanceEvent = this.buildPerformanceEvent('REPEATED_LATENESS', dto.employeeId, ts, {
+          minutesLate: lateMinutes,
+          repeatedCount: lateCount,
+          deviceId: (dto as any).deviceId,
+          terminalId: (dto as any).terminalId,
+          location: (dto as any).location,
+          raw: { reason: '30-day-late-count' },
+        });
+
         if (lateCount >= 3) {
           isRepeatedLate = true;
-          // Log flagged employee for disciplinary tracking
-          console.info('REPEATED LATENESS FLAGGED FOR DISCIPLINARY TRACKING', {
-            employeeId: dto.employeeId,
-            lateCount,
-            lastLateClockIn: ts,
-            deviceInfo: punch.__deviceInfo,
-          });
+          // log as well for ops
+          console.info('REPEATED LATENESS FLAGGED FOR DISCIPLINARY TRACKING', performanceEvent);
         }
       }
     }
@@ -346,7 +402,11 @@ export class AttendanceService {
       __repeatedLate: isRepeatedLate,
     };
 
-    return this.attendanceRepo.updateById((existing as any)._id, update as any);
+    const updated = await this.attendanceRepo.updateById((existing as any)._id, update as any);
+    if (performanceEvent) {
+      (updated as any).performanceEvent = performanceEvent;
+    }
+    return updated;
   }
 
   async createHoliday(dto: any) {

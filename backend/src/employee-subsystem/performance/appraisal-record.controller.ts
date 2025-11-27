@@ -35,4 +35,16 @@ export class AppraisalRecordController {
     ): Promise<AppraisalRecord> {
         return this.appraisalRecordService.updateRecord(id, updateDto);
     }
+
+    @Get('employee/:employeeProfileId/final')
+    @ApiOperation({ summary: 'Get finalized appraisal records for an employee' })
+    @ApiResponse({
+        status: 200,
+        description: 'Array of finalized appraisal records for employee',
+    })
+    async getFinalizedForEmployee(
+        @Param('employeeProfileId') employeeProfileId: string,
+    ): Promise<any[]> {
+        return this.appraisalRecordService.getFinalizedRecordsForEmployee(employeeProfileId);
+    }
 }

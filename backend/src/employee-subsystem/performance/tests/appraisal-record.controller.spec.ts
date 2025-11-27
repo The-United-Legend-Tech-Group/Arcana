@@ -28,6 +28,7 @@ describe('AppraisalRecordController', () => {
     const mockAppraisalRecordRepository = {
         findOne: jest.fn(),
         update: jest.fn(),
+        find: jest.fn(),
     };
 
     const mockAppraisalTemplateRepository = {
@@ -70,6 +71,39 @@ describe('AppraisalRecordController', () => {
             await expect(controller.getRecord('invalidId')).rejects.toThrow(
                 NotFoundException,
             );
+        });
+    });
+
+    describe('getFinalizedForEmployee', () => {
+        it('should return finalized records for an employee', async () => {
+            const finalized = [
+                {
+                    _id: 'r1',
+                    templateId: 't1',
+                    ratings: [{ key: 'c1', ratingValue: 4 }],
+                    totalScore: 4,
+                    overallRatingLabel: 'Good',
+                    managerSummary: 'Well done',
+                    strengths: 'Teamwork',
+                    improvementAreas: 'Time management',
+                    hrPublishedAt: new Date(),
+                },
+            ];
+
+            mockAppraisalRecordRepository.find.mockResolvedValue(finalized);
+
+            const result = await controller.getFinalizedForEmployee('employee1');
+            expect(result).toEqual(finalized.map((r) => expect.objectContaining({ templateId: r.templateId })));
+            expect(mockAppraisalRecordRepository.find).toHaveBeenCalledWith({
+                employeeProfileId: 'employee1',
+                status: expect.any(String),
+            });
+        });
+
+        it('should return empty array when no finalized records', async () => {
+            mockAppraisalRecordRepository.find.mockResolvedValue([]);
+            const result = await controller.getFinalizedForEmployee('employee2');
+            expect(result).toEqual([]);
         });
     });
 

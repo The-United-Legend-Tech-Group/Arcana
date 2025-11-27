@@ -8,6 +8,7 @@ import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
+import { AdminUpdateEmployeeProfileDto } from './dto/admin-update-employee-profile.dto';
 import { AssignRolesDto } from './dto/assign-roles.dto';
 import { EmployeeService } from './employee.service';
 import { ProfileChangeStatus, SystemRole } from './enums/employee-profile.enums';
@@ -52,9 +53,9 @@ export class EmployeeController {
     //@ApiBearerAuth()
     @ApiOperation({ summary: 'Admin update employee profile' })
     @ApiParam({ name: 'id', description: 'Employee ID' })
-    @ApiBody({ type: UpdateEmployeeProfileDto })
+    @ApiBody({ type: AdminUpdateEmployeeProfileDto })
     @ApiResponse({ status: 200, description: 'Profile updated by admin' })
-    async adminUpdateProfile(@Param('id') id: string, @Body() updateEmployeeProfileDto: UpdateEmployeeProfileDto) {
+    async adminUpdateProfile(@Param('id') id: string, @Body() updateEmployeeProfileDto: AdminUpdateEmployeeProfileDto) {
         return this.employeeService.adminUpdateProfile(id, updateEmployeeProfileDto);
     }
     @Patch(':id/status')

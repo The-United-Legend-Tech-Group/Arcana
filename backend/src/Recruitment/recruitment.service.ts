@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -167,13 +166,3 @@ export class RecruitmentService {
     return updatedApplication;
   }
 }
-=======
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
-export class recruitmentService {
-  getHello(): string {
-    return 'Hello World!';
-  }
-}
->>>>>>> upstream/Recruitment-Subsystem-Integration

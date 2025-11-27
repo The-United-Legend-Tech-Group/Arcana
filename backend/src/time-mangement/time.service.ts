@@ -69,7 +69,7 @@ export class TimeService {
           startDate: start,
           endDate: end,
           status: dto.status,
-            scheduleRuleId: dto.scheduleRuleId,
+          scheduleRuleId: dto.scheduleRuleId,
         };
         const res = await this.shiftAssignmentRepo.create(payload);
         created.push(res);
@@ -84,7 +84,7 @@ export class TimeService {
         startDate: start,
         endDate: end,
         status: dto.status,
-          scheduleRuleId: dto.scheduleRuleId,
+        scheduleRuleId: dto.scheduleRuleId,
       };
       const res = await this.shiftAssignmentRepo.create(payload);
       created.push(res);
@@ -98,7 +98,7 @@ export class TimeService {
         startDate: start,
         endDate: end,
         status: dto.status,
-          scheduleRuleId: dto.scheduleRuleId,
+        scheduleRuleId: dto.scheduleRuleId,
       };
       const res = await this.shiftAssignmentRepo.create(payload);
       created.push(res);
@@ -156,14 +156,13 @@ export class TimeService {
     const payload: any = { name: dto.name, active: dto.active };
 
     // determine if any structured fields provided (including weekly/rest info)
-    const hasStructured =
-      !!(
-        dto.shiftTypes ||
-        dto.startDate ||
-        dto.endDate ||
-        (dto as any).weeklyRestDays ||
-        (dto as any).restDates
-      );
+    const hasStructured = !!(
+      dto.shiftTypes ||
+      dto.startDate ||
+      dto.endDate ||
+      (dto as any).weeklyRestDays ||
+      (dto as any).restDates
+    );
 
     if (dto.pattern && !hasStructured) {
       // If only a free-form pattern provided, use it verbatim
@@ -175,7 +174,8 @@ export class TimeService {
       if (dto.shiftTypes) rule.shiftTypes = dto.shiftTypes;
       if (dto.startDate) rule.startDate = dto.startDate;
       if (dto.endDate) rule.endDate = dto.endDate;
-      if ((dto as any).weeklyRestDays) rule.weeklyRestDays = (dto as any).weeklyRestDays;
+      if ((dto as any).weeklyRestDays)
+        rule.weeklyRestDays = (dto as any).weeklyRestDays;
       if ((dto as any).restDates) rule.restDates = (dto as any).restDates;
 
       // If there's any structured content, stringify it into pattern
@@ -204,7 +204,9 @@ export class TimeService {
     // 2) schedule rule-based weekly/rest dates
     if (!this.scheduleRuleRepo) return false;
 
-    const assignment = await this.shiftAssignmentRepo.findById(assignmentId as any);
+    const assignment = await this.shiftAssignmentRepo.findById(
+      assignmentId as any,
+    );
     if (!assignment) return false;
 
     const scheduleRuleId = (assignment as any).scheduleRuleId;
@@ -224,13 +226,18 @@ export class TimeService {
     }
 
     // check weeklyRestDays in parsed pattern or on dto-like fields
-    const weeklyRest: number[] | undefined = parsed?.weeklyRestDays || (rule as any).weeklyRestDays || parsed?.weeklyDays || (rule as any).weeklyDays;
+    const weeklyRest: number[] | undefined =
+      parsed?.weeklyRestDays ||
+      (rule as any).weeklyRestDays ||
+      parsed?.weeklyDays ||
+      (rule as any).weeklyDays;
     if (weeklyRest && Array.isArray(weeklyRest)) {
       if (weeklyRest.includes(d.getDay())) return true;
     }
 
     // check explicit restDates
-    const restDates: string[] | undefined = parsed?.restDates || (rule as any).restDates;
+    const restDates: string[] | undefined =
+      parsed?.restDates || (rule as any).restDates;
     if (restDates && Array.isArray(restDates)) {
       const ds = d.toISOString().slice(0, 10);
       if (restDates.includes(ds)) return true;

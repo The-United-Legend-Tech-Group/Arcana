@@ -34,7 +34,7 @@ export class TimeService {
       startDate: new Date(dto.startDate),
       endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       status: dto.status,
-      scheduleRuleId: (dto as any).scheduleRuleId,
+      scheduleRuleId: dto.scheduleRuleId,
     } as any;
 
     return this.shiftAssignmentRepo.create(payload);

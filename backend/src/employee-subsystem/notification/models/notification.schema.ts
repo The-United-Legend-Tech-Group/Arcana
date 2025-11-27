@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import { EmployeeProfile } from '../../employee/models/employee-profile.schema';
-
+import { SystemRole } from '../../employee/enums/employee-profile.enums';
 @Schema({
   timestamps: { createdAt: true, updatedAt: false },
   collection: 'notifications',
@@ -11,15 +11,17 @@ export class Notification {
   @Prop({
     type: [mongoose.Schema.Types.ObjectId],
     ref: EmployeeProfile.name,
-    required: true,
   })
-  recipientId: Types.ObjectId[];
+  recipientId?: Types.ObjectId[];
 
   @Prop({ required: true, enum: ['Alert', 'Info', 'Success', 'Warning'] }) //SUBJECT TO CHANGE
   type: string;
 
-  @Prop({ required: true, enum: ['UNICAST', 'MULTICAST'] })
+  @Prop({ required: true, enum: ['UNICAST', 'MULTICAST', 'BROADCAST'] })
   deliveryType: string;
+
+  @Prop({ type: String, enum: Object.values(SystemRole) })
+  deliverToRole?: SystemRole;
 
   @Prop({ required: true, trim: true })
   title: string;
@@ -35,9 +37,6 @@ export class Notification {
 
   @Prop({ default: false })
   isRead: boolean;
-
-  // @Prop({ type: [String], default: ['In-App'] })
-  // sentVia: string[]; // ['In-App', 'Email', 'SMS']
 
   @Prop()
   readAt: Date;

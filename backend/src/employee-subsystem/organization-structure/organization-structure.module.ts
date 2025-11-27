@@ -5,6 +5,9 @@ import { Position, PositionSchema } from './models/position.schema';
 import {StructureChangeRequest,StructureChangeRequestSchema,} from './models/structure-change-request.schema';
 import { PositionAssignment, PositionAssignmentSchema } from './models/position-assignment.schema';
 import { EmployeeProfile, EmployeeProfileSchema } from '../employee/models/employee-profile.schema';
+import { Notification, NotificationSchema } from '../notification/models/notification.schema';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationRepository } from '../notification/repository/notification.repository';
 import { OrganizationStructureController } from './organization-structure.controller';
 import { OrganizationStructureService } from './organization-structure.service';
 import { PositionRepository } from './repository/position.repository';
@@ -18,10 +21,11 @@ import { DepartmentRepository } from './repository/department.repository';
         { name: StructureChangeRequest.name, schema: StructureChangeRequestSchema },
         { name: PositionAssignment.name, schema: PositionAssignmentSchema },
         { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
+        { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
   controllers: [OrganizationStructureController],
-  providers: [OrganizationStructureService, PositionRepository, DepartmentRepository],
-  exports: [OrganizationStructureService, PositionRepository, DepartmentRepository],
+  providers: [OrganizationStructureService, PositionRepository, DepartmentRepository, NotificationService, NotificationRepository],
+  exports: [OrganizationStructureService, PositionRepository, DepartmentRepository, NotificationService, NotificationRepository],
 })
 export class OrganizationStructureModule { }

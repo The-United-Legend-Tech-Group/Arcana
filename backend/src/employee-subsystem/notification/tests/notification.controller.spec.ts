@@ -3,6 +3,7 @@ import { NotificationController } from '../notification.controller';
 import { NotificationService } from '../notification.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { ApiKeyGuard } from '../../guards/api-key.guard';
+import { AuthGuard } from '../../guards/authentication.guard';
 
 describe('NotificationController', () => {
     let controller: NotificationController;
@@ -28,6 +29,8 @@ describe('NotificationController', () => {
         })
             .overrideGuard(ApiKeyGuard)
             .useValue(mockApiKeyGuard)
+            .overrideGuard(AuthGuard)
+            .useValue({ canActivate: () => true })
             .compile();
 
         controller = module.get<NotificationController>(NotificationController);

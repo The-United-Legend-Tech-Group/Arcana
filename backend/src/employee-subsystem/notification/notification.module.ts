@@ -5,8 +5,13 @@ import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
 import { NotificationRepository } from './repository/notification.repository';
 
+import { AuthModule } from '../employee/auth.module';
+
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Notification.name, schema: NotificationSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Notification.name, schema: NotificationSchema }]),
+    AuthModule,
+  ],
   providers: [NotificationService, NotificationRepository],
   controllers: [NotificationController],
   exports: [MongooseModule],

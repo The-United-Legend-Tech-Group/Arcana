@@ -19,4 +19,8 @@ export class NotificationService {
     };
     return this.notificationRepository.create(payload);
   }
+
+  async findAllByEmployeeId(employeeId: string): Promise<Notification[]> {
+    return this.notificationRepository.find({ recipientId: new Types.ObjectId(employeeId) });
+  }
 }

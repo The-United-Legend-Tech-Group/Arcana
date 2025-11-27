@@ -1,6 +1,6 @@
 import { Body, Controller, Patch, Param, Post, UseGuards, Get, Query } from '@nestjs/common';
 import { ApiKeyGuard } from '../guards/api-key.guard';
-import { Roles, Role } from './decorators/roles.decorator';
+import { Roles } from './decorators/roles.decorator';
 import { authorizationGuard } from '../guards/authorization.guard';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
@@ -9,7 +9,7 @@ import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
 import { AssignRolesDto } from './dto/assign-roles.dto';
 import { EmployeeService } from './employee.service';
-import { ProfileChangeStatus } from './enums/employee-profile.enums';
+import { ProfileChangeStatus, SystemRole } from './enums/employee-profile.enums';
 
 
 @Controller('employee')
@@ -35,7 +35,7 @@ export class EmployeeController {
 
     @Patch(':id/profile/admin')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async adminUpdateProfile(@Param('id') id: string, @Body() updateEmployeeProfileDto: UpdateEmployeeProfileDto) {
         return this.employeeService.adminUpdateProfile(id, updateEmployeeProfileDto);
     }
@@ -55,21 +55,21 @@ export class EmployeeController {
 
     @Post(':id/roles')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async assignRoles(@Param('id') id: string, @Body() assignRolesDto: AssignRolesDto) {
         return this.employeeService.assignRoles(id, assignRolesDto);
     }
 
     @Get('team/summary')
     @UseGuards(authorizationGuard)
-    @Roles(Role.DEPARTMENT_HEAD)
+    @Roles(SystemRole.DEPARTMENT_HEAD)
     async getTeamSummary(@Query('managerId') managerId: string) {
         return this.employeeService.getTeamSummary(managerId);
     }
 
     @Get('team/profiles')
     @UseGuards(authorizationGuard)
-    @Roles(Role.DEPARTMENT_HEAD)
+    @Roles(SystemRole.DEPARTMENT_HEAD)
     async getTeamProfiles(@Query('managerId') managerId: string) {
         return this.employeeService.getTeamProfiles(managerId);
     }
@@ -82,28 +82,28 @@ export class EmployeeController {
     // HR Admin: review profile change requests
     @Get('profile-change-requests')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async listProfileChangeRequests(@Query('status') status?: ProfileChangeStatus) {
         return this.employeeService.listProfileChangeRequests(status as any);
     }
 
     @Get('profile-change-requests/:requestId')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async getProfileChangeRequest(@Param('requestId') requestId: string) {
         return this.employeeService.getProfileChangeRequest(requestId);
     }
 
     @Patch('profile-change-requests/:requestId/approve')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async approveProfileChangeRequest(@Param('requestId') requestId: string) {
         return this.employeeService.approveProfileChangeRequest(requestId);
     }
 
     @Patch('profile-change-requests/:requestId/reject')
     @UseGuards(authorizationGuard)
-    @Roles(Role.HR_ADMIN)
+    @Roles(SystemRole.HR_ADMIN)
     async rejectProfileChangeRequest(@Param('requestId') requestId: string, @Body() body: { reason?: string }) {
         return this.employeeService.rejectProfileChangeRequest(requestId, body?.reason);
     }

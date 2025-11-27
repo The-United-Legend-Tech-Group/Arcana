@@ -80,4 +80,69 @@ describe('TimeService - Holiday flows', () => {
     expect(mockHolidayRepo.find).toHaveBeenCalled();
     expect(results).toHaveLength(1);
   });
+
+  it('rejects holiday creation when contractStart permission not satisfied', async () => {
+    const dto = {
+      type: HolidayType.NATIONAL,
+      startDate: '2025-11-01',
+      name: 'EarlyHoliday',
+      contractStart: '2025-12-01', // contract starts after holiday -> should fail
+    } as any;
+
+    await expect(service.createHoliday(dto)).rejects.toThrow(
+      /contractStart permission date/,
+    );
+  });
+
+  it('rejects holiday creation when probationEnd permission not satisfied', async () => {
+    const dto = {
+      type: HolidayType.NATIONAL,
+      startDate: '2025-02-01',
+      name: 'ProbationHoliday',
+      probationEnd: '2025-03-01', // probation ends after holiday -> should fail
+    } as any;
+
+    await expect(service.createHoliday(dto)).rejects.toThrow(
+      /probationEnd permission date/,
+    );
+  });
+
+  it('rejects holiday creation when financialYearStart permission not satisfied', async () => {
+    const dto = {
+      type: HolidayType.NATIONAL,
+      startDate: '2025-04-01',
+      name: 'FinanceHoliday',
+      financialYearStart: '2025-05-01', // financial year starts after holiday -> should fail
+    } as any;
+
+    await expect(service.createHoliday(dto)).rejects.toThrow(
+      /financialYearStart permission date/,
+    );
+  });
+
+  it('rejects weekly expansion when a permission date prevents creation', async () => {
+    const dto = {
+      weeklyDays: [6],
+      weeklyFrom: '2025-11-01',
+      weeklyTo: '2025-11-10',
+      name: 'WeekendPartial',
+      contractStart: '2025-11-08', // some generated weekly dates will be before this -> should fail
+    } as any;
+
+    await expect(service.createHoliday(dto)).rejects.toThrow(
+      /contractStart permission date/,
+    );
+  });
+
+  it('defaults `active` to true when not provided', async () => {
+    const dto = {
+      type: HolidayType.NATIONAL,
+      startDate: '2025-12-31',
+      name: 'YearEnd',
+      // no `active` provided
+    } as any;
+
+    const res = await service.createHoliday(dto);
+    expect(res).toHaveProperty('active', true);
+  });
 });

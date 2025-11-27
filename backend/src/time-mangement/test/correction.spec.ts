@@ -6,16 +6,14 @@ jest.mock('../repository/attendance-correction.repository', () => ({
   AttendanceCorrectionRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock('../repository/correction-audit.repository', () => ({
-  CorrectionAuditRepository: jest.fn().mockImplementation(() => ({})),
-}));
+// CorrectionAuditRepository mock removed because audits are ephemeral (logged)
 
 import { AttendanceService } from '../attendance.service';
 
 describe('TimeService - Attendance Correction flows', () => {
   let mockAttendanceRepo: any;
   let mockCorrectionRepo: any;
-  let mockAuditRepo: any;
+  let consoleInfoSpy: jest.SpyInstance;
   let service: any;
   let attendanceService: any;
 
@@ -38,12 +36,11 @@ describe('TimeService - Attendance Correction flows', () => {
           Promise.resolve({ _id: id, ...update }),
         ),
     };
-    mockAuditRepo = { create: jest.fn() };
+    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
 
     attendanceService = new AttendanceService(
       mockAttendanceRepo,
       mockCorrectionRepo,
-      mockAuditRepo,
     );
     service = attendanceService;
   });
@@ -51,14 +48,14 @@ describe('TimeService - Attendance Correction flows', () => {
   it('submits a correction request and creates an audit entry', async () => {
     const dto = {
       employeeId: 'emp1',
-      attendanceRecordId: 'a1',
+      attendanceRecord: 'a1',
       punches: [],
       reason: 'missed',
     } as any;
     const res = await service.submitAttendanceCorrection(dto);
 
     expect(mockCorrectionRepo.create).toHaveBeenCalled();
-    expect(mockAuditRepo.create).toHaveBeenCalled();
+    expect(consoleInfoSpy).toHaveBeenCalled();
     expect(res).toHaveProperty('_id', 'c1');
   });
 
@@ -79,7 +76,7 @@ describe('TimeService - Attendance Correction flows', () => {
     expect(mockCorrectionRepo.updateById).toHaveBeenCalledWith('c2', {
       status: 'APPROVED',
     });
-    expect(mockAuditRepo.create).toHaveBeenCalled();
+    expect(consoleInfoSpy).toHaveBeenCalled();
     expect(res).toHaveProperty('updatedAttendance');
   });
 

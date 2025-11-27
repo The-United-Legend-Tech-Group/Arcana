@@ -35,7 +35,6 @@ describe('TimeService - Holiday flows', () => {
     attendanceService = new AttendanceService(
       undefined,
       undefined,
-      undefined,
       mockHolidayRepo,
     );
 

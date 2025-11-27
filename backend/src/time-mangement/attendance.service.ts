@@ -4,7 +4,7 @@ import { PunchType, PunchPolicy, HolidayType } from './models/enums/index';
 import { PunchDto } from './dto/punch.dto';
 import { CreateAttendanceCorrectionDto } from './dto/create-attendance-correction.dto';
 import { AttendanceCorrectionRepository } from './repository/attendance-correction.repository';
-import { CorrectionAuditRepository } from './repository/correction-audit.repository';
+// CorrectionAuditRepository removed — audits are now ephemeral (logged)
 import { HolidayRepository } from './repository/holiday.repository';
 
 @Injectable()
@@ -12,7 +12,6 @@ export class AttendanceService {
   constructor(
     private readonly attendanceRepo?: AttendanceRepository,
     private readonly attendanceCorrectionRepo?: AttendanceCorrectionRepository,
-    private readonly correctionAuditRepo?: CorrectionAuditRepository,
     private readonly holidayRepo?: HolidayRepository,
   ) {}
 
@@ -247,14 +246,17 @@ export class AttendanceService {
 
     const created = await this.attendanceCorrectionRepo.create(payload as any);
 
-    if (this.correctionAuditRepo) {
-      await this.correctionAuditRepo.create({
-        correctionRequestId: created._id,
-        performedBy: created.employeeId,
-        action: 'SUBMITTED',
-        details: { reason: dto.reason },
-      } as any);
-    }
+    // Ephemeral audit: log the submission instead of persisting
+    /* Auditing (ephemeral):
+       correctionRequestId, performedBy (employee), action, details
+       Persistence intentionally removed; log for debugging/ops instead. */
+    // eslint-disable-next-line no-console
+    console.info('Audit: attendance-correction SUBMITTED', {
+      correctionRequestId: created._id,
+      performedBy: created.employeeId,
+      action: 'SUBMITTED',
+      details: { reason: dto.reason },
+    });
 
     return created;
   }
@@ -299,14 +301,14 @@ export class AttendanceService {
       { status: 'APPROVED' } as any,
     );
 
-    if (this.correctionAuditRepo) {
-      await this.correctionAuditRepo.create({
-        correctionRequestId: correctionId,
-        performedBy: approverId,
-        action: 'APPROVED',
-        details: { appliedTo: attendanceId },
-      } as any);
-    }
+    // Ephemeral audit: log the approval instead of persisting
+    // eslint-disable-next-line no-console
+    console.info('Audit: attendance-correction APPROVED', {
+      correctionRequestId: correctionId,
+      performedBy: approverId,
+      action: 'APPROVED',
+      details: { appliedTo: attendanceId },
+    });
 
     return { updatedAttendance: updated, correction: updatedReq };
   }

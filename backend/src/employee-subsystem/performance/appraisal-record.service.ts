@@ -103,4 +103,27 @@ export class AppraisalRecordService {
 
         return updatedRecord;
     }
+
+    async getFinalizedRecordsForEmployee(employeeProfileId: string): Promise<Partial<AppraisalRecordDocument>[]> {
+        // Find records that have been published by HR
+        const records = await this.appraisalRecordRepository.find({
+            employeeProfileId,
+            status: AppraisalRecordStatus.HR_PUBLISHED,
+        });
+
+        // Map to only return fields relevant for employee view
+        return records.map((r) => ({
+            _id: (r as any)._id,
+            templateId: r.templateId,
+            cycleId: r.cycleId,
+            ratings: r.ratings,
+            totalScore: r.totalScore,
+            overallRatingLabel: r.overallRatingLabel,
+            managerSummary: r.managerSummary,
+            strengths: r.strengths,
+            improvementAreas: r.improvementAreas,
+            hrPublishedAt: r.hrPublishedAt,
+            employeeViewedAt: r.employeeViewedAt,
+        }));
+    }
 }

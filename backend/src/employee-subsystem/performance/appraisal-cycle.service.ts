@@ -6,6 +6,7 @@ import { AppraisalCycle } from './models/appraisal-cycle.schema';
 import { NotificationService } from '../notification/notification.service';
 import { EmployeeProfileRepository } from '../employee/repository/employee-profile.repository';
 import { EmployeeStatus, SystemRole } from '../employee/enums/employee-profile.enums';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class AppraisalCycleService {
@@ -26,7 +27,7 @@ export class AppraisalCycleService {
 
         const query: any = { status: EmployeeStatus.ACTIVE };
         if (uniqueDepartmentIds.length > 0) {
-            query.primaryDepartmentId = { $in: uniqueDepartmentIds };
+            query.primaryDepartmentId = { $in: uniqueDepartmentIds.map(id => new Types.ObjectId(id)) };
         }
 
         const employees = await this.employeeProfileRepository.find(query);

@@ -8,6 +8,7 @@ import { NotFoundException } from '@nestjs/common';
 import { NotificationService } from '../../notification/notification.service';
 import { EmployeeProfileRepository } from '../../employee/repository/employee-profile.repository';
 import { EmployeeStatus, SystemRole } from '../../employee/enums/employee-profile.enums';
+import { Types } from 'mongoose';
 
 describe('AppraisalCycleService', () => {
     let service: AppraisalCycleService;
@@ -91,6 +92,12 @@ describe('AppraisalCycleService', () => {
         });
 
         it('should create an appraisal cycle and notify employees in specific departments', async () => {
+            const validDeptId1 = '507f1f77bcf86cd799439011';
+            const validDeptId2 = '507f1f77bcf86cd799439012';
+            const validEmpId = '507f1f77bcf86cd799439013';
+            const validCycleId = '507f1f77bcf86cd799439014';
+            const validTemplateId = '507f1f77bcf86cd799439015';
+
             const dto: CreateAppraisalCycleDto = {
                 name: 'Test Cycle',
                 cycleType: AppraisalTemplateType.ANNUAL,
@@ -98,13 +105,13 @@ describe('AppraisalCycleService', () => {
                 endDate: new Date(),
                 templateAssignments: [
                     {
-                        templateId: 'tempId',
-                        departmentIds: ['deptId1', 'deptId2']
+                        templateId: validTemplateId,
+                        departmentIds: [validDeptId1, validDeptId2]
                     }
                 ]
             };
-            mockRepository.create.mockResolvedValue({ ...dto, _id: 'cycleId' });
-            mockEmployeeProfileRepository.find.mockResolvedValue([{ _id: 'empId' }]);
+            mockRepository.create.mockResolvedValue({ ...dto, _id: validCycleId });
+            mockEmployeeProfileRepository.find.mockResolvedValue([{ _id: validEmpId }]);
             mockNotificationService.create.mockResolvedValue({});
 
             await service.create(dto);
@@ -112,11 +119,11 @@ describe('AppraisalCycleService', () => {
             expect(mockRepository.create).toHaveBeenCalledWith(dto);
             expect(mockEmployeeProfileRepository.find).toHaveBeenCalledWith({
                 status: EmployeeStatus.ACTIVE,
-                primaryDepartmentId: { $in: ['deptId1', 'deptId2'] }
+                primaryDepartmentId: { $in: [new Types.ObjectId(validDeptId1), new Types.ObjectId(validDeptId2)] }
             });
             expect(mockNotificationService.create).toHaveBeenCalledWith(expect.objectContaining({
-                recipientId: ['empId'],
-                relatedEntityId: 'cycleId',
+                recipientId: [validEmpId],
+                relatedEntityId: validCycleId,
                 title: 'New Appraisal Cycle Started',
             }));
         });

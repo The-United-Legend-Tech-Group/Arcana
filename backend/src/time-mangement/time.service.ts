@@ -190,26 +190,46 @@ export class TimeService {
   // Holiday APIs
   async createHoliday(dto: CreateHolidayDto) {
     if (!this.holidayRepo) throw new Error('HolidayRepository not available');
+    // Helper: parse optional permission dates
+    const permContractStart = dto.contractStart ? new Date(dto.contractStart) : undefined;
+    const permProbationEnd = dto.probationEnd ? new Date(dto.probationEnd) : undefined;
+    const permFinancialYearStart = dto.financialYearStart ? new Date(dto.financialYearStart) : undefined;
+
+    const validatePermissions = (dateToCheck: Date) => {
+      if (permContractStart && dateToCheck < permContractStart) {
+        throw new Error('contractStart permission date not satisfied');
+      }
+      if (permProbationEnd && dateToCheck < permProbationEnd) {
+        throw new Error('probationEnd permission date not satisfied');
+      }
+      if (permFinancialYearStart && dateToCheck < permFinancialYearStart) {
+        throw new Error('financialYearStart permission date not satisfied');
+      }
+    };
 
     // If weeklyDays provided, expand into concrete holiday dates between weeklyFrom..weeklyTo
     if (dto.weeklyDays && dto.weeklyDays.length) {
       const from = dto.weeklyFrom
         ? new Date(dto.weeklyFrom)
-        : new Date(dto.startDate);
+        : dto.startDate
+        ? new Date(dto.startDate)
+        : new Date();
       const to = dto.weeklyTo
         ? new Date(dto.weeklyTo)
         : dto.endDate
-          ? new Date(dto.endDate)
-          : new Date(from.getTime() + 365 * 24 * 3600 * 1000);
+        ? new Date(dto.endDate)
+        : new Date(from.getTime() + 365 * 24 * 3600 * 1000);
 
       const created: any[] = [];
       // iterate days from 'from' to 'to'
       for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
         const weekday = d.getDay();
         if (dto.weeklyDays.includes(weekday)) {
+          const candidate = new Date(d);
+          validatePermissions(candidate);
           const payload: any = {
             type: HolidayType.WEEKLY_REST,
-            startDate: new Date(d),
+            startDate: candidate,
             endDate: undefined,
             name: dto.name,
             active: dto.active !== undefined ? dto.active : true,
@@ -222,10 +242,17 @@ export class TimeService {
     }
 
     // Otherwise create single/range holiday
+    const start = new Date(dto.startDate);
+    const end = dto.endDate ? new Date(dto.endDate) : undefined;
+
+    // Validate permission constraints against start (and end if provided)
+    validatePermissions(start);
+    if (end) validatePermissions(end);
+
     const payload: any = {
       type: dto.type,
-      startDate: new Date(dto.startDate),
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+      startDate: start,
+      endDate: end,
       name: dto.name,
       active: dto.active !== undefined ? dto.active : true,
     };

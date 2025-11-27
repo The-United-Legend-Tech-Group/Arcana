@@ -80,4 +80,17 @@ describe('TimeService - Holiday flows', () => {
     expect(mockHolidayRepo.find).toHaveBeenCalled();
     expect(results).toHaveLength(1);
   });
+
+  it('rejects holiday creation when contractStart permission not satisfied', async () => {
+    const dto = {
+      type: HolidayType.NATIONAL,
+      startDate: '2025-11-01',
+      name: 'EarlyHoliday',
+      contractStart: '2025-12-01', // contract starts after holiday -> should fail
+    } as any;
+
+    await expect(service.createHoliday(dto)).rejects.toThrow(
+      /contractStart permission date/,
+    );
+  });
 });

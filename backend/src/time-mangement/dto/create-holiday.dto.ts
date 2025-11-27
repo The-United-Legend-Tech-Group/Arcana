@@ -52,4 +52,21 @@ export class CreateHolidayDto {
   @IsOptional()
   @IsString()
   weeklyTo?: string;
+
+  // Optional permission constraints (dates). When provided, holiday dates must
+  // satisfy these constraints — otherwise creation will be rejected.
+  @ApiProperty({ example: '2025-01-01', required: false })
+  @IsOptional()
+  @IsString()
+  contractStart?: string;
+
+  @ApiProperty({ example: '2025-03-01', required: false })
+  @IsOptional()
+  @IsString()
+  probationEnd?: string;
+
+  @ApiProperty({ example: '2025-04-01', required: false })
+  @IsOptional()
+  @IsString()
+  financialYearStart?: string;
 }

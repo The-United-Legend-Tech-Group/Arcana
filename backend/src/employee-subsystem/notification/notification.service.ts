@@ -19,4 +19,13 @@ export class NotificationService {
     };
     return this.notificationRepository.create(payload);
   }
+
+  async findByRecipientId(recipientId: string) {
+    return this.notificationRepository.find({
+      $or: [
+        { recipientId: recipientId },
+        { deliveryType: 'BROADCAST' }
+      ]
+    });
+  }
 }

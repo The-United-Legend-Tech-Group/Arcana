@@ -12,27 +12,27 @@ import { ExecutionModule } from './payroll/execution/execution.module';
 import { RecruitmentModule } from './Recruitment/recruitment.module';
 
 @Module({
-  imports: [
-    // Load .env into process.env and make ConfigService global
-    ConfigModule.forRoot({ isGlobal: true }),
-    // Central database connection and shared schemas
-    DatabaseModule,
-    // Time management subsystem module
-    TimeMangementModule,
-    // Leaves subsystem
-    LeavesModule,
-    // Employee management subsystem
-    EmployeeSubsystemModule,
-    // Configuration setup subsystem
-    ConfigSetupModule,
-    // Tracking subsystem
-    TrackingModule,
-    // Execution subsystem
-    ExecutionModule,
-    // Recruitment subsystem
-    RecruitmentModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        // Load .env into process.env and make ConfigService global
+        ConfigModule.forRoot({ isGlobal: true }),
+        // Central database connection and shared schemas
+        DatabaseModule,
+        // Time management subsystem module
+        TimeMangementModule,
+        // Leaves subsystem
+        LeavesModule,
+        // Employee management subsystem
+        EmployeeSubsystemModule,
+        // Configuration setup subsystem
+        ConfigSetupModule,
+        // Tracking subsystem
+        TrackingModule,
+        // Execution subsystem
+        ExecutionModule,
+        // Recruitment subsystem
+        RecruitmentModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

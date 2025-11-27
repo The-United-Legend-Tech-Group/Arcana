@@ -30,4 +30,4 @@ import { TimeService } from './time.service';
   providers: [TimeService],
   exports: [MongooseModule, TimeService],
 })
-export class TimeMangementModule {}
+export class TimeMangementModule { }

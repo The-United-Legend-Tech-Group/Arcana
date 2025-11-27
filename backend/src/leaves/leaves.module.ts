@@ -42,4 +42,4 @@ import { LeavesService } from './leaves.service';
   providers: [LeavesService],
   exports: [MongooseModule],
 })
-export class LeavesModule {}
+export class LeavesModule { }

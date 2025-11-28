@@ -4,13 +4,11 @@ import { AuthService } from './auth.service';
 import { EmployeeModule } from './employee.module';
 import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
-import { AuthGuard } from './guards/authentication.guard';
-import { authorizationGuard } from './guards/authorization.guard';
 dotenv.config();
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, authorizationGuard],
+  providers: [AuthService],
   imports: [
     EmployeeModule,
     JwtModule.register({
@@ -18,5 +16,6 @@ dotenv.config();
       signOptions: { expiresIn: '60m' }, // default for now
     }),
   ],
+  exports: [JwtModule],
 })
-export class AuthModule {}
+export class AuthModule { }

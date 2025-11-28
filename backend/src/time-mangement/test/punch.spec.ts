@@ -14,13 +14,15 @@ import { PunchType, PunchPolicy } from '../models/enums/index';
 import { AttendanceService } from '../attendance.service';
 
 describe('AttendanceService - Punch flows', () => {
-  // shift repo mocks not required for these unit tests
+  let mockShiftRepo: any;
+  let mockShiftAssignmentRepo: any;
   let mockAttendanceRepo: any;
   let attendanceService: any;
   let service: any;
 
   beforeEach(() => {
-    // shift repo mocks not required for these unit tests
+    mockShiftRepo = {};
+    mockShiftAssignmentRepo = {};
 
     mockAttendanceRepo = {
       findForDay: jest.fn(),

@@ -7,9 +7,7 @@ export class CreateAttendanceCorrectionDto {
   @IsNotEmpty()
   employeeId: string;
 
-  @ApiProperty({
-    description: 'AttendanceRecord to correct (ObjectId as string)',
-  })
+  @ApiProperty({ description: 'AttendanceRecord to correct (ObjectId as string)' })
   @IsNotEmpty()
   attendanceRecord: string;
 

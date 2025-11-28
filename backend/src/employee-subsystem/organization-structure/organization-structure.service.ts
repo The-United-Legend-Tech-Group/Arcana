@@ -6,7 +6,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {StructureChangeRequest,StructureChangeRequestDocument,} from './models/structure-change-request.schema';
 import { StructureApproval, StructureApprovalDocument } from './models/structure-approval.schema';
-import { StructureRequestStatus, ApprovalDecision } from './enums/organization-structure.enums';
+import { StructureChangeLog, StructureChangeLogDocument } from './models/structure-change-log.schema';
+import { StructureRequestStatus, ApprovalDecision, ChangeLogAction } from './enums/organization-structure.enums';
 import { EmployeeProfile, EmployeeProfileDocument } from '../employee/models/employee-profile.schema';
 import { PositionAssignment, PositionAssignmentDocument } from './models/position-assignment.schema';
 import { NotificationService } from '../notification/notification.service';
@@ -21,6 +22,8 @@ export class OrganizationStructureService {
         private readonly changeRequestModel: Model<StructureChangeRequestDocument>,
         @InjectModel(StructureApproval.name)
         private readonly structureApprovalModel: Model<StructureApprovalDocument>,
+        @InjectModel(StructureChangeLog.name)
+        private readonly changeLogModel: Model<StructureChangeLogDocument>,
         @InjectModel(EmployeeProfile.name)
         private readonly employeeModel: Model<EmployeeProfileDocument>,
         @InjectModel(PositionAssignment.name)
@@ -46,6 +49,9 @@ export class OrganizationStructureService {
     }
 
     async approveChangeRequest(id: string, comment?: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
+        const existing = await this.changeRequestModel.findById(id).lean().exec();
+        if (!existing) throw new NotFoundException('Change request not found');
+
         const updated = await this.changeRequestModel
             .findByIdAndUpdate(
                 id,
@@ -74,6 +80,23 @@ export class OrganizationStructureService {
             console.error('[OrganizationStructure] approveChangeRequest - failed to create structure approval record:', err);
             // don't fail approval if structure approval record creation fails
         }
+
+        // Create structure change log
+        try {
+            const log = new this.changeLogModel({
+                action: ChangeLogAction.UPDATED,
+                entityType: 'StructureChangeRequest',
+                entityId: updated._id,
+                performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
+                summary: 'Change request approved',
+                beforeSnapshot: existing,
+                afterSnapshot: updated.toObject ? updated.toObject() : updated,
+            });
+            const savedLog = await log.save();
+            console.log('[OrganizationStructure] approveChangeRequest - created change log:', savedLog._id.toString());
+        } catch (err) {
+            console.error('[OrganizationStructure] approveChangeRequest - failed to create change log:', err);
+        }
         
         // notify stakeholders that the change request was approved
         try {
@@ -85,7 +108,10 @@ export class OrganizationStructureService {
         return updated;
     }
 
-    async rejectChangeRequest(id: string, comment?: string): Promise<StructureChangeRequest> {
+    async rejectChangeRequest(id: string, comment?: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
+        const existing = await this.changeRequestModel.findById(id).lean().exec();
+        if (!existing) throw new NotFoundException('Change request not found');
+
         const updated = await this.changeRequestModel
             .findByIdAndUpdate(
                 id,
@@ -94,6 +120,23 @@ export class OrganizationStructureService {
             )
             .exec();
         if (!updated) throw new NotFoundException('Change request not found');
+
+        // Create structure change log for rejection
+        try {
+            const log = new this.changeLogModel({
+                action: ChangeLogAction.UPDATED,
+                entityType: 'StructureChangeRequest',
+                entityId: updated._id,
+                performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
+                summary: 'Change request rejected',
+                beforeSnapshot: existing,
+                afterSnapshot: updated.toObject ? updated.toObject() : updated,
+            });
+            const savedLog = await log.save();
+            console.log('[OrganizationStructure] rejectChangeRequest - created change log:', savedLog._id.toString());
+        } catch (err) {
+            console.error('[OrganizationStructure] rejectChangeRequest - failed to create change log:', err);
+        }
 
         // notify stakeholders that the change request was rejected
         try {

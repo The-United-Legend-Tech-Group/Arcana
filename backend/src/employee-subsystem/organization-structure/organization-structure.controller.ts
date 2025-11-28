@@ -75,6 +75,7 @@ export class OrganizationStructureController {
     //@Roles(Role.SYSTEM_ADMIN)
     //@ApiSecurity('api-key')
     @ApiOperation({ summary: 'Approve a structure change request (System Admin)' })
+    @ApiResponse({ status: 200, description: 'Approved change request', type: StructureChangeRequest })
     async approveRequest(@Param('id') id: string, @Body() body: { comment?: string }): Promise<StructureChangeRequest> {
         return this.organizationStructureService.approveChangeRequest(id, body?.comment);
     }

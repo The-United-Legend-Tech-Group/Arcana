@@ -4,6 +4,7 @@ import { Department, DepartmentSchema } from './models/department.schema';
 import { Position, PositionSchema } from './models/position.schema';
 import {StructureChangeRequest,StructureChangeRequestSchema,} from './models/structure-change-request.schema';
 import { StructureApproval, StructureApprovalSchema } from './models/structure-approval.schema';
+import { StructureChangeLog, StructureChangeLogSchema } from './models/structure-change-log.schema';
 import { PositionAssignment, PositionAssignmentSchema } from './models/position-assignment.schema';
 import { EmployeeProfile, EmployeeProfileSchema } from '../employee/models/employee-profile.schema';
 import { Notification, NotificationSchema } from '../notification/models/notification.schema';
@@ -21,6 +22,7 @@ import { DepartmentRepository } from './repository/department.repository';
       { name: Position.name, schema: PositionSchema },
         { name: StructureChangeRequest.name, schema: StructureChangeRequestSchema },
         { name: StructureApproval.name, schema: StructureApprovalSchema },
+        { name: StructureChangeLog.name, schema: StructureChangeLogSchema },
         { name: PositionAssignment.name, schema: PositionAssignmentSchema },
         { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
         { name: Notification.name, schema: NotificationSchema },

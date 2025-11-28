@@ -1,11 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ExecutionService } from './execution.service';
 import { CreateExecutionDto } from './dto/create-execution.dto';
 import { UpdateExecutionDto } from './dto/update-execution.dto';
 
 @Controller('execution')
 export class ExecutionController {
-  constructor(private readonly executionService: ExecutionService) {}
+  constructor(private readonly executionService: ExecutionService) { }
 
   @Post()
   create(@Body() createExecutionDto: CreateExecutionDto) {
@@ -23,7 +31,10 @@ export class ExecutionController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExecutionDto: UpdateExecutionDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateExecutionDto: UpdateExecutionDto,
+  ) {
     return this.executionService.update(+id, updateExecutionDto);
   }
 

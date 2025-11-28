@@ -3,92 +3,106 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BaseRepository } from '../../../common/repository/base.repository';
 import {
-    EmployeeProfile,
-    EmployeeProfileDocument,
+  EmployeeProfile,
+  EmployeeProfileDocument,
 } from '../models/employee-profile.schema';
 
 @Injectable()
 export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDocument> {
-    constructor(
-        @InjectModel(EmployeeProfile.name) model: Model<EmployeeProfileDocument>,
-    ) {
-        super(model);
+  constructor(
+    @InjectModel(EmployeeProfile.name) model: Model<EmployeeProfileDocument>,
+  ) {
+    super(model);
+  }
+
+  async findByEmail(email: string): Promise<EmployeeProfileDocument | null> {
+    return this.model
+      .findOne({ personalEmail: email })
+      .select('+password')
+      .exec();
+  }
+
+  async getTeamSummaryByManagerId(managerId: string) {
+    const manager = await this.model
+      .findById(managerId)
+      .select('primaryPositionId')
+      .lean()
+      .exec();
+    if (!manager || !manager.primaryPositionId) {
+      return [];
     }
 
-    async findByEmail(email: string): Promise<EmployeeProfileDocument | null> {
-        return this.model.findOne({ personalEmail: email }).select('+password').exec();
-    }
+    const positionId = manager.primaryPositionId;
 
-    async getTeamSummaryByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) {
-            return [];
-        }
+    const pipeline = [
+      { $match: { supervisorPositionId: positionId } },
+      {
+        $group: {
+          _id: {
+            positionId: '$primaryPositionId',
+            departmentId: '$primaryDepartmentId',
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: 'positions',
+          localField: '_id.positionId',
+          foreignField: '_id',
+          as: 'position',
+        },
+      },
+      {
+        $lookup: {
+          from: 'departments',
+          localField: '_id.departmentId',
+          foreignField: '_id',
+          as: 'department',
+        },
+      },
+      { $unwind: { path: '$position', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          positionId: '$_id.positionId',
+          positionTitle: '$position.title',
+          departmentId: '$_id.departmentId',
+          departmentName: '$department.name',
+          count: 1,
+        },
+      },
+    ];
 
-        const positionId = manager.primaryPositionId;
+    const results = await this.model.aggregate(pipeline).exec();
+    return results;
+  }
 
-        const pipeline = [
-            { $match: { supervisorPositionId: positionId } },
-            {
-                $group: {
-                    _id: { positionId: '$primaryPositionId', departmentId: '$primaryDepartmentId' },
-                    count: { $sum: 1 },
-                },
-            },
-            {
-                $lookup: {
-                    from: 'positions',
-                    localField: '_id.positionId',
-                    foreignField: '_id',
-                    as: 'position',
-                },
-            },
-            {
-                $lookup: {
-                    from: 'departments',
-                    localField: '_id.departmentId',
-                    foreignField: '_id',
-                    as: 'department',
-                },
-            },
-            { $unwind: { path: '$position', preserveNullAndEmptyArrays: true } },
-            { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
-            {
-                $project: {
-                    positionId: '$_id.positionId',
-                    positionTitle: '$position.title',
-                    departmentId: '$_id.departmentId',
-                    departmentName: '$department.name',
-                    count: 1,
-                },
-            },
-        ];
+  async getTeamMembersByManagerId(managerId: string) {
+    const manager = await this.model
+      .findById(managerId)
+      .select('primaryPositionId')
+      .lean()
+      .exec();
+    if (!manager || !manager.primaryPositionId) return [];
 
-        const results = await this.model.aggregate(pipeline).exec();
-        return results;
-    }
+    const positionId = manager.primaryPositionId;
 
-    async getTeamMembersByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) return [];
+    // Exclude sensitive personal fields
+    const projection: any = {
+      nationalId: 0,
+      password: 0,
+      personalEmail: 0,
+      mobilePhone: 0,
+      homePhone: 0,
+      address: 0,
+      accessProfileId: 0,
+    };
 
-        const positionId = manager.primaryPositionId;
-
-        // Exclude sensitive personal fields
-        const projection: any = {
-            nationalId: 0,
-            password: 0,
-            personalEmail: 0,
-            mobilePhone: 0,
-            homePhone: 0,
-            address: 0,
-            accessProfileId: 0,
-        };
-
-        return this.model
-            .find({ supervisorPositionId: positionId })
-            .select(projection)
-            .lean()
-            .exec();
-    }
+    return this.model
+      .find({ supervisorPositionId: positionId })
+      .select(projection)
+      .lean()
+      .exec();
+  }
 }

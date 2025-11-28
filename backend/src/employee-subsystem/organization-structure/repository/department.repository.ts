@@ -7,7 +7,7 @@ import { BaseRepository } from '../../../common/repository/base.repository';
 @Injectable()
 export class DepartmentRepository extends BaseRepository<DepartmentDocument> {
   constructor(
-    @InjectModel(Department.name) private departmentModel: Model<DepartmentDocument>,
+    @InjectModel(Department.name) departmentModel: Model<DepartmentDocument>,
   ) {
     super(departmentModel);
   }

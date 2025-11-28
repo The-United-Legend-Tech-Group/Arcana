@@ -79,7 +79,7 @@ export class AttendanceService {
         } else if (mode === 'floor') {
           targetMins = mins - remainder;
         }
-        const targetMs = targetMins * 60000; //@Youssef-Ashraf2099 validate this
+        const targetMs = targetMins * 60000;
         return new Date(targetMs);
       };
 
@@ -88,105 +88,6 @@ export class AttendanceService {
 
     const startOfDay = new Date(ts);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(ts);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Enforce shift boundaries / pre-approval rules when possible
-    try {
-      if (this.shiftAssignmentRepo && this.shiftRepo) {
-        const assignments: any =
-          await this.shiftAssignmentRepo.findByEmployeeAndTerm(
-            dto.employeeId,
-            startOfDay,
-            endOfDay,
-          );
-
-        const assignment = Array.isArray(assignments)
-          ? assignments[0]
-          : assignments;
-        if (assignment && (assignment as any).shiftId) {
-          const shift: any = await this.shiftRepo.findById(
-            (assignment as any).shiftId,
-          );
-          if (shift) {
-            const [shH, shM] = (shift.startTime || '00:00')
-              .split(':')
-              .map((v: any) => Number(v));
-            const [enH, enM] = (shift.endTime || '00:00')
-              .split(':')
-              .map((v: any) => Number(v));
-            // Build shift start/end using UTC components to avoid timezone skew when comparing
-            const year = ts.getUTCFullYear();
-            const month = ts.getUTCMonth();
-            const day = ts.getUTCDate();
-            const shiftStart = new Date(
-              Date.UTC(year, month, day, shH, shM, 0, 0),
-            );
-            let shiftEnd = new Date(Date.UTC(year, month, day, enH, enM, 0, 0));
-            // handle overnight shifts (end <= start => next day)
-            if (shiftEnd.getTime() <= shiftStart.getTime()) {
-              shiftEnd = new Date(shiftEnd.getTime() + 24 * 3600 * 1000);
-            }
-
-            const graceIn = shift.graceInMinutes || 0;
-            const graceOut = shift.graceOutMinutes || 0;
-
-            // check if this day is a holiday/rest day
-            let isHoliday = false;
-            if (this.holidayRepo) {
-              const holidays = await this.holidayRepo.find({
-                startDate: { $lte: ts } as any,
-                $or: [{ endDate: null }, { endDate: { $gte: ts } }],
-                active: true,
-              } as any);
-              isHoliday = Array.isArray(holidays)
-                ? holidays.length > 0
-                : !!holidays;
-            }
-
-            // Enforce IN rules
-            if (dto.type === PunchType.IN) {
-              // Late beyond grace
-              if (ts.getTime() > shiftStart.getTime() + graceIn * 60000) {
-                throw new Error('Late punch beyond allowed grace period');
-              }
-              // Early before shift start: require pre-approval if shift demands it
-              if (
-                ts.getTime() < shiftStart.getTime() &&
-                shift.requiresApprovalForOvertime
-              ) {
-                throw new Error('Early clock-in requires pre-approval');
-              }
-              // Punch on holiday/rest day may require approval
-              if (isHoliday && shift.requiresApprovalForOvertime) {
-                throw new Error('Punch on holiday requires pre-approval');
-              }
-            }
-
-            // Enforce OUT rules
-            if (dto.type === PunchType.OUT) {
-              // Leaving early
-              if (
-                ts.getTime() < shiftEnd.getTime() &&
-                shift.requiresApprovalForOvertime
-              ) {
-                throw new Error('Early leaving requires pre-approval');
-              }
-              // Overtime beyond grace out
-              if (
-                ts.getTime() > shiftEnd.getTime() + graceOut * 60000 &&
-                shift.requiresApprovalForOvertime
-              ) {
-                throw new Error('Overtime requires pre-approval');
-              }
-            }
-          }
-        }
-      }
-    } catch (err) {
-      // Rethrow to prevent creating/updating attendance when rule violation occurs
-      throw err;
-    }
 
     const existing = await this.attendanceRepo.findForDay(
       dto.employeeId,
@@ -195,6 +96,8 @@ export class AttendanceService {
 
     // Calculate penalty if check-in and expected time provided
     let penaltyInfo: PenaltyInfo | null = null;
+    let penaltyDeduction = 0;
+
     if (
       dto.type === PunchType.IN &&
       dto.expectedCheckInTime &&
@@ -208,6 +111,7 @@ export class AttendanceService {
         dto.latenessThresholdMinutes || 0,
         dto.automaticDeductionMinutes || 0,
       );
+      penaltyDeduction = penaltyInfo.deductedMinutes;
     }
 
     const punch = { type: dto.type, time: ts } as any;
@@ -216,7 +120,7 @@ export class AttendanceService {
       const payload: any = {
         employeeId: dto.employeeId,
         punches: [punch],
-        totalWorkMinutes: penaltyInfo ? -penaltyInfo.deductedMinutes : 0,
+        totalWorkMinutes: penaltyDeduction > 0 ? -penaltyDeduction : 0,
         hasMissedPunch: false,
         exceptionIds: [],
         finalisedForPayroll: false,
@@ -235,8 +139,6 @@ export class AttendanceService {
     let totalMinutes = 0;
     let missed = false;
     let finalPunches: any[] = punches;
-    let isRepeatedLate = false;
-    let totalDeductions = penaltyInfo ? penaltyInfo.deductedMinutes : 0; // review in vs code
 
     if (policy === PunchPolicy.MULTIPLE) {
       for (let i = 0; i < punches.length; ) {
@@ -292,58 +194,19 @@ export class AttendanceService {
       missed = true;
     }
 
-    // Detect repeated lateness: check if clock-in is after shift start (9:00 AM)
-    if (dto.type === PunchType.IN) {
-      const clockInTime = new Date(ts);
-      const SHIFT_START_HOUR = 9;
+    // Get existing penalty from previous punch on same day
+    const existingPenalty = (existing as any).totalWorkMinutes < 0 
+      ? Math.abs((existing as any).totalWorkMinutes) 
+      : 0;
 
-      if (clockInTime.getHours() >= SHIFT_START_HOUR) {
-        // This is a late clock-in
-        const allRecords = await this.attendanceRepo.find({
-          employeeId: dto.employeeId,
-        } as any);
-
-        let lateCount = 0;
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        // Count late clock-ins in the past 30 days
-        (allRecords || []).forEach((record: any) => {
-          const recordDate = new Date(record.createdAt || record._id);
-          if (recordDate >= thirtyDaysAgo) {
-            const recordPunches = record.punches || [];
-            recordPunches.forEach((p: any) => {
-              if (p.type === PunchType.IN) {
-                const punchTime = new Date(p.time);
-                if (punchTime.getHours() >= SHIFT_START_HOUR) {
-                  lateCount++;
-                }
-              }
-            });
-          }
-        });
-
-        // Flag as repeated lateness if 3 or more late instances in 30 days
-        if (lateCount >= 3) {
-          isRepeatedLate = true;
-          // Log flagged employee for disciplinary tracking
-          console.info('REPEATED LATENESS FLAGGED FOR DISCIPLINARY TRACKING', {
-            employeeId: dto.employeeId,
-            lateCount,
-            lastLateClockIn: ts,
-            deviceInfo: punch.__deviceInfo,
-          });
-        }
-      }
-    }
     // Apply deductions to total work minutes
+    const totalDeductions = penaltyDeduction > 0 ? penaltyDeduction : existingPenalty;
     const finalTotalMinutes = Math.max(0, totalMinutes - totalDeductions);
 
     const update: any = {
       punches: finalPunches,
       totalWorkMinutes: finalTotalMinutes,
       hasMissedPunch: missed,
-      __repeatedLate: isRepeatedLate,
     };
 
     return this.attendanceRepo.updateById((existing as any)._id, update as any);

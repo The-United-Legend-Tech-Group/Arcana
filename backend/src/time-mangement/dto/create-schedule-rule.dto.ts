@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsArray,
   ArrayNotEmpty,
+  Matches,
 } from 'class-validator';
 
 export class CreateScheduleRuleDto {

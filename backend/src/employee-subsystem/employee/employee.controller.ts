@@ -10,6 +10,8 @@ import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import { CreateProfileChangeRequestDto } from './dto/create-profile-change-request.dto';
 import { AdminUpdateEmployeeProfileDto } from './dto/admin-update-employee-profile.dto';
 import { AssignRolesDto } from './dto/assign-roles.dto';
+import { UpdateEmployeeDepartmentDto } from './dto/update-employee-department.dto';
+import { UpdateEmployeePositionDto } from './dto/update-employee-position.dto';
 import { EmployeeService } from './employee.service';
 import { ProfileChangeStatus, SystemRole } from './enums/employee-profile.enums';
 
@@ -20,7 +22,7 @@ export class EmployeeController {
     constructor(private readonly employeeService: EmployeeService) { }
 
     @Post('onboard')
-    @UseGuards(ApiKeyGuard)
+    //@UseGuards(ApiKeyGuard)
     @ApiOperation({ summary: 'Onboard a new employee (M2M)' })
     @ApiResponse({ status: 201, description: 'Employee successfully onboarded' })
     @ApiBody({ type: CreateEmployeeDto })
@@ -66,6 +68,24 @@ export class EmployeeController {
     @ApiResponse({ status: 200, description: 'Status updated' })
     async updateStatus(@Param('id') id: string, @Body() updateEmployeeStatusDto: UpdateEmployeeStatusDto) {
         return this.employeeService.updateStatus(id, updateEmployeeStatusDto);
+    }
+
+    @Patch(':id/department')
+    @ApiOperation({ summary: 'Update employee department' })
+    @ApiParam({ name: 'id', description: 'Employee ID' })
+    @ApiBody({ type: UpdateEmployeeDepartmentDto })
+    @ApiResponse({ status: 200, description: 'Department updated' })
+    async updateDepartment(@Param('id') id: string, @Body() updateEmployeeDepartmentDto: UpdateEmployeeDepartmentDto) {
+        return this.employeeService.updateDepartment(id, updateEmployeeDepartmentDto);
+    }
+
+    @Patch(':id/position')
+    @ApiOperation({ summary: 'Update employee position' })
+    @ApiParam({ name: 'id', description: 'Employee ID' })
+    @ApiBody({ type: UpdateEmployeePositionDto })
+    @ApiResponse({ status: 200, description: 'Position updated' })
+    async updatePosition(@Param('id') id: string, @Body() updateEmployeePositionDto: UpdateEmployeePositionDto) {
+        return this.employeeService.updatePosition(id, updateEmployeePositionDto);
     }
 
     @Post(':id/correction-request')

@@ -10,6 +10,5 @@ export class UpdateEmployeeProfileDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    @IsUrl()
     profilePictureUrl?: string;
 }

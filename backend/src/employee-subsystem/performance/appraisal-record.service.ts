@@ -4,20 +4,44 @@ import { AppraisalTemplateRepository } from './repository/appraisal-template.rep
 import { UpdateAppraisalRecordDto } from './dto/update-appraisal-record.dto';
 import { AppraisalRecordDocument } from './models/appraisal-record.schema';
 import { AppraisalRecordStatus } from './enums/performance.enums';
+import { AttendanceService } from '../../time-mangement/attendance.service';
+import { AppraisalCycleRepository } from './repository/appraisal-cycle.repository';
 
 @Injectable()
 export class AppraisalRecordService {
     constructor(
         private readonly appraisalRecordRepository: AppraisalRecordRepository,
         private readonly appraisalTemplateRepository: AppraisalTemplateRepository,
+        private readonly attendanceService: AttendanceService,
+        private readonly appraisalCycleRepository: AppraisalCycleRepository,
     ) { }
 
-    async getRecordById(id: string): Promise<AppraisalRecordDocument> {
+    async getRecordById(id: string): Promise<any> {
         const record = await this.appraisalRecordRepository.findOne({ _id: id });
         if (!record) {
             throw new NotFoundException(`Appraisal record with ID ${id} not found`);
         }
-        return record;
+
+        let attendanceSummary: any = null;
+        if (record.cycleId) {
+            const cycle = await this.appraisalCycleRepository.findOne({ _id: record.cycleId });
+            if (cycle) {
+                try {
+                    attendanceSummary = await this.attendanceService.getAttendanceSummary(
+                        (record as any).employeeProfileId, // Assuming employeeProfileId exists on record
+                        cycle.startDate,
+                        cycle.endDate,
+                    );
+                } catch (error) {
+                    console.error('Failed to fetch attendance summary', error);
+                }
+            }
+        }
+
+        return {
+            ...record.toObject(),
+            attendanceSummary,
+        };
     }
 
     async updateRecord(

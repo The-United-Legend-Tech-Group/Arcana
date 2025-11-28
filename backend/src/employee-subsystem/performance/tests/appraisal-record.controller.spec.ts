@@ -5,6 +5,8 @@ import { AppraisalRecordRepository } from '../repository/appraisal-record.reposi
 import { AppraisalTemplateRepository } from '../repository/appraisal-template.repository';
 import { UpdateAppraisalRecordDto } from '../dto/update-appraisal-record.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { AttendanceService } from '../../../time-mangement/attendance.service';
+import { AppraisalCycleRepository } from '../repository/appraisal-cycle.repository';
 
 describe('AppraisalRecordController', () => {
     let controller: AppraisalRecordController;
@@ -14,6 +16,9 @@ describe('AppraisalRecordController', () => {
         _id: 'recordId',
         templateId: 'templateId',
         ratings: [],
+        toObject: function () {
+            return this;
+        },
     };
 
     const mockTemplate = {
@@ -48,6 +53,14 @@ describe('AppraisalRecordController', () => {
                     provide: AppraisalTemplateRepository,
                     useValue: mockAppraisalTemplateRepository,
                 },
+                {
+                    provide: AttendanceService,
+                    useValue: { getAttendanceSummary: jest.fn() },
+                },
+                {
+                    provide: AppraisalCycleRepository,
+                    useValue: { findOne: jest.fn() },
+                },
             ],
         }).compile();
 
@@ -63,7 +76,10 @@ describe('AppraisalRecordController', () => {
         it('should return a record by ID', async () => {
             mockAppraisalRecordRepository.findOne.mockResolvedValue(mockRecord);
             const result = await controller.getRecord('recordId');
-            expect(result).toEqual(mockRecord);
+            expect(result).toEqual({
+                ...mockRecord,
+                attendanceSummary: null,
+            });
         });
 
         it('should throw NotFoundException if record not found', async () => {

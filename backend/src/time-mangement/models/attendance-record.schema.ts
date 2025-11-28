@@ -11,11 +11,15 @@ export type Punch = {
 export type AttendanceRecordDocument = HydratedDocument<AttendanceRecord>;
 
 @Schema()
-export class AttendanceRecord{
-    @Prop({type: Types.ObjectId, ref: 'EmployeeProfile', required: true})
+export class AttendanceRecord {
+    @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
     employeeId: Types.ObjectId;
 
-    @Prop({default: []})
+    @Prop({ required: true })
+    date: Date;
+
+
+    @Prop({ default: [] })
     punches: Punch[];
 
     @Prop({ default: 0 }) // to be computed after creating an instance

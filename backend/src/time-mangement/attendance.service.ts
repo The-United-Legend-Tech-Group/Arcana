@@ -13,7 +13,7 @@ export class AttendanceService {
     private readonly attendanceRepo?: AttendanceRepository,
     private readonly attendanceCorrectionRepo?: AttendanceCorrectionRepository,
     private readonly holidayRepo?: HolidayRepository,
-  ) {}
+  ) { }
 
   async punch(dto: PunchDto) {
     if (!this.attendanceRepo)
@@ -62,6 +62,7 @@ export class AttendanceService {
     if (!existing) {
       const payload: any = {
         employeeId: dto.employeeId,
+        date: startOfDay,
         punches: [punch],
         totalWorkMinutes: 0,
         hasMissedPunch: false,
@@ -84,7 +85,7 @@ export class AttendanceService {
     let finalPunches: any[] = punches;
 
     if (policy === PunchPolicy.MULTIPLE) {
-      for (let i = 0; i < punches.length; ) {
+      for (let i = 0; i < punches.length;) {
         const current = punches[i];
         if (current.type === PunchType.IN) {
           if (i + 1 < punches.length && punches[i + 1].type === PunchType.OUT) {
@@ -311,5 +312,39 @@ export class AttendanceService {
     });
 
     return { updatedAttendance: updated, correction: updatedReq };
+  }
+
+  async getAttendanceSummary(
+    employeeId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    if (!this.attendanceRepo)
+      throw new Error('AttendanceRepository not available');
+
+    // Find records within the date range
+    const records = await this.attendanceRepo.find({
+      employeeId,
+      date: { $gte: startDate, $lte: endDate } as any,
+    });
+
+    const totalDaysPresent = records.length;
+    const totalWorkMinutes = records.reduce(
+      (sum, r) => sum + (r.totalWorkMinutes || 0),
+      0,
+    );
+    const averageWorkMinutes =
+      totalDaysPresent > 0
+        ? Math.round(totalWorkMinutes / totalDaysPresent)
+        : 0;
+
+    const lateArrivals = 0;
+
+    return {
+      totalDaysPresent,
+      totalWorkMinutes,
+      averageWorkMinutes,
+      lateArrivals,
+    };
   }
 }

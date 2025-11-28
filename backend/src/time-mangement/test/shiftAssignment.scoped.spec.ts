@@ -10,6 +10,7 @@ jest.mock('../repository/shift-assignment.repository', () => ({
 import { ShiftAssignmentService } from '../shift-assignment.service';
 
 describe('ShiftAssignmentService - scoped shift assignments (unit)', () => {
+  let mockShiftRepo: any;
   let mockShiftAssignmentRepo: any;
   let shiftAssignmentService: ShiftAssignmentService;
   let service: any;
@@ -33,7 +34,7 @@ describe('ShiftAssignmentService - scoped shift assignments (unit)', () => {
     };
 
     shiftAssignmentService = new ShiftAssignmentService(
-      mockShiftAssignmentRepo,
+      mockShiftAssignmentRepo as any,
     );
     service = shiftAssignmentService;
   });

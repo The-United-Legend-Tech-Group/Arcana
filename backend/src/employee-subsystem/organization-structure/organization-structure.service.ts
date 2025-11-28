@@ -57,15 +57,19 @@ export class OrganizationStructureService {
         
         // Create structure approval record
         try {
+            const approverIdToUse = approverEmployeeId 
+                ? new Types.ObjectId(approverEmployeeId) 
+                : updated.submittedByEmployeeId;
+            
             const approvalRecord = new this.structureApprovalModel({
                 changeRequestId: updated._id,
-                approverEmployeeId: approverEmployeeId || updated.submittedByEmployeeId,
+                approverEmployeeId: approverIdToUse,
                 decision: ApprovalDecision.APPROVED,
                 decidedAt: new Date(),
                 comments: comment,
             });
-            await approvalRecord.save();
-            console.log('[OrganizationStructure] approveChangeRequest - created structure approval record:', approvalRecord._id.toString());
+            const savedApproval = await approvalRecord.save();
+            console.log('[OrganizationStructure] approveChangeRequest - created structure approval record:', savedApproval._id.toString());
         } catch (err) {
             console.error('[OrganizationStructure] approveChangeRequest - failed to create structure approval record:', err);
             // don't fail approval if structure approval record creation fails

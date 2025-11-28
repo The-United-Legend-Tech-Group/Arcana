@@ -47,16 +47,36 @@ describe('OrganizationStructureService notifications', () => {
       exec: jest.fn().mockResolvedValue(null),
     });
 
+    // Mock findById to return an object with lean() and exec()
+    changeRequestModel.findById = jest.fn().mockReturnValue({
+      lean: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      }),
+      exec: jest.fn().mockResolvedValue(null),
+    });
+
     // Mock structure approval model
     const mockStructureApprovalModel: any = {
       create: jest.fn(),
     };
+    // Mock constructor behavior for structureApprovalModel
+    const mockStructureApprovalConstructor: any = function (this: any, payload: any) {
+      Object.assign(this, payload);
+      this.save = jest.fn().mockResolvedValue({ ...payload, _id: 'approval-1' });
+    } as any;
+
+    // Mock change log model
+    const mockChangeLogModel: any = function (this: any, payload: any) {
+      Object.assign(this, payload);
+      this.save = jest.fn().mockResolvedValue({ ...payload, _id: 'log-1' });
+    } as any;
 
     service = new OrganizationStructureService(
       mockPositionRepository,
       mockDepartmentRepository,
       changeRequestModel as any,
-      mockStructureApprovalModel,
+      mockStructureApprovalConstructor,
+      mockChangeLogModel,
       mockEmployeeModel as any,
       mockPositionAssignmentModel as any,
       mockNotificationService,
@@ -108,6 +128,11 @@ describe('OrganizationStructureService notifications', () => {
     const changeRequestModel: any = (service as any).changeRequestModel;
     changeRequestModel.findByIdAndUpdate.mockReturnValue({
       exec: jest.fn().mockResolvedValue(updated),
+    });
+    changeRequestModel.findById.mockReturnValue({
+      lean: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ _id: 'req-2' }),
+      }),
     });
 
     // department returns head position id and employeeModel returns head

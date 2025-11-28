@@ -20,18 +20,40 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
     }
 
     async getTeamSummaryByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) {
+        // Find the manager and get their position
+        const manager = await this.model
+            .findById(managerId)
+            .select('primaryPositionId')
+            .lean()
+            .exec();
+
+        if (!manager) {
+            console.log(`[getTeamSummaryByManagerId] Manager not found: ${managerId}`);
             return [];
         }
 
-        const positionId = manager.primaryPositionId;
+        if (!manager.primaryPositionId) {
+            console.log(`[getTeamSummaryByManagerId] Manager has no position: ${managerId}`);
+            return [];
+        }
 
+        const managerPositionId = manager.primaryPositionId;
+        console.log(`[getTeamSummaryByManagerId] Manager position: ${managerPositionId}`);
+
+        // Find all employees whose supervisorPositionId matches the manager's position
         const pipeline = [
-            { $match: { supervisorPositionId: positionId } },
+            {
+                $match: {
+                    supervisorPositionId: { $exists: true },
+                    $expr: { $eq: ['$supervisorPositionId', managerPositionId] }
+                }
+            },
             {
                 $group: {
-                    _id: { positionId: '$primaryPositionId', departmentId: '$primaryDepartmentId' },
+                    _id: {
+                        positionId: '$primaryPositionId',
+                        departmentId: '$primaryDepartmentId'
+                    },
                     count: { $sum: 1 },
                 },
             },
@@ -65,14 +87,30 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
         ];
 
         const results = await this.model.aggregate(pipeline).exec();
+        console.log(`[getTeamSummaryByManagerId] Found ${results.length} position groups`);
         return results;
     }
 
     async getTeamMembersByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) return [];
+        // Find the manager and get their position
+        const manager = await this.model
+            .findById(managerId)
+            .select('primaryPositionId')
+            .lean()
+            .exec();
 
-        const positionId = manager.primaryPositionId;
+        if (!manager) {
+            console.log(`[getTeamMembersByManagerId] Manager not found: ${managerId}`);
+            return [];
+        }
+
+        if (!manager.primaryPositionId) {
+            console.log(`[getTeamMembersByManagerId] Manager has no position: ${managerId}`);
+            return [];
+        }
+
+        const managerPositionId = manager.primaryPositionId;
+        console.log(`[getTeamMembersByManagerId] Manager position: ${managerPositionId}`);
 
         // Exclude sensitive personal fields
         const projection: any = {
@@ -85,10 +123,17 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
             accessProfileId: 0,
         };
 
-        return this.model
-            .find({ supervisorPositionId: positionId })
+        // Find all employees whose supervisorPositionId matches the manager's position
+        const teamMembers = await this.model
+            .find({
+                supervisorPositionId: { $exists: true },
+                $expr: { $eq: ['$supervisorPositionId', managerPositionId] }
+            })
             .select(projection)
             .lean()
             .exec();
+
+        console.log(`[getTeamMembersByManagerId] Found ${teamMembers.length} team members`);
+        return teamMembers;
     }
 }

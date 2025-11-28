@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Notification } from './schema/notification.schema';
+import { Notification } from './models/notification.schema';
 import { NotificationRepository } from './repository/notification.repository';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Types } from 'mongoose';
@@ -18,5 +18,14 @@ export class NotificationService {
       recipientId: createNotificationDto.recipientId.map((id) => new Types.ObjectId(id)),
     };
     return this.notificationRepository.create(payload);
+  }
+
+  async findByRecipientId(recipientId: string) {
+    return this.notificationRepository.find({
+      $or: [
+        { recipientId: recipientId },
+        { deliveryType: 'BROADCAST' }
+      ]
+    });
   }
 }

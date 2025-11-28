@@ -1,12 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, ROLES_KEY } from '../../employee-subsystem/employee/decorators/roles.decorator';
+import { ROLES_KEY } from '../../employee-subsystem/employee/decorators/roles.decorator';
+import { SystemRole } from '../employee/enums/employee-profile.enums';
 
 @Injectable()
 export class authorizationGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }
+  constructor(private readonly reflector: Reflector) { }
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<SystemRole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);

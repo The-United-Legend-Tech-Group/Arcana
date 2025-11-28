@@ -3,6 +3,7 @@ import { NotificationController } from '../notification.controller';
 import { NotificationService } from '../notification.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { ApiKeyGuard } from '../../guards/api-key.guard';
+import { AuthGuard } from '../../guards/authentication.guard';
 
 describe('NotificationController', () => {
     let controller: NotificationController;
@@ -10,10 +11,19 @@ describe('NotificationController', () => {
 
     const mockNotificationService = {
         create: jest.fn(),
+        findByRecipientId: jest.fn(),
     };
 
     const mockApiKeyGuard = {
         canActivate: jest.fn(() => true),
+    };
+
+    const mockAuthGuard = {
+        canActivate: jest.fn((context) => {
+            const req = context.switchToHttp().getRequest();
+            req.user = { sub: 'user123' }; // Mock user
+            return true;
+        }),
     };
 
     beforeEach(async () => {
@@ -28,6 +38,8 @@ describe('NotificationController', () => {
         })
             .overrideGuard(ApiKeyGuard)
             .useValue(mockApiKeyGuard)
+            .overrideGuard(AuthGuard)
+            .useValue(mockAuthGuard)
             .compile();
 
         controller = module.get<NotificationController>(NotificationController);
@@ -51,7 +63,7 @@ describe('NotificationController', () => {
             const expectedResult = {
                 _id: 'someId',
                 ...createNotificationDto,
-                recipientId: createNotificationDto.recipientId.map(id => ({ toString: () => id })), // Mocking ObjectId behavior slightly if needed, or just return plain obj
+                recipientId: createNotificationDto.recipientId.map(id => ({ toString: () => id })),
                 createdAt: new Date(),
             };
 
@@ -61,6 +73,19 @@ describe('NotificationController', () => {
 
             expect(result).toEqual(expectedResult);
             expect(service.create).toHaveBeenCalledWith(createNotificationDto);
+        });
+    });
+
+    describe('findMyNotifications', () => {
+        it('should return notifications for the authenticated user', async () => {
+            const req = { user: { sub: 'user123' } };
+            const expectedResult = [{ title: 'Test', message: 'Message' }];
+            mockNotificationService.findByRecipientId.mockResolvedValue(expectedResult);
+
+            const result = await controller.findMyNotifications(req);
+
+            expect(result).toEqual(expectedResult);
+            expect(service.findByRecipientId).toHaveBeenCalledWith('user123');
         });
     });
 });

@@ -369,7 +369,10 @@ export class AttendanceService {
       } catch (e) {
         // don't let notification failures block attendance flow
         // eslint-disable-next-line no-console
-        console.warn('Notification send failed', e && e.message ? e.message : e);
+        console.warn(
+          'Notification send failed',
+          e && e.message ? e.message : e,
+        );
       }
 
       return created;

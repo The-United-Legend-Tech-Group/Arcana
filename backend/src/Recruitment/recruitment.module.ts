@@ -10,6 +10,7 @@ import { ApplicationStatusHistory, ApplicationStatusHistorySchema } from './mode
 import { Interview, InterviewSchema } from './models/interview.schema';
 import { NotificationModule } from '../employee-subsystem/notification/notification.module';
 
+import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
 
 @Module({
   imports: [
@@ -19,9 +20,10 @@ import { NotificationModule } from '../employee-subsystem/notification/notificat
       { name: Document.name, schema: DocumentSchema },
       { name: Application.name, schema: ApplicationSchema },
       { name: ApplicationStatusHistory.name, schema: ApplicationStatusHistorySchema },
-      { name: Interview.name, schema: InterviewSchema }
+      { name: Interview.name, schema: InterviewSchema },
     ]),
-    NotificationModule
+    NotificationModule, EmployeeModule,
+
   ],
   controllers: [RecruitmentController],
   providers: [RecruitmentService],

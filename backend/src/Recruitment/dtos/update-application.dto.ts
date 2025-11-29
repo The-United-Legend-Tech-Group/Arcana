@@ -1,5 +1,5 @@
 import { IsEnum, IsMongoId, IsOptional } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApplicationStage } from '../enums/application-stage.enum';
 import { ApplicationStatus } from '../enums/application-status.enum';
 
@@ -24,10 +24,17 @@ export class UpdateApplicationDto {
   @IsEnum(ApplicationStatus)
   status?: ApplicationStatus;
 
-  @ApiPropertyOptional({
-    description: 'Update assigned HR person responsible for this application',
+  @ApiProperty({
+    description: 'HR ID of the person updating the application',
     example: '507f1f77bcf86cd799439013',
     type: 'string'
+  })
+  @IsMongoId()
+  hrId: string;
+
+  @ApiPropertyOptional({
+    description: 'Assign or reassign the application to a different HR representative by their user ID.',
+    example: '507f1f77bcf86cd799439016',
   })
   @IsOptional()
   @IsMongoId()

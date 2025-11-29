@@ -22,11 +22,11 @@ import { CreateInterviewDto } from './dtos/create-interview.dto';
 import { CreateNotificationDto } from '../employee-subsystem/notification/dto/create-notification.dto';
 
 import { InterviewStatus } from './enums/interview-status.enum';
+import { InterviewMethod } from './enums/interview-method.enum';
 
 import { EmployeeProfileRepository } from '../employee-subsystem/employee/repository/employee-profile.repository';
 import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
 import { EmployeeSystemRoleRepository } from '../employee-subsystem/employee/repository/employee-system-role.repository';
-import { EmployeeProfileChangeRequestRepository } from '../employee-subsystem/employee/repository/ep-change-request.repository';
 import { SystemRole, EmployeeStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
 import { EmployeeProfileDocument } from '../employee-subsystem/employee/models/employee-profile.schema';
 //import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
@@ -45,8 +45,6 @@ export class RecruitmentService {
     private readonly employeeProfileRepository: EmployeeProfileRepository,
     private readonly candidateRepository: CandidateRepository,
     private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
-    private readonly employeeProfileChangeRequestRepository: EmployeeProfileChangeRequestRepository,
-
   ) { }
 
   async validateEmployeeExistence(employeeId: string, roles: SystemRole[]): Promise<boolean> {
@@ -249,8 +247,8 @@ export class RecruitmentService {
     }
 
     // Use the ID from DTO if provided, otherwise use the parameter
-    const targetApplicationId =  applicationId;
-    
+    const targetApplicationId = applicationId;
+
     // Find the application to update
     const currentApplication = await this.applicationModel.findById(targetApplicationId).exec();
     if (!currentApplication) {
@@ -258,7 +256,7 @@ export class RecruitmentService {
     }
 
     // Prepare update data (exclude id and hrId from the update)
-    const {hrId, ...updateData } = updateApplicationDto;
+    const { hrId, ...updateData } = updateApplicationDto;
 
     // Update the application directly by ID
     const updatedApplication = await this.applicationModel.findByIdAndUpdate(
@@ -481,7 +479,7 @@ export class RecruitmentService {
     if (createInterviewDto.method === InterviewMethod.VIDEO && !createInterviewDto.videoLink) {
       throw new NotFoundException('Video link is required for video interviews');
     }
-    if (createInterviewDto.method !== InterviewMethod.VIDEO && createInterviewDto.videoLink) {  
+    if (createInterviewDto.method !== InterviewMethod.VIDEO && createInterviewDto.videoLink) {
       throw new NotFoundException('Video link should not be provided for non-video interviews');
     }
     if (new Set(createInterviewDto.panel).size !== createInterviewDto.panel.length) {

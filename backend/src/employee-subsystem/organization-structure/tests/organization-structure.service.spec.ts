@@ -55,10 +55,6 @@ describe('OrganizationStructureService notifications', () => {
       exec: jest.fn().mockResolvedValue(null),
     });
 
-    // Mock structure approval model
-    const mockStructureApprovalModel: any = {
-      create: jest.fn(),
-    };
     // Mock constructor behavior for structureApprovalModel
     const mockStructureApprovalConstructor: any = function (this: any, payload: any) {
       Object.assign(this, payload);

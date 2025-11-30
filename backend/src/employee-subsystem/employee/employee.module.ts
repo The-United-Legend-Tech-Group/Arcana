@@ -5,6 +5,10 @@ import {
   EmployeeProfileSchema,
 } from './models/employee-profile.schema';
 import {
+  AppraisalRecord,
+  AppraisalRecordSchema,
+} from '../performance/models/appraisal-record.schema';
+import {
   EmployeeProfileChangeRequest,
   EmployeeProfileChangeRequestSchema,
 } from './models/ep-change-request.schema';
@@ -17,13 +21,22 @@ import {
   EmployeeSystemRoleSchema,
 } from './models/employee-system-role.schema';
 import { EmployeeSystemRoleRepository } from './repository/employee-system-role.repository';
+import { Candidate, CandidateSchema } from './models/candidate.schema';
+import { CandidateRepository } from './repository/candidate.repository';
+import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
 
 @Module({
   imports: [
+    OrganizationStructureModule,
     MongooseModule.forFeature([
       { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
-      { name: EmployeeProfileChangeRequest.name, schema: EmployeeProfileChangeRequestSchema },
+      { name: AppraisalRecord.name, schema: AppraisalRecordSchema },
+      {
+        name: EmployeeProfileChangeRequest.name,
+        schema: EmployeeProfileChangeRequestSchema,
+      },
       { name: EmployeeSystemRole.name, schema: EmployeeSystemRoleSchema },
+      { name: Candidate.name, schema: CandidateSchema },
     ]),
   ],
   controllers: [EmployeeController],
@@ -32,12 +45,13 @@ import { EmployeeSystemRoleRepository } from './repository/employee-system-role.
     EmployeeProfileRepository,
     EmployeeProfileChangeRequestRepository,
     EmployeeSystemRoleRepository,
+    CandidateRepository,
   ],
   exports: [
-    MongooseModule,
     EmployeeProfileRepository,
-    EmployeeProfileChangeRequestRepository,
+    CandidateRepository,
     EmployeeSystemRoleRepository,
+    EmployeeProfileChangeRequestRepository,
   ],
 })
-export class EmployeeModule { }
+export class EmployeeModule {}

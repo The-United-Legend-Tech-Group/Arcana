@@ -3,35 +3,63 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BaseRepository } from '../../../common/repository/base.repository';
 import {
-    EmployeeProfile,
-    EmployeeProfileDocument,
+  EmployeeProfile,
+  EmployeeProfileDocument,
 } from '../models/employee-profile.schema';
 
 @Injectable()
 export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDocument> {
-    constructor(
-        @InjectModel(EmployeeProfile.name) model: Model<EmployeeProfileDocument>,
-    ) {
-        super(model);
-    }
+  constructor(
+    @InjectModel(EmployeeProfile.name) model: Model<EmployeeProfileDocument>,
+  ) {
+    super(model);
+  }
 
-    async findByEmail(email: string): Promise<EmployeeProfileDocument | null> {
-        return this.model.findOne({ personalEmail: email }).select('+password').exec();
-    }
+  async findByEmail(email: string): Promise<EmployeeProfileDocument | null> {
+    return this.model
+      .findOne({ personalEmail: email })
+      .select('+password')
+      .exec();
+  }
 
     async getTeamSummaryByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) {
+        // Find the manager and get their position
+        const manager = await this.model
+            .findById(managerId)
+            .select('primaryPositionId')
+            .lean()
+            .exec();
+
+        if (!manager) {
+            console.log(`[getTeamSummaryByManagerId] Manager not found: ${managerId}`);
             return [];
         }
 
-        const positionId = manager.primaryPositionId;
+        if (!manager.primaryPositionId) {
+            console.log(`[getTeamSummaryByManagerId] Manager has no position: ${managerId}`);
+            return [];
+        }
 
+        const managerPositionId = manager.primaryPositionId;
+        console.log(`[getTeamSummaryByManagerId] Manager position: ${managerPositionId}`);
+
+        // NOTE: supervisorPositionId may be stored as string in the database
+        // even though schema defines it as ObjectId, so we need to match both types
         const pipeline = [
-            { $match: { supervisorPositionId: positionId } },
+            {
+                $match: {
+                    $or: [
+                        { supervisorPositionId: managerPositionId },
+                        { supervisorPositionId: managerPositionId.toString() }
+                    ]
+                }
+            },
             {
                 $group: {
-                    _id: { positionId: '$primaryPositionId', departmentId: '$primaryDepartmentId' },
+                    _id: {
+                        positionId: '$primaryPositionId',
+                        departmentId: '$primaryDepartmentId'
+                    },
                     count: { $sum: 1 },
                 },
             },
@@ -65,30 +93,56 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
         ];
 
         const results = await this.model.aggregate(pipeline).exec();
+        console.log(`[getTeamSummaryByManagerId] Found ${results.length} position groups`);
         return results;
     }
 
     async getTeamMembersByManagerId(managerId: string) {
-        const manager = await this.model.findById(managerId).select('primaryPositionId').lean().exec();
-        if (!manager || !manager.primaryPositionId) return [];
+        // Find the manager and get their position
+        const manager = await this.model
+            .findById(managerId)
+            .select('primaryPositionId')
+            .lean()
+            .exec();
 
-        const positionId = manager.primaryPositionId;
+        if (!manager) {
+            console.log(`[getTeamMembersByManagerId] Manager not found: ${managerId}`);
+            return [];
+        }
 
-        // Exclude sensitive personal fields
-        const projection: any = {
-            nationalId: 0,
-            password: 0,
-            personalEmail: 0,
-            mobilePhone: 0,
-            homePhone: 0,
-            address: 0,
-            accessProfileId: 0,
-        };
+        if (!manager.primaryPositionId) {
+            console.log(`[getTeamMembersByManagerId] Manager has no position: ${managerId}`);
+            return [];
+        }
 
-        return this.model
-            .find({ supervisorPositionId: positionId })
+        const managerPositionId = manager.primaryPositionId;
+        console.log(`[getTeamMembersByManagerId] Manager position: ${managerPositionId}`);
+
+    // Exclude sensitive personal fields
+    const projection: any = {
+      nationalId: 0,
+      password: 0,
+      personalEmail: 0,
+      mobilePhone: 0,
+      homePhone: 0,
+      address: 0,
+      accessProfileId: 0,
+    };
+
+        // NOTE: supervisorPositionId may be stored as string in the database
+        // even though schema defines it as ObjectId, so we need to match both types
+        const teamMembers = await this.model
+            .find({
+                $or: [
+                    { supervisorPositionId: managerPositionId },
+                    { supervisorPositionId: managerPositionId.toString() }
+                ]
+            })
             .select(projection)
             .lean()
             .exec();
+
+        console.log(`[getTeamMembersByManagerId] Found ${teamMembers.length} team members`);
+        return teamMembers;
     }
 }

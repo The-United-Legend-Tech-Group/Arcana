@@ -80,7 +80,4 @@ export class AuthController {
   }
 }
 
-// Example usage:
-// curl -i -X POST http://localhost:3000/auth/login \
-//   -H "Content-Type: application/json" \
-//   -d '{"username":"alice@example.com","password":"password123"}'
+

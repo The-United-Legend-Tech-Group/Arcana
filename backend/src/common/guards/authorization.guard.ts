@@ -5,8 +5,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../employee/decorators/roles.decorator';
-import { SystemRole } from '../employee/enums/employee-profile.enums';
+import { ROLES_KEY } from '../decorators/roles.decorator';
+import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 
 @Injectable()
 export class authorizationGuard implements CanActivate {

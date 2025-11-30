@@ -32,7 +32,7 @@ export class AttendanceService {
     private readonly shiftAssignmentRepo?: ShiftAssignmentRepository,
     private readonly shiftRepo?: ShiftRepository,
     private readonly approvalWorkflowService?: ApprovalWorkflowService,
-  ) {}
+  ) { }
 
   private calculatePenalty(
     checkInTime: Date,
@@ -335,6 +335,7 @@ export class AttendanceService {
       }
       const payload: any = {
         employeeId: dto.employeeId,
+        date: startOfDay,
         punches: [punch],
         totalWorkMinutes: penaltyDeduction > 0 ? -penaltyDeduction : 0,
         hasMissedPunch:
@@ -361,7 +362,7 @@ export class AttendanceService {
     let finalPunches: any[] = punches;
 
     if (policy === PunchPolicy.MULTIPLE) {
-      for (let i = 0; i < punches.length; ) {
+      for (let i = 0; i < punches.length;) {
         const current = punches[i];
         if (current.type === PunchType.IN) {
           if (i + 1 < punches.length && punches[i + 1].type === PunchType.OUT) {
@@ -512,6 +513,43 @@ export class AttendanceService {
     d.setUTCHours(hh, mm, 0, 0);
     if (nextDay) d.setUTCDate(d.getUTCDate() + 1);
     return d;
+  }
+
+  async getAttendanceSummary( //Performance Integration
+    employeeId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    if (!this.attendanceRepo)
+      throw new Error('AttendanceRepository not available');
+
+    const records = await this.attendanceRepo.find({
+      employeeId,
+      date: { $gte: startDate, $lte: endDate },
+    } as any);
+
+    let totalWorkMinutes = 0;
+    let totalDaysPresent = 0;
+
+    if (records && Array.isArray(records)) {
+      for (const record of records) {
+        if ((record as any).totalWorkMinutes > 0) {
+          totalWorkMinutes += (record as any).totalWorkMinutes;
+          totalDaysPresent++;
+        }
+      }
+    }
+
+    const averageWorkMinutes =
+      totalDaysPresent > 0
+        ? Math.round(totalWorkMinutes / totalDaysPresent)
+        : 0;
+
+    return {
+      totalDaysPresent,
+      totalWorkMinutes,
+      averageWorkMinutes,
+    };
   }
 
   async createHoliday(dto: any) {

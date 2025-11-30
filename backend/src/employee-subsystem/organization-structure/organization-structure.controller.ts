@@ -27,8 +27,6 @@ export class OrganizationStructureController {
   ) {}
 
   @Get('positions/open')
-  //@UseGuards(ApiKeyGuard)
-  //@ApiSecurity('api-key')
   @ApiOperation({ summary: 'Get all open positions (M2M)' })
   @ApiResponse({
     status: 200,
@@ -40,16 +38,6 @@ export class OrganizationStructureController {
   }
 
   @Get('hierarchy')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(
-  //    Role.DEPARTMENT_EMPLOYEE,
-  //    Role.DEPARTMENT_HEAD,
-  //    Role.HR_EMPLOYEE,
-  //    Role.HR_MANAGER,
-  //    Role.HR_ADMIN,
-  //    Role.SYSTEM_ADMIN,
-  //)
-  //@ApiSecurity('api-key')
   @ApiOperation({ summary: 'Get organizational hierarchy (Employees)' })
   @ApiResponse({
     status: 200,
@@ -61,9 +49,6 @@ export class OrganizationStructureController {
   }
 
   @Get('requests/pending')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(Role.SYSTEM_ADMIN)
-  //@ApiSecurity('api-key')
   @ApiOperation({
     summary: 'List pending structure change requests (System Admin)',
   })
@@ -77,9 +62,6 @@ export class OrganizationStructureController {
   }
 
   @Get('requests/:id')
-  // @UseGuards(ApiKeyGuard, authorizationGuard)
-  // @Roles(Role.SYSTEM_ADMIN)
-  // @ApiSecurity('api-key')
   @ApiOperation({
     summary: 'Get a single structure change request by id (System Admin)',
   })
@@ -94,27 +76,14 @@ export class OrganizationStructureController {
     return this.organizationStructureService.getChangeRequestById(id);
   }
 
-  @Post('requests/:id/approve')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(Role.SYSTEM_ADMIN)
-  //@ApiSecurity('api-key')
-  @ApiOperation({
-    summary: 'Approve a structure change request (System Admin)',
-  })
-  async approveRequest(
-    @Param('id') id: string,
-    @Body() body: { comment?: string },
-  ): Promise<StructureChangeRequest> {
-    return this.organizationStructureService.approveChangeRequest(
-      id,
-      body?.comment,
-    );
-  }
+    @Post('requests/:id/approve')
+    @ApiOperation({ summary: 'Approve a structure change request (System Admin)' })
+    @ApiResponse({ status: 200, description: 'Approved change request', type: StructureChangeRequest })
+    async approveRequest(@Param('id') id: string, @Body() body: { comment?: string }): Promise<StructureChangeRequest> {
+        return this.organizationStructureService.approveChangeRequest(id, body?.comment);
+    }
 
   @Post('requests/:id/reject')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(Role.SYSTEM_ADMIN)
-  //@ApiSecurity('api-key')
   @ApiOperation({ summary: 'Reject a structure change request (System Admin)' })
   async rejectRequest(
     @Param('id') id: string,
@@ -127,9 +96,6 @@ export class OrganizationStructureController {
   }
 
   @Post('requests')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(Role.DEPARTMENT_HEAD, Role.HR_MANAGER)
-  //@ApiSecurity('api-key')
   @ApiOperation({ summary: 'Submit a structure change request (Managers)' })
   @ApiResponse({
     status: 201,
@@ -143,9 +109,6 @@ export class OrganizationStructureController {
   }
 
   @Get('managers/:managerId/team')
-  //@UseGuards(ApiKeyGuard, authorizationGuard)
-  //@Roles(Role.DEPARTMENT_HEAD, Role.HR_MANAGER)
-  //@ApiSecurity('api-key')
   @ApiOperation({
     summary: "Get a manager's team structure and reporting lines (Managers)",
   })

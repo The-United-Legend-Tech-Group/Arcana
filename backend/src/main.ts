@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppConfigService } from './config/app-config.service';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +19,6 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   });
-
 
   // Global validation pipe for DTO validation (useful for Swagger testing)
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

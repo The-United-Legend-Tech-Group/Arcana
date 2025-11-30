@@ -158,4 +158,48 @@ describe('OrganizationStructureService notifications', () => {
     expect(arg.recipientId).toContain('head-1');
     expect(arg.title).toContain('Approved');
   });
+
+  describe('createPosition', () => {
+    it('should throw BadRequestException if position code already exists', async () => {
+      mockPositionRepository.findOne = jest.fn().mockResolvedValue({ _id: 'existing-pos' });
+      const dto = { code: 'POS-001', title: 'Test Position', departmentId: 'dept-1' };
+
+      await expect(service.createPosition(dto)).rejects.toThrow(
+        'Position with code POS-001 already exists',
+      );
+    });
+
+    it('should automatically assign reportsToPositionId from department head if not provided', async () => {
+      mockPositionRepository.findOne = jest.fn().mockResolvedValue(null);
+      mockDepartmentRepository.findById.mockResolvedValue({
+        _id: 'dept-1',
+        headPositionId: 'head-pos-1',
+      });
+      mockPositionRepository.create = jest.fn().mockImplementation((dto) => Promise.resolve(dto));
+
+      const dto = { code: 'POS-002', title: 'Test Position', departmentId: 'dept-1' };
+      const result = await service.createPosition(dto);
+
+      expect(result.reportsToPositionId).toBe('head-pos-1');
+    });
+
+    it('should use provided reportsToPositionId if provided', async () => {
+      mockPositionRepository.findOne = jest.fn().mockResolvedValue(null);
+      mockDepartmentRepository.findById.mockResolvedValue({
+        _id: 'dept-1',
+        headPositionId: 'head-pos-1',
+      });
+      mockPositionRepository.create = jest.fn().mockImplementation((dto) => Promise.resolve(dto));
+
+      const dto = {
+        code: 'POS-003',
+        title: 'Test Position',
+        departmentId: 'dept-1',
+        reportsToPositionId: 'custom-pos-1',
+      };
+      const result = await service.createPosition(dto);
+
+      expect(result.reportsToPositionId).toBe('custom-pos-1');
+    });
+  });
 });

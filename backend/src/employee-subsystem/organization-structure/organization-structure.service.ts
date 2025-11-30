@@ -8,7 +8,7 @@ import { DepartmentRepository } from './repository/department.repository';
 import { Position } from './models/position.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {StructureChangeRequest,StructureChangeRequestDocument,} from './models/structure-change-request.schema';
+import { StructureChangeRequest, StructureChangeRequestDocument, } from './models/structure-change-request.schema';
 import { StructureApproval, StructureApprovalDocument } from './models/structure-approval.schema';
 import { StructureChangeLog, StructureChangeLogDocument } from './models/structure-change-log.schema';
 import { StructureRequestStatus, ApprovalDecision, ChangeLogAction } from './enums/organization-structure.enums';
@@ -19,21 +19,21 @@ import { CreateNotificationDto } from '../notification/dto/create-notification.d
 
 @Injectable()
 export class OrganizationStructureService {
-    constructor(
-        private readonly positionRepository: PositionRepository,
-            private readonly departmentRepository: DepartmentRepository,
-        @InjectModel(StructureChangeRequest.name)
-        private readonly changeRequestModel: Model<StructureChangeRequestDocument>,
-        @InjectModel(StructureApproval.name)
-        private readonly structureApprovalModel: Model<StructureApprovalDocument>,
-        @InjectModel(StructureChangeLog.name)
-        private readonly changeLogModel: Model<StructureChangeLogDocument>,
-        @InjectModel(EmployeeProfile.name)
-        private readonly employeeModel: Model<EmployeeProfileDocument>,
-        @InjectModel(PositionAssignment.name)
-        private readonly positionAssignmentModel: Model<PositionAssignmentDocument>,
-            private readonly notificationService?: NotificationService,
-    ) { }
+  constructor(
+    private readonly positionRepository: PositionRepository,
+    private readonly departmentRepository: DepartmentRepository,
+    @InjectModel(StructureChangeRequest.name)
+    private readonly changeRequestModel: Model<StructureChangeRequestDocument>,
+    @InjectModel(StructureApproval.name)
+    private readonly structureApprovalModel: Model<StructureApprovalDocument>,
+    @InjectModel(StructureChangeLog.name)
+    private readonly changeLogModel: Model<StructureChangeLogDocument>,
+    @InjectModel(EmployeeProfile.name)
+    private readonly employeeModel: Model<EmployeeProfileDocument>,
+    @InjectModel(PositionAssignment.name)
+    private readonly positionAssignmentModel: Model<PositionAssignmentDocument>,
+    private readonly notificationService?: NotificationService,
+  ) { }
 
   async getOpenPositions(): Promise<Position[]> {
     return this.positionRepository.find({ isActive: false });
@@ -59,106 +59,106 @@ export class OrganizationStructureService {
     return req;
   }
 
-    async approveChangeRequest(id: string, comment?: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
-        const existing = await this.changeRequestModel.findById(id).lean().exec();
-        if (!existing) throw new NotFoundException('Change request not found');
+  async approveChangeRequest(id: string, comment?: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
+    const existing = await this.changeRequestModel.findById(id).lean().exec();
+    if (!existing) throw new NotFoundException('Change request not found');
 
-        const updated = await this.changeRequestModel
-            .findByIdAndUpdate(
-                id,
-                { status: StructureRequestStatus.APPROVED },
-                { new: true },
-            )
-            .exec();
-        if (!updated) throw new NotFoundException('Change request not found');
-        
-        // Create structure approval record
-        try {
-            const approverIdToUse = approverEmployeeId 
-                ? new Types.ObjectId(approverEmployeeId) 
-                : updated.submittedByEmployeeId;
-            
-            const approvalRecord = new this.structureApprovalModel({
-                changeRequestId: updated._id,
-                approverEmployeeId: approverIdToUse,
-                decision: ApprovalDecision.APPROVED,
-                decidedAt: new Date(),
-                comments: comment,
-            });
-            const savedApproval = await approvalRecord.save();
-            console.log('[OrganizationStructure] approveChangeRequest - created structure approval record:', savedApproval._id.toString());
-        } catch (err) {
-            console.error('[OrganizationStructure] approveChangeRequest - failed to create structure approval record:', err);
-            // don't fail approval if structure approval record creation fails
-        }
+    const updated = await this.changeRequestModel
+      .findByIdAndUpdate(
+        id,
+        { status: StructureRequestStatus.APPROVED },
+        { new: true },
+      )
+      .exec();
+    if (!updated) throw new NotFoundException('Change request not found');
 
-        // Create structure change log
-        try {
-            const log = new this.changeLogModel({
-                action: ChangeLogAction.UPDATED,
-                entityType: 'StructureChangeRequest',
-                entityId: updated._id,
-                performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
-                summary: 'Change request approved',
-                beforeSnapshot: existing,
-                afterSnapshot: updated.toObject ? updated.toObject() : updated,
-            });
-            const savedLog = await log.save();
-            console.log('[OrganizationStructure] approveChangeRequest - created change log:', savedLog._id.toString());
-        } catch (err) {
-            console.error('[OrganizationStructure] approveChangeRequest - failed to create change log:', err);
-        }
-        
-        // notify stakeholders that the change request was approved
-        try {
-            await this.notifyStakeholders(updated, 'approved');
-        } catch (err) {
-            console.error('[OrganizationStructure] approveChangeRequest - failed to notify stakeholders:', err);
-            // don't fail approval if notification fails
-        }
-        return updated;
+    // Create structure approval record
+    try {
+      const approverIdToUse = approverEmployeeId
+        ? new Types.ObjectId(approverEmployeeId)
+        : updated.submittedByEmployeeId;
+
+      const approvalRecord = new this.structureApprovalModel({
+        changeRequestId: updated._id,
+        approverEmployeeId: approverIdToUse,
+        decision: ApprovalDecision.APPROVED,
+        decidedAt: new Date(),
+        comments: comment,
+      });
+      const savedApproval = await approvalRecord.save();
+      console.log('[OrganizationStructure] approveChangeRequest - created structure approval record:', savedApproval._id.toString());
+    } catch (err) {
+      console.error('[OrganizationStructure] approveChangeRequest - failed to create structure approval record:', err);
+      // don't fail approval if structure approval record creation fails
     }
 
-    async rejectChangeRequest(id: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
-        const existing = await this.changeRequestModel.findById(id).lean().exec();
-        if (!existing) throw new NotFoundException('Change request not found');
-
-        const updated = await this.changeRequestModel
-            .findByIdAndUpdate(
-                id,
-                { status: StructureRequestStatus.REJECTED },
-                { new: true },
-            )
-            .exec();
-        if (!updated) throw new NotFoundException('Change request not found');
-
-        // Create structure change log for rejection
-        try {
-            const log = new this.changeLogModel({
-                action: ChangeLogAction.UPDATED,
-                entityType: 'StructureChangeRequest',
-                entityId: updated._id,
-                performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
-                summary: 'Change request rejected',
-                beforeSnapshot: existing,
-                afterSnapshot: updated.toObject ? updated.toObject() : updated,
-            });
-            const savedLog = await log.save();
-            console.log('[OrganizationStructure] rejectChangeRequest - created change log:', savedLog._id.toString());
-        } catch (err) {
-            console.error('[OrganizationStructure] rejectChangeRequest - failed to create change log:', err);
-        }
-
-        // notify stakeholders that the change request was rejected
-        try {
-            await this.notifyStakeholders(updated, 'rejected');
-        } catch (err) {
-            console.error('[OrganizationStructure] rejectChangeRequest - failed to notify stakeholders:', err);
-            // don't fail rejection if notification fails
-        }
-
-        return updated;
+    // Create structure change log
+    try {
+      const log = new this.changeLogModel({
+        action: ChangeLogAction.UPDATED,
+        entityType: 'StructureChangeRequest',
+        entityId: updated._id,
+        performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
+        summary: 'Change request approved',
+        beforeSnapshot: existing,
+        afterSnapshot: updated.toObject ? updated.toObject() : updated,
+      });
+      const savedLog = await log.save();
+      console.log('[OrganizationStructure] approveChangeRequest - created change log:', savedLog._id.toString());
+    } catch (err) {
+      console.error('[OrganizationStructure] approveChangeRequest - failed to create change log:', err);
     }
+
+    // notify stakeholders that the change request was approved
+    try {
+      await this.notifyStakeholders(updated, 'approved');
+    } catch (err) {
+      console.error('[OrganizationStructure] approveChangeRequest - failed to notify stakeholders:', err);
+      // don't fail approval if notification fails
+    }
+    return updated;
+  }
+
+  async rejectChangeRequest(id: string, approverEmployeeId?: string): Promise<StructureChangeRequest> {
+    const existing = await this.changeRequestModel.findById(id).lean().exec();
+    if (!existing) throw new NotFoundException('Change request not found');
+
+    const updated = await this.changeRequestModel
+      .findByIdAndUpdate(
+        id,
+        { status: StructureRequestStatus.REJECTED },
+        { new: true },
+      )
+      .exec();
+    if (!updated) throw new NotFoundException('Change request not found');
+
+    // Create structure change log for rejection
+    try {
+      const log = new this.changeLogModel({
+        action: ChangeLogAction.UPDATED,
+        entityType: 'StructureChangeRequest',
+        entityId: updated._id,
+        performedByEmployeeId: approverEmployeeId ? new Types.ObjectId(approverEmployeeId) : (updated.submittedByEmployeeId as any),
+        summary: 'Change request rejected',
+        beforeSnapshot: existing,
+        afterSnapshot: updated.toObject ? updated.toObject() : updated,
+      });
+      const savedLog = await log.save();
+      console.log('[OrganizationStructure] rejectChangeRequest - created change log:', savedLog._id.toString());
+    } catch (err) {
+      console.error('[OrganizationStructure] rejectChangeRequest - failed to create change log:', err);
+    }
+
+    // notify stakeholders that the change request was rejected
+    try {
+      await this.notifyStakeholders(updated, 'rejected');
+    } catch (err) {
+      console.error('[OrganizationStructure] rejectChangeRequest - failed to notify stakeholders:', err);
+      // don't fail rejection if notification fails
+    }
+
+    return updated;
+  }
 
   /**
    * Submit a new structure change request. Intended for managers to request
@@ -181,81 +181,81 @@ export class OrganizationStructureService {
       submittedAt: new Date(),
     });
 
-        const saved = await doc.save();
-        // notify stakeholders/managers about the submitted change request
-        try {
-            await this.notifyStakeholders(saved, 'submitted');
-        } catch (err) {
-            // ignore notification failures for now
-        }
-        return saved;
+    const saved = await doc.save();
+    // notify stakeholders/managers about the submitted change request
+    try {
+      await this.notifyStakeholders(saved, 'submitted');
+    } catch (err) {
+      // ignore notification failures for now
+    }
+    return saved;
+  }
+
+  private async notifyStakeholders(request: StructureChangeRequestDocument, action: 'submitted' | 'approved' | 'rejected') {
+    const recipientIds = new Set<string>();
+
+    // If a target position is specified, notify its supervisor(s)
+    if (request.targetPositionId) {
+      const pos = await this.positionRepository.findById(request.targetPositionId as any);
+      const supervisorPosId = pos?.reportsToPositionId && pos.reportsToPositionId.toString && pos.reportsToPositionId.toString();
+      if (supervisorPosId) {
+        const managers = await this.employeeModel.find({ primaryPositionId: supervisorPosId }).select('_id').lean().exec();
+        for (const m of managers) recipientIds.add(m._id.toString());
+      }
     }
 
-    private async notifyStakeholders(request: StructureChangeRequestDocument, action: 'submitted' | 'approved' | 'rejected') {
-        const recipientIds = new Set<string>();
-
-        // If a target position is specified, notify its supervisor(s)
-        if (request.targetPositionId) {
-            const pos = await this.positionRepository.findById(request.targetPositionId as any);
-            const supervisorPosId = pos?.reportsToPositionId && pos.reportsToPositionId.toString && pos.reportsToPositionId.toString();
-            if (supervisorPosId) {
-                const managers = await this.employeeModel.find({ primaryPositionId: supervisorPosId }).select('_id').lean().exec();
-                for (const m of managers) recipientIds.add(m._id.toString());
-            }
-        }
-
-        // If a target department is specified, notify the department head position holders
-        if (request.targetDepartmentId) {
-            const dept = await this.departmentRepository.findById(request.targetDepartmentId as any);
-            const headPosId = dept?.headPositionId && dept.headPositionId.toString && dept.headPositionId.toString();
-            if (headPosId) {
-                const heads = await this.employeeModel.find({ primaryPositionId: headPosId }).select('_id').lean().exec();
-                for (const h of heads) recipientIds.add(h._id.toString());
-            }
-        }
-
-        // Always include the submitter/requester if present
-        if (request.submittedByEmployeeId) recipientIds.add(request.submittedByEmployeeId.toString());
-        if (request.requestedByEmployeeId) recipientIds.add(request.requestedByEmployeeId.toString());
-
-        const recipients = Array.from(recipientIds);
-        if (!recipients.length) return;
-
-        let title: string;
-        let message: string;
-        if (action === 'submitted') {
-            title = `Structure Change Request Submitted: ${request.requestNumber}`;
-            message = `A structure change request (${request.requestNumber}) has been submitted. Details: ${request.details || request.reason || ''}`;
-        } else if (action === 'approved') {
-            title = `Structure Change Request Approved: ${request.requestNumber}`;
-            message = `A structure change request (${request.requestNumber}) has been approved.`;
-        } else {
-            title = `Structure Change Request Rejected: ${request.requestNumber}`;
-            message = `A structure change request (${request.requestNumber}) has been rejected. ${request.details || request.reason || ''}`;
-        }
-
-        const payload: CreateNotificationDto = {
-            recipientId: recipients,
-            type: 'Alert',
-            deliveryType: recipients.length > 1 ? 'MULTICAST' : 'UNICAST',
-            title,
-            message,
-            relatedEntityId: request._id?.toString(),
-            relatedModule: 'OrganizationStructure',
-        } as any;
-
-        if (this.notificationService && typeof this.notificationService.create === 'function') {
-            try {
-                console.log('[OrganizationStructure] notifyStakeholders - creating notification payload:', JSON.stringify(payload));
-                const res = await this.notificationService.create(payload);
-                console.log('[OrganizationStructure] notifyStakeholders - notificationService.create result:', res);
-            } catch (err) {
-                console.log('[OrganizationStructure] notifyStakeholders - notificationService.create failed:', err);
-            }
-        } else {
-            console.log('[OrganizationStructure] notifyStakeholders - no notificationService available; payload would be:', JSON.stringify(payload));
-        }
+    // If a target department is specified, notify the department head position holders
+    if (request.targetDepartmentId) {
+      const dept = await this.departmentRepository.findById(request.targetDepartmentId as any);
+      const headPosId = dept?.headPositionId && dept.headPositionId.toString && dept.headPositionId.toString();
+      if (headPosId) {
+        const heads = await this.employeeModel.find({ primaryPositionId: headPosId }).select('_id').lean().exec();
+        for (const h of heads) recipientIds.add(h._id.toString());
+      }
     }
+
+    // Always include the submitter/requester if present
+    if (request.submittedByEmployeeId) recipientIds.add(request.submittedByEmployeeId.toString());
+    if (request.requestedByEmployeeId) recipientIds.add(request.requestedByEmployeeId.toString());
+
+    const recipients = Array.from(recipientIds);
+    if (!recipients.length) return;
+
+    let title: string;
+    let message: string;
+    if (action === 'submitted') {
+      title = `Structure Change Request Submitted: ${request.requestNumber}`;
+      message = `A structure change request (${request.requestNumber}) has been submitted. Details: ${request.details || request.reason || ''}`;
+    } else if (action === 'approved') {
+      title = `Structure Change Request Approved: ${request.requestNumber}`;
+      message = `A structure change request (${request.requestNumber}) has been approved.`;
+    } else {
+      title = `Structure Change Request Rejected: ${request.requestNumber}`;
+      message = `A structure change request (${request.requestNumber}) has been rejected. ${request.details || request.reason || ''}`;
+    }
+
+    const payload: CreateNotificationDto = {
+      recipientId: recipients,
+      type: 'Alert',
+      deliveryType: recipients.length > 1 ? 'MULTICAST' : 'UNICAST',
+      title,
+      message,
+      relatedEntityId: request._id?.toString(),
+      relatedModule: 'OrganizationStructure',
+    } as any;
+
+    if (this.notificationService && typeof this.notificationService.create === 'function') {
+      try {
+        console.log('[OrganizationStructure] notifyStakeholders - creating notification payload:', JSON.stringify(payload));
+        const res = await this.notificationService.create(payload);
+        console.log('[OrganizationStructure] notifyStakeholders - notificationService.create result:', res);
+      } catch (err) {
+        console.log('[OrganizationStructure] notifyStakeholders - notificationService.create failed:', err);
+      }
+    } else {
+      console.log('[OrganizationStructure] notifyStakeholders - no notificationService available; payload would be:', JSON.stringify(payload));
+    }
+  }
 
   /**
    * Build and return the organizational hierarchy as a tree of positions.
@@ -500,12 +500,29 @@ export class OrganizationStructureService {
       );
     }
 
+    // Check for duplicate position code
+    const existingPosition = await this.positionRepository.findOne({
+      code: dto.code,
+    });
+    if (existingPosition) {
+      throw new BadRequestException(
+        `Position with code ${dto.code} already exists`,
+      );
+    }
+
     // ensure department exists
     const dept = await this.departmentRepository.findById(dto.departmentId);
     if (!dept)
       throw new BadRequestException(
         'Department not found for provided departmentId',
       );
+
+    // Automatic reportsToPositionId assignment
+    if (!dto.reportsToPositionId) {
+      if (dept.headPositionId) {
+        dto.reportsToPositionId = dept.headPositionId;
+      }
+    }
 
     return this.positionRepository.create(dto);
   }

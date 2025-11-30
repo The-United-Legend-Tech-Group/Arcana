@@ -149,7 +149,9 @@ export class LeavesRequestService {
     const members = Array.isArray(team?.items) ? team.items : [];
     if (members.length === 0) return [];
 
-    const employeeIds = members.map((m: any) => m._id || m.employeeProfileId || m.id).filter(Boolean);
+    const employeeIds = members
+      .map((m: any) => m._id || m.employeeProfileId || m.id)
+      .filter(Boolean);
     if (employeeIds.length === 0) return [];
 
     return this.leaveRequestModel

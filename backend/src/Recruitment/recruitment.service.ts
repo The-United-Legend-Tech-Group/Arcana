@@ -22,6 +22,7 @@ import { SendOfferDto } from './DTO/send-offer.dto';
 import { CandidateRespondOfferDto } from './DTO/candidate-respond-offer.dto';
 import { EmployeeService } from '../employee-subsystem/employee/employee.service';
 import { ConfigSetupService } from '../payroll/config_setup/config_setup.service';
+import { EmployeeSigningBonusService } from '../payroll/execution/services/EmployeesigningBonus.service';
 //import { PayrollExecutionService } from '../payroll-execution/payroll-execution.service';
 
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
@@ -96,6 +97,7 @@ export class RecruitmentService {
     private readonly candidateRepository: CandidateRepository,
     private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     private readonly configSetupService: ConfigSetupService,
+    private readonly employeeSigningBonusService: EmployeeSigningBonusService,
     //private payrollExecutionService: PayrollExecutionService,
   ) { }
 
@@ -538,19 +540,56 @@ export class RecruitmentService {
         relatedModule: 'Recruitment',
         isRead: false,
       });
+
+      // Automatically process signing bonus when BOTH employee and HR have signed
+      if (contract.signingBonus && contract.signingBonus > 0 && contract.role) {
+        await this.processSigningBonusForNewHire(
+          employeeProfileId,
+          contract.role
+        );
+      }
     }
 
-    // Automatically process signing bonus when BOTH employee and HR have signed
-    // if (contract.signingBonus && contract.signingBonus > 0 && contract.role) {
-    //     if (offer?.candidateId) {
-    //         await this.payrollExecutionService.processSigningBonusByPosition(
-    //             offer.candidateId.toString(),
-    //             contract.role
-    //         );
-    //     }
-    // }
-
     return contract;
+  }
+
+  /**
+   * Process signing bonus for new hire after contract is fully signed
+   * ONB-019: Automatically create employee signing bonus record
+   */
+  async processSigningBonusForNewHire(employeeId: string, positionName: string): Promise<void> {
+    try {
+      // Create employee signing bonus record using the payroll execution service
+      await this.employeeSigningBonusService.createEmployeeSigningBonus({
+        employeeId,
+        positionName,
+      });
+
+      // Send notification to HR about signing bonus creation
+      await this.notificationService.create({
+        recipientId: [],
+        type: 'Info',
+        deliveryType: 'BROADCAST',
+        deliverToRole: SystemRole.HR_MANAGER,
+        title: 'Signing Bonus Record Created',
+        message: `Signing bonus record has been automatically created for employee ${employeeId} for position ${positionName}. Status: Pending approval.`,
+        relatedModule: 'Recruitment',
+        isRead: false,
+      });
+    } catch (error) {
+      console.error('Failed to process signing bonus for new hire:', error);
+      // Send error notification to HR
+      await this.notificationService.create({
+        recipientId: [],
+        type: 'Alert',
+        deliveryType: 'BROADCAST',
+        deliverToRole: SystemRole.HR_MANAGER,
+        title: 'Signing Bonus Processing Failed',
+        message: `Failed to create signing bonus record for employee ${employeeId}. Position: ${positionName}. Please create manually. Error: ${error.message || 'Unknown error'}`,
+        relatedModule: 'Recruitment',
+        isRead: false,
+      });
+    }
   }
 
   // need guards for auth and roles

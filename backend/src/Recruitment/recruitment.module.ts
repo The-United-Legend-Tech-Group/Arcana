@@ -58,6 +58,7 @@ import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
 import { ConfigSetupModule } from '../payroll/config_setup/config_setup.module';
+import { ExecutionModule } from '../payroll/execution/execution.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -98,6 +99,7 @@ import { ConfigSetupModule } from '../payroll/config_setup/config_setup.module';
     OrganizationStructureModule,
     LeavesModule,
     ConfigSetupModule,
+    ExecutionModule,
   ],
   controllers: [
     RecruitmentController,

@@ -106,6 +106,24 @@ export class RecruitmentService {
   async createOffer(dto: CreateOfferDto) {
     const { applicationId, candidateId, hrEmployeeId, role, benefits, conditions, insurances, content, deadline } = dto;
 
+    // Validate application exists
+    const application = await this.applicationRepository.findById(applicationId);
+    if (!application) {
+      throw new NotFoundException(`Application with id ${applicationId} not found`);
+    }
+
+    // Validate candidate exists
+    const isCandidateValid = await this.validateCandidateExistence(candidateId);
+    if (!isCandidateValid) {
+      throw new NotFoundException(`Candidate with id ${candidateId} is not valid or not active`);
+    }
+
+    // Validate HR employee exists and has proper role
+    const isValidHR = await this.validateEmployeeExistence(hrEmployeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
+    if (!isValidHR) {
+      throw new NotFoundException(`HR Employee with id ${hrEmployeeId} is not valid or not active`);
+    }
+
     // Lookup signing bonus by role/position from payroll configuration
     const bonusConfig = await this.configSetupService.signingBonus.findOne({
       positionName: role,
@@ -162,6 +180,12 @@ export class RecruitmentService {
       throw new NotFoundException('Offer not found');
     }
 
+    // Validate employee exists and is active
+    const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
+    if (!isValidEmployee) {
+      throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
+    }
+
     // Check if approver already exists
     const existingApprover = offer.approvers.find(
       a => a.employeeId.toString() === employeeId
@@ -197,6 +221,12 @@ export class RecruitmentService {
     const offer = await this.offerRepository.findById(offerId);
     if (!offer) {
       throw new NotFoundException('Offer not found');
+    }
+
+    // Validate employee exists and is active
+    const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
+    if (!isValidEmployee) {
+      throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
     }
 
     // Find the approver in the list
@@ -247,6 +277,12 @@ export class RecruitmentService {
     const offer = await this.offerRepository.findById(offerId);
     if (!offer) {
       throw new NotFoundException('Offer not found');
+    }
+
+    // Validate HR employee who created the offer still exists and is active
+    const isValidHR = await this.validateEmployeeExistence(offer.hrEmployeeId.toString(), [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
+    if (!isValidHR) {
+      throw new NotFoundException(`HR Employee who created this offer (${offer.hrEmployeeId}) is not valid or not active`);
     }
 
     // Check if all required approvals are obtained
@@ -372,12 +408,36 @@ export class RecruitmentService {
       throw new NotFoundException('Contract not found');
     }
 
+    // Validate candidate exists
+    if (!candidateId) {
+      throw new BadRequestException('Candidate ID is required to sign contract');
+    }
+
+    const isCandidateValid = await this.validateCandidateExistence(candidateId);
+    if (!isCandidateValid) {
+      throw new NotFoundException(`Candidate with id ${candidateId} is not valid or not active`);
+    }
+
+    // Get the offer associated with this contract to verify candidate ownership
+    const offer = await this.offerRepository.findById(contract.offerId?.toString());
+
+    if (!offer) {
+      throw new NotFoundException('Offer associated with this contract not found');
+    }
+
+    // Verify that the candidate signing is the same candidate who received the offer
+    const offerCandidateId = offer.candidateId?.toString();
+    if (!offerCandidateId) {
+      throw new BadRequestException('Offer does not have a valid candidate ID');
+    }
+
+    if (offerCandidateId !== candidateId) {
+      throw new BadRequestException('This contract does not belong to you. You can only sign your own contract.');
+    }
+
+    // Validate that at least one contract document is provided
     if (!files || files.length === 0) {
-      // nothing to attach — simply update signedAt if provided
-      const updatedContract = await this.contractRepository.updateById(contractId, {
-        employeeSignedAt: signedAt ? new Date(signedAt) : new Date()
-      });
-      return updatedContract;
+      throw new BadRequestException('At least one contract document must be uploaded when signing the contract');
     }
 
     // determine which file is the main signed contract
@@ -453,16 +513,31 @@ export class RecruitmentService {
     await this.contractRepository.updateById(contractId, updateData);
 
     // Get candidateId from the offer for onboarding and bonus processing
-    const populatedContract = await this.contractRepository.findById(contractId);
-    const offer = populatedContract?.offerId as any;
+    const updatedContract = await this.contractRepository.findById(contractId);
+    
+    if (!updatedContract?.offerId) {
+      throw new NotFoundException('Contract does not have an associated offer');
+    }
+
+    // Fetch the offer to get candidate information
+    const offer = await this.offerRepository.findById(updatedContract.offerId.toString());
+    
+    if (!offer) {
+      throw new NotFoundException('Offer associated with this contract not found');
+    }
 
     // Automatically trigger onboarding when BOTH employee and HR have signed
-    if (offer?.candidateId) {
-      const candidate = offer.candidateId;
+    if (offer.candidateId) {
+      // Fetch the candidate details
+      const candidate = await this.candidateRepository.findById(offer.candidateId.toString());
+      
+      if (!candidate) {
+        throw new NotFoundException('Candidate associated with this offer not found');
+      }
 
       // Update candidate status to HIRED
       await this.employeeService.updateCandidateStatus(
-        candidate._id ? candidate._id.toString() : candidate.toString(),
+        offer.candidateId.toString(),
         { status: CandidateStatus.HIRED } as UpdateCandidateStatusDto
       );
 
@@ -504,8 +579,29 @@ export class RecruitmentService {
         throw new BadRequestException('Employee must have a national ID before creating employee profile');
       }
 
-      const createdEmployee = await this.employeeService.onboard(employeeData);
-      const employeeProfileId = String((createdEmployee as any)._id || (createdEmployee as any).id);
+      // Check if employee already exists with this national ID or employee number
+      let employeeProfileId: string;
+      try {
+        const createdEmployee = await this.employeeService.onboard(employeeData);
+        employeeProfileId = String((createdEmployee as any)._id || (createdEmployee as any).id);
+      } catch (error) {
+        // If employee already exists (409 Conflict), try to find them by national ID
+        if (error.status === 409 || error.message?.includes('already exists')) {
+          const existingEmployee = await this.employeeProfileRepository.findOne({ 
+            nationalId: employeeData.nationalId 
+          });
+          
+          if (existingEmployee) {
+            employeeProfileId = existingEmployee._id.toString();
+            console.log(`Employee already exists with ID: ${employeeProfileId}. Using existing employee profile.`);
+          } else {
+            // If we can't find the employee, re-throw the original error
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
 
       const startDate = new Date();
       startDate.setDate(startDate.getDate() + 7); // Start date 7 days from now
@@ -532,7 +628,7 @@ export class RecruitmentService {
 
       // Send notification to candidate (before they become employee) about acceptance
       await this.notificationService.create({
-        recipientId: [offer.candidateId._id.toString()],
+        recipientId: [offer.candidateId.toString()],
         type: 'Success',
         deliveryType: 'UNICAST',
         title: 'Contract Fully Signed - You Are Hired!',
@@ -542,15 +638,15 @@ export class RecruitmentService {
       });
 
       // Automatically process signing bonus when BOTH employee and HR have signed
-      if (contract.signingBonus && contract.signingBonus > 0 && contract.role) {
+      if (updatedContract.signingBonus && updatedContract.signingBonus > 0 && updatedContract.role) {
         await this.processSigningBonusForNewHire(
           employeeProfileId,
-          contract.role
+          updatedContract.role
         );
       }
     }
 
-    return contract;
+    return updatedContract;
   }
 
   /**
@@ -1239,7 +1335,7 @@ export class RecruitmentService {
     });
 
     if (existingApplication) {
-      throw new Error(`Application already exists for candidate ${createApplicationDto.candidateId} and requisition ${createApplicationDto.requisitionId}`);
+      throw new BadRequestException(`Application already exists for candidate ${createApplicationDto.candidateId} and requisition ${createApplicationDto.requisitionId}`);
     }
 
     const applicationData = {

@@ -43,6 +43,11 @@ import {
   AttachmentRepository,
 } from './repository';
 
+import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsystem/employee/models/employee-system-role.schema';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -57,7 +62,17 @@ import {
       { name: LeaveRequest.name, schema: LeaveRequestSchema },
       { name: LeaveType.name, schema: LeaveTypeSchema },
       { name: LeaveCategory.name, schema: LeaveCategorySchema },
+      { name: EmployeeSystemRole.name, schema: EmployeeSystemRoleSchema },
     ]),
+    ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
+    }),
     EmployeeModule,
     NotificationModule,
     OrganizationStructureModule,
@@ -81,4 +96,4 @@ import {
   ],
   exports: [MongooseModule],
 })
-export class LeavesModule {}
+export class LeavesModule { }

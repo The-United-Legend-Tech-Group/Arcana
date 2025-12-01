@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { LeaveRequest } from '../models/leave-request.schema';
@@ -19,6 +20,10 @@ import {
   AttachmentRepository,
   LeaveEntitlementRepository,
 } from '../repository';
+import { AuthGuard } from '../../common/guards/authentication.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 
 @Injectable()
 export class LeavesRequestService {
@@ -32,6 +37,8 @@ export class LeavesRequestService {
   ) {}
 
   // ---------- REQ-015: Submit Leave Request ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_EMPLOYEE)
   async submitLeaveRequest(dto: CreateLeaveRequestDto): Promise<LeaveRequest> {
     // Validate leave type
     const leaveType = await this.leaveTypeRepository.findById(dto.leaveTypeId);
@@ -60,6 +67,8 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-016: Upload Supporting Document ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async uploadAttachment(dto: UploadAttachmentDto): Promise<Attachment> {
     return await this.attachmentRepository.create({
       originalName: dto.originalName,
@@ -70,6 +79,8 @@ export class LeavesRequestService {
   }
 
   // Optional: Attach existing uploaded document to a leave request
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async attachToLeaveRequest(
     leaveRequestId: string,
     attachmentId: string,
@@ -80,6 +91,8 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-017: Update Pending Leave Requests ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async modifyPendingRequest(
     id: string,
     dto: UpdateLeaveRequestDto,
@@ -95,6 +108,8 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-018: Cancel Pending Leave Requests ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async cancelPendingRequest(leaveRequestId: string): Promise<LeaveRequest> {
     const request = await this.leaveRequestRepository.findById(leaveRequestId);
 
@@ -111,6 +126,8 @@ export class LeavesRequestService {
   }
 
   // REQ-019: As an employee, receive notifications when my leave request is approved, rejected
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async notifyEmployee(status: LeaveStatus, r: string) {
     const request = await this.leaveRequestRepository.findById(r);
     if(!request) throw new NotFoundException("No Request Found");
@@ -138,6 +155,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-020: Manager Review Request
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD)
   async getLeaveRequestsForManager(managerId: string): Promise<LeaveRequest[]> {
     
     const team = await this.employeeService.getTeamProfiles(managerId);
@@ -153,6 +172,8 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-021: Manager Approves a request ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD)
   async approveRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
     return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.APPROVED,
@@ -168,6 +189,8 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-022: Manager Rejects a request ----------
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD)
   async rejectRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
     return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.REJECTED,
@@ -183,6 +206,8 @@ export class LeavesRequestService {
     });
   }
 
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD)
   async notifyManager(status: LeaveStatus, r: string) {
     const request = await this.leaveRequestRepository.findById(r);
     if(!request) throw new NotFoundException("No Request Found");
@@ -208,6 +233,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-025: HR Finalization
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER)
   async finalizeLeaveRequest(
     leaveRequestId: string,
     hrUserId: string,
@@ -238,6 +265,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-026: HR Override
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER)
   async hrOverrideRequest(
     leaveRequestId: string,
     hrUserId: string,
@@ -264,6 +293,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-027: Bulk Processing
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER)
   async bulkProcessRequests(
     leaveRequestIds: string[],
     action: string,
@@ -315,6 +346,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-028: Verify Medical Documents
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER)
   async verifyMedicalDocuments(
     leaveRequestId: string,
     hrUserId: string,
@@ -351,6 +384,8 @@ export class LeavesRequestService {
   // =============================
   // REQ-029: Auto Update Balance After Approval
   // =============================
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
   async autoUpdateBalancesForApprovedRequests(): Promise<{ updated: number }> {
     const approvedRequests = await this.leaveRequestRepository.find({
       status: LeaveStatus.APPROVED,

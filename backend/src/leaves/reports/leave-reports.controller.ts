@@ -6,6 +6,7 @@ import {
   Body,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { LeavesReportService } from './leave-reports.service';
@@ -13,6 +14,10 @@ import { FilterLeaveHistoryDto } from '../dtos/filter-leave-history.dto';
 import { ManagerFilterTeamDataDto } from '../dtos/manager-filter-team-data.dto';
 import { FlagIrregularDto } from '../dtos/flag-irregular.dto';
 import { SubmitPostLeaveDto } from '../dtos/submit-post-leave.dto';
+import { AuthGuard } from '../../common/guards/authentication.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 
 @ApiTags('Leaves Reports')
 @Controller('leaves-report')
@@ -26,6 +31,8 @@ export class LeavesReportController {
 
   // Get all leave balances
   @Get('balances/:employeeId')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD, SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.HR_MANAGER, SystemRole.HR_ADMIN)
   @ApiOperation({ summary: 'Get all leave balances for an employee' })
   @ApiParam({ name: 'employeeId', description: 'Employee ID' })
   @ApiResponse({ status: 200, description: 'Leave balances retrieved successfully' })
@@ -36,6 +43,8 @@ export class LeavesReportController {
 
   // Get leave balance for a specific leave type
   @Get('balances/:employeeId/:leaveTypeId')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD, SystemRole.DEPARTMENT_EMPLOYEE)
   @ApiOperation({ summary: 'Get leave balance for a specific leave type' })
   @ApiParam({ name: 'employeeId', description: 'Employee ID' })
   @ApiParam({ name: 'leaveTypeId', description: 'Leave type ID' })
@@ -52,6 +61,8 @@ export class LeavesReportController {
 // REQ-032 & REQ-033 — Employee View + Filter Past History
 // =============================
 @Get('history/:employeeId')
+@UseGuards(AuthGuard, authorizationGuard)
+@Roles(SystemRole.DEPARTMENT_HEAD, SystemRole.DEPARTMENT_EMPLOYEE)
 @ApiOperation({ summary: 'Get filtered leave history for an employee' })
 @ApiParam({ name: 'employeeId', description: 'Employee ID' })
 @ApiQuery({ type: FilterLeaveHistoryDto, description: 'Filter options' })
@@ -67,6 +78,8 @@ async getEmployeeLeaveHistory(
 // REQ-035 — Manager Filter Team Data
 // =============================
 @Get('manager/team-data')
+@UseGuards(AuthGuard, authorizationGuard)
+@Roles(SystemRole.DEPARTMENT_HEAD)
 @ApiOperation({ summary: 'Get filtered team data for manager' })
 @ApiQuery({ type: ManagerFilterTeamDataDto, description: 'Filter options for team data' })
 @ApiResponse({ status: 200, description: 'Team data retrieved successfully' })
@@ -79,7 +92,9 @@ async getManagerTeamData(
   // =============================
   // REQ-039 — Flag Irregular Patterns
   // =============================
-  @Patch('flag-irregular/:leaveRequestId')
+  @Patch('flag-irregular/:leaveRequestId') 
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({ summary: 'Flag or unflag irregular leave patterns' })
   @ApiParam({ name: 'leaveRequestId', description: 'Leave request ID' })
   @ApiBody({ type: FlagIrregularDto })
@@ -95,6 +110,8 @@ async getManagerTeamData(
 // REQ-034 —  Manager View Team Balances
 // =============================
 @Get('manager/team-balances/:managerId')
+@UseGuards(AuthGuard, authorizationGuard)
+@Roles(SystemRole.DEPARTMENT_HEAD)
 @ApiOperation({ summary: 'Get team leave balances for manager' })
 @ApiParam({ name: 'managerId', description: 'Manager ID' })
 @ApiResponse({ status: 200, description: 'Team balances retrieved successfully' })
@@ -106,6 +123,8 @@ async viewBalance(@Param('managerId') managerId: string) {
 // REQ-031 — Submit Post-Leave Request As an employee
 // =============================
 @Post('post-leave/:employeeId')
+@UseGuards(AuthGuard, authorizationGuard)
+@Roles(SystemRole.DEPARTMENT_EMPLOYEE)
 @ApiOperation({ summary: 'Submit post-leave feedback as an employee' })
 @ApiParam({ name: 'employeeId', description: 'Employee ID' })
 @ApiBody({ type: SubmitPostLeaveDto })
@@ -118,8 +137,5 @@ async submitPostLeave(
 ) {
   return this.leavesReportService.submitPostLeave(employeeId, body);
 }
-
-
-
 
 }

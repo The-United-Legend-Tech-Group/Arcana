@@ -1,12 +1,12 @@
-import {Controller,Post,Body,HttpCode,HttpStatus,UsePipes,ValidationPipe,Get,Query,Patch} from '@nestjs/common';
-import {ApiTags,ApiOperation,ApiBadRequestResponse,ApiNotFoundResponse,ApiCreatedResponse,ApiOkResponse} from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus, UsePipes, ValidationPipe, Get, Query, Patch } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBadRequestResponse, ApiNotFoundResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { OffboardingService } from './offboarding.service';
 import { InitiateTerminationReviewDto } from './offboardingDtos/initiate-termination-review.dto';
 import { InitiateOffboardingChecklistDto } from './offboardingDtos/initiate-offboarding-checklist.dto';
-import { SendOffboardingNotificationDto } from './offboardingDtos/send-offboarding-notification.dto';
+//import { SendOffboardingNotificationDto } from './offboardingDtos/send-offboarding-notification.dto';
 import { SubmitResignationDto } from './offboardingDtos/submit-resignation.dto';
 import { TrackResignationStatusDto } from './offboardingDtos/track-resignation-status.dto';
-import { RevokeSystemAccessDto } from './offboardingDtos/revoke-system-access.dto';
+//import { RevokeSystemAccessDto } from './offboardingDtos/revoke-system-access.dto';
 import { DepartmentClearanceSignOffDto } from './offboardingDtos/department-clearance-signoff.dto';
 import { ApproveTerminationDto } from './offboardingDtos/approve-termination.dto';
 import { TerminationRequest } from './models/termination-request.schema';
@@ -16,7 +16,7 @@ import { Notification } from '../employee-subsystem/notification/models/notifica
 @ApiTags('Offboarding')
 @Controller('offboarding')
 export class OffboardingController {
-  constructor(private readonly offboardingService: OffboardingService) {}
+  constructor(private readonly offboardingService: OffboardingService) { }
 
   @Post('initiate-termination-review')
   @ApiOperation({ summary: 'Initiate termination review for employee' })
@@ -47,10 +47,10 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Termination request or employee not found' })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async sendOffboardingNotification(@Body() dto: SendOffboardingNotificationDto): Promise<Notification> {
-    return this.offboardingService.sendOffboardingNotification(dto);
-  }
-
+  /* async sendOffboardingNotification(@Body() dto: SendOffboardingNotificationDto): Promise<Notification> {
+     return this.offboardingService.sendOffboardingNotification(dto);
+   }
+ */
   @Post('submit-resignation')
   @ApiOperation({ summary: 'Employee submits resignation request' })
   @ApiCreatedResponse({ description: 'Resignation submitted successfully', type: TerminationRequest })
@@ -82,17 +82,17 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Termination request or employee not found' })
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  async revokeSystemAccess(@Body() dto: RevokeSystemAccessDto): Promise<{
-    message: string;
-    employeeId: string;
-    employeeNumber: string;
-    previousStatus: string;
-    newStatus: string;
-    accessRevoked: boolean;
-    rolesDeactivated: boolean;
-  }> {
-    return this.offboardingService.revokeSystemAccess(dto);
-  }
+  /* async revokeSystemAccess(@Body() dto: RevokeSystemAccessDto): Promise<{
+     message: string;
+     employeeId: string;
+     employeeNumber: string;
+     previousStatus: string;
+     newStatus: string;
+     accessRevoked: boolean;
+     rolesDeactivated: boolean;
+   }> {
+     return this.offboardingService.revokeSystemAccess(dto);
+   }*/
 
   @Post('department-signoff')
   @ApiOperation({ summary: 'Process department clearance sign-off for employee exit' })

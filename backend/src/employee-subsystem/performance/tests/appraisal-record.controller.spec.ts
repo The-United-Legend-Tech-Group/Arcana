@@ -5,7 +5,7 @@ import { AppraisalRecordRepository } from '../repository/appraisal-record.reposi
 import { AppraisalTemplateRepository } from '../repository/appraisal-template.repository';
 import { UpdateAppraisalRecordDto } from '../dto/update-appraisal-record.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { AttendanceService } from '../../../time-mangement/attendance.service';
+import { AttendanceService } from '../../../time-mangement/services/attendance.service';
 import { AppraisalCycleRepository } from '../repository/appraisal-cycle.repository';
 import { AuthGuard } from '../../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../../common/guards/authorization.guard';

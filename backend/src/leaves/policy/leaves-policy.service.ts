@@ -9,7 +9,7 @@ import {
   LeaveEntitlementRepository,
   LeaveTypeRepository,
   LeaveAdjustmentRepository,
-  CalendarRepository
+  CalendarRepository,
 } from '../repository';
 import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
 import { InitiatePolicyDto } from '../dtos/initiate-policy.dto';
@@ -38,6 +38,7 @@ export class LeavesPolicyService {
     private readonly calendarRepository: CalendarRepository,
     private readonly employeeService: EmployeeService,
   ) {}
+  //private readonly approvalWorkflowService: ApprovalWorkflowService
 
   // REQ-001: Initiate a leave policy
   async initiatePolicy(dto: InitiatePolicyDto): Promise<LeavePolicy> {
@@ -47,29 +48,31 @@ export class LeavesPolicyService {
     });
   }
 
-  // =============================
-  // REQ-003: Configure Leave Settings
-  // =============================
-
-async configureLeaveSettings(leaveTypeId: string, settings: ConfigureSettingsDto): Promise<LeavePolicy> {
-  const policy = await this.leavePolicyRepository.update(
-    { leaveTypeId },
-    { ...settings },
-    { upsert: true }
-  );
-
-  if (!policy) {
-    throw new NotFoundException('Failed to create or update leave policy');
+  // REQ-001: Manage All Policies
+  async managePolicy(): Promise<LeavePolicy[]>{
+    return this.leavePolicyRepository.find();
   }
 
-  return policy;
-}
+  // REQ-003: Configure Leave Settings
+  async configureLeaveSettings(leaveTypeId: string, settings: ConfigureSettingsDto): Promise<LeavePolicy> {
+    const policy = await this.leavePolicyRepository.update(
+      { leaveTypeId },
+      { ...settings },
+      { upsert: true }
+    );
 
-async getLeaveSettings(leaveTypeId: string): Promise<LeavePolicy> {
-  const policy = await this.leavePolicyRepository.findOne({ leaveTypeId });
-  if (!policy) throw new NotFoundException('Leave settings not found');
-  return policy;
-}
+    if (!policy) {
+      throw new NotFoundException('Failed to create or update leave policy');
+    }
+
+    return policy;
+  }
+
+  async getLeaveSettings(leaveTypeId: string): Promise<LeavePolicy> {
+    const policy = await this.leavePolicyRepository.findOne({ leaveTypeId });
+    if (!policy) throw new NotFoundException('Leave settings not found');
+    return policy;
+  }
 /*
   // REQ-005: Update entitlement
   async updateEntitlement(dto: UpdateEntitlementDto): Promise<LeaveEntitlement> {
@@ -103,243 +106,247 @@ async getLeaveSettings(leaveTypeId: string): Promise<LeavePolicy> {
     return updatedEntitlement;
   }
 */
-private applyRoundingRule(value: number, rule: RoundingRule): number {
-  switch (rule) {
-    case RoundingRule.ROUND:
-      return Math.round(value);
-    case RoundingRule.ROUND_UP:
-      return Math.ceil(value);
-    case RoundingRule.ROUND_DOWN:
-      return Math.floor(value);
-    case RoundingRule.NONE:
-    default:
-      return value;
-  }
-}
-
-private calculateAccrual(policy: LeavePolicy, employmentType: string): number {
-  // You can expand this based on contract rules
-  let rate = 0;
-
-  switch (policy.accrualMethod) {
-    case AccrualMethod.MONTHLY:
-      rate = policy.monthlyRate;
-      break;
-
-    case AccrualMethod.YEARLY:
-      rate = policy.yearlyRate;
-      break;
-
-    case AccrualMethod.PER_TERM:
-      rate = policy.monthlyRate * 6;
-      break;
-
-    default:
-      rate = 0;
+  private applyRoundingRule(value: number, rule: RoundingRule): number {
+    switch (rule) {
+      case RoundingRule.ROUND:
+        return Math.round(value);
+      case RoundingRule.ROUND_UP:
+        return Math.ceil(value);
+      case RoundingRule.ROUND_DOWN:
+        return Math.floor(value);
+      case RoundingRule.NONE:
+      default:
+        return value;
+    }
   }
 
-  // Example: contract type may reduce entitlement for part-time
-  if (employmentType === 'PART_TIME') {
-    rate *= 0.5; // business logic (adjust as needed)
+  private calculateAccrual(policy: LeavePolicy, employmentType: string): number {
+    // You can expand this based on contract rules
+    let rate = 0;
+
+    switch (policy.accrualMethod) {
+      case AccrualMethod.MONTHLY:
+        rate = policy.monthlyRate;
+        break;
+
+      case AccrualMethod.YEARLY:
+        rate = policy.yearlyRate;
+        break;
+
+      case AccrualMethod.PER_TERM:
+        rate = policy.monthlyRate * 6;
+        break;
+
+      default:
+        rate = 0;
+    }
+
+    // Example: contract type may reduce entitlement for part-time
+    if (employmentType === 'PART_TIME') {
+      rate *= 0.5; // business logic (adjust as needed)
+    }
+
+    return rate;
+  }
+  private calculateCarryForward(policy: LeavePolicy, entitlement: LeaveEntitlement): number {
+    if (!policy.carryForwardAllowed) return 0;
+
+    const eligibleCarry = Math.min(
+      entitlement.remaining,
+      policy.maxCarryForward
+    );
+
+    return eligibleCarry;
   }
 
-  return rate;
-}
-private calculateCarryForward(policy: LeavePolicy, entitlement: LeaveEntitlement): number {
-  if (!policy.carryForwardAllowed) return 0;
-
-  const eligibleCarry = Math.min(
-    entitlement.remaining,
-    policy.maxCarryForward
-  );
-
-  return eligibleCarry;
-}
-
-private computeRemaining(ent: LeaveEntitlement): number {
-  return (
-    ent.yearlyEntitlement +
-    ent.carryForward +
-    ent.accruedRounded -
-    ent.taken -
-    ent.pending
-  );
-}
-
-async updateEntitlementInternal(
-  employeeId: string,
-  leaveTypeId: string,
-): Promise<LeaveEntitlement> {
-  
-  const employeeProfile = await this.employeeService.getProfile(employeeId);
-  if (!employeeProfile) throw new NotFoundException('Employee profile not found');
-
-
-  const entitlement = await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
-    employeeId,
-    leaveTypeId
-  );
-  if (!entitlement) throw new NotFoundException('Leave entitlement not found');
-
-  const policy = await this.leavePolicyRepository.findByLeaveTypeId(leaveTypeId);
-  
-  if(!policy) throw new  NotFoundException('Leave policy not found');
-  /** ---------------------
-   * 1. CALCULATE ACCRUAL
-   * --------------------- */
-  const accrualActual = this.calculateAccrual(policy, employeeProfile.profile?.workType?.toString() ?? '');
-
-  /** ---------------------
-   * 2. APPLY ROUNDING RULE
-   * --------------------- */
-  const accrualRounded = this.applyRoundingRule(
-    accrualActual,
-    policy.roundingRule
-  );
-
-  entitlement.accruedActual += accrualActual;
-  entitlement.accruedRounded += accrualRounded;
-
-  /** ---------------------
-   * 3. HANDLE CARRY FORWARD
-   * --------------------- */
-  const carryForwardAmount = this.calculateCarryForward(policy, entitlement);
-  entitlement.carryForward = carryForwardAmount;
-
-  /** ---------------------
-   * 4. UPDATE YEARLY ENTITLEMENT (FROM POLICY)
-   * --------------------- */
-  entitlement.yearlyEntitlement = policy.yearlyRate;
-
-  /** ---------------------
-   * 5. CALCULATE REMAINING
-   * --------------------- */
-  entitlement.remaining = this.computeRemaining(entitlement);
-
-  /** ---------------------
-   * 6. UPDATE EXPIRY / RESET
-   * --------------------- */
-  if (policy.expiryAfterMonths) {
-    const nextReset = new Date();
-    nextReset.setMonth(nextReset.getMonth() + policy.expiryAfterMonths);
-    entitlement.nextResetDate = nextReset;
+  private computeRemaining(ent: LeaveEntitlement): number {
+    return (
+      ent.yearlyEntitlement +
+      ent.carryForward +
+      ent.accruedRounded -
+      ent.taken -
+      ent.pending
+    );
   }
 
-  entitlement.lastAccrualDate = new Date();
+  async updateEntitlementInternal(
+    employeeId: string,
+    leaveTypeId: string,
+  ): Promise<LeaveEntitlement> {
+    
+    const employeeProfile = await this.employeeService.getProfile(employeeId);
+    if (!employeeProfile) throw new NotFoundException('Employee profile not found');
 
-  /** ---------------------
-   * 7. SAVE
-   * --------------------- */
-  return entitlement.save(); // TODO: Use updateById instead of save
-}
 
-// =============================
-// REQ-006: Create & Manage Leave Types
-// =============================
+    const entitlement = await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
+      employeeId,
+      leaveTypeId
+    );
+    if (!entitlement) throw new NotFoundException('Leave entitlement not found');
 
-async createLeaveType(dto: CreateLeaveTypeDto): Promise<LeaveType> {
-  return this.leaveTypeRepository.create({
-    ...dto,
-    categoryId: new Types.ObjectId(dto.categoryId)
-  });
-}
+    const policy = await this.leavePolicyRepository.findByLeaveTypeId(leaveTypeId);
+    
+    if(!policy) throw new  NotFoundException('Leave policy not found');
+    /** ---------------------
+     * 1. CALCULATE ACCRUAL
+     * --------------------- */
+    const accrualActual = this.calculateAccrual(policy, employeeProfile.profile?.workType?.toString() ?? '');
 
-async getAllLeaveTypes(): Promise<LeaveType[]> {
-  return this.leaveTypeRepository.find();
-}
+    /** ---------------------
+     * 2. APPLY ROUNDING RULE
+     * --------------------- */
+    const accrualRounded = this.applyRoundingRule(
+      accrualActual,
+      policy.roundingRule
+    );
 
-async getLeaveTypeById(id: string): Promise<LeaveType> {
-  const type = await this.leaveTypeRepository.findById(id);
-  if (!type) throw new NotFoundException('Leave type not found');
-  return type;
-}
+    entitlement.accruedActual += accrualActual;
+    entitlement.accruedRounded += accrualRounded;
 
-async updateLeaveType(id: string, dto: UpdateLeaveTypeDto): Promise<LeaveType> {
-  const updated = await this.leaveTypeRepository.updateById(id, dto);
-  if (!updated) throw new NotFoundException('Leave type not found');
-  return updated;
-}
+    /** ---------------------
+     * 3. HANDLE CARRY FORWARD
+     * --------------------- */
+    const carryForwardAmount = this.calculateCarryForward(policy, entitlement);
+    entitlement.carryForward = carryForwardAmount;
 
-async deleteLeaveType(id: string): Promise<void> {
-  const deleted = await this.leaveTypeRepository.deleteById(id);
-  if (!deleted) throw new NotFoundException('Leave type not found');
-}
+    /** ---------------------
+     * 4. UPDATE YEARLY ENTITLEMENT (FROM POLICY)
+     * --------------------- */
+    entitlement.yearlyEntitlement = policy.yearlyRate;
 
-// REQ-007: Set Eligibility Rules
+    /** ---------------------
+     * 5. CALCULATE REMAINING
+     * --------------------- */
+    entitlement.remaining = this.computeRemaining(entitlement);
 
-async setEligibilityRules(dto: SetEligibilityRulesDto) {
-  const updated = await this.leavePolicyRepository.update(
-    { leaveTypeId: dto.leaveTypeId },
-    {
-      eligibility: {
-        minTenureMonths: dto.minTenureMonths ?? null,
-        positionsAllowed: dto.positionsAllowed ?? [],
-        contractTypesAllowed: dto.contractTypesAllowed ?? [],
-      },
-    },
-  );
+    /** ---------------------
+     * 6. UPDATE EXPIRY / RESET
+     * --------------------- */
+    if (policy.expiryAfterMonths) {
+      const nextReset = new Date();
+      nextReset.setMonth(nextReset.getMonth() + policy.expiryAfterMonths);
+      entitlement.nextResetDate = nextReset;
+    }
 
-  return updated;
-}
+    entitlement.lastAccrualDate = new Date();
 
-// =========================================
-// REQ-008 — Assign Personalized Entitlements
-// =========================================
+    /** ---------------------
+     * 7. SAVE
+     * --------------------- */
+    return entitlement.save(); // TODO: Use updateById instead of save
+  }
 
-async assignPersonalizedEntitlement(dto: AssignPersonalizedEntitlementDto) {
-  // 1. Check if entitlement exists for employee + leaveType
-  let entitlement = await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
-    dto.employeeId,
-    dto.leaveTypeId
-  );
+  // =============================
+  // REQ-006: Create & Manage Leave Types
+  // =============================
 
-  if (!entitlement) {
-    // Create new entitlement if missing
-    entitlement = await this.leaveEntitlementRepository.create({
-      employeeId: new Types.ObjectId(dto.employeeId),
-      leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
-      yearlyEntitlement: 0,
-      accruedActual: 0,
-      accruedRounded: 0,
-      carryForward: 0,
-      taken: 0,
-      pending: 0,
-      remaining: 0,
+  async createLeaveType(dto: CreateLeaveTypeDto): Promise<LeaveType> {
+    return this.leaveTypeRepository.create({
+      ...dto,
+      categoryId: new Types.ObjectId(dto.categoryId)
     });
   }
 
-  // 2. Apply override or extra days
-  const updateData: any = {};
-  if (dto.overrideYearlyEntitlement !== undefined) {
-    updateData.yearlyEntitlement = dto.overrideYearlyEntitlement;
+  async getAllLeaveTypes(): Promise<LeaveType[]> {
+    return this.leaveTypeRepository.find();
   }
 
-  if (dto.extraDays !== undefined) {
-    updateData.yearlyEntitlement = (entitlement.yearlyEntitlement || 0) + dto.extraDays;
+  async getLeaveTypeById(id: string): Promise<LeaveType> {
+    const type = await this.leaveTypeRepository.findById(id);
+    if (!type) throw new NotFoundException('Leave type not found');
+    return type;
   }
 
-  // Recalculate remaining
-  const taken = entitlement.taken || 0;
-  const pending = entitlement.pending || 0;
-  updateData.remaining = (updateData.yearlyEntitlement || entitlement.yearlyEntitlement || 0) - (taken + pending);
+  async updateLeaveType(id: string, dto: UpdateLeaveTypeDto): Promise<LeaveType> {
+    const updated = await this.leaveTypeRepository.updateById(id, dto);
+    if (!updated) throw new NotFoundException('Leave type not found');
+    return updated;
+  }
 
-  const updatedEntitlement = await this.leaveEntitlementRepository.updateById(
-    entitlement._id.toString(),
-    updateData,
-  );
+  async deleteLeaveType(id: string): Promise<void> {
+    const deleted = await this.leaveTypeRepository.deleteById(id);
+    if (!deleted) throw new NotFoundException('Leave type not found');
+  }
 
-  // 3. Store adjustment audit log
-  await this.leaveAdjustmentRepository.create({
-    employeeId: new Types.ObjectId(dto.employeeId),
-    leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
-    adjustmentType: dto.adjustmentType,
-    amount: dto.extraDays ?? dto.overrideYearlyEntitlement,
-    reason: dto.reason,
-    hrUserId: new Types.ObjectId(dto.hrUserId),
-  });
+  // REQ-007: Set Eligibility Rules
 
-  return updatedEntitlement;
-}
+  async setEligibilityRules(dto: SetEligibilityRulesDto) {
+    const updated = await this.leavePolicyRepository.update(
+      { leaveTypeId: dto.leaveTypeId },
+      {
+        eligibility: {
+          minTenureMonths: dto.minTenureMonths ?? null,
+          positionsAllowed: dto.positionsAllowed ?? [],
+          contractTypesAllowed: dto.contractTypesAllowed ?? [],
+        },
+      },
+    );
+
+    return updated;
+  }
+
+  // REQ-008 — Assign Personalized Entitlements
+  async assignPersonalizedEntitlement(dto: AssignPersonalizedEntitlementDto) {
+    // 1. Check if entitlement exists for employee + leaveType
+    let entitlement = await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
+      dto.employeeId,
+      dto.leaveTypeId
+    );
+
+    if (!entitlement) {
+      // Create new entitlement if missing
+      entitlement = await this.leaveEntitlementRepository.create({
+        employeeId: new Types.ObjectId(dto.employeeId),
+        leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
+        yearlyEntitlement: 0,
+        accruedActual: 0,
+        accruedRounded: 0,
+        carryForward: 0,
+        taken: 0,
+        pending: 0,
+        remaining: 0,
+      });
+    }
+
+    // 2. Apply override or extra days
+    const updateData: any = {};
+    if (dto.overrideYearlyEntitlement !== undefined) {
+      updateData.yearlyEntitlement = dto.overrideYearlyEntitlement;
+    }
+
+    if (dto.extraDays !== undefined) {
+      updateData.yearlyEntitlement = (entitlement.yearlyEntitlement || 0) + dto.extraDays;
+    }
+
+    // Recalculate remaining
+    const taken = entitlement.taken || 0;
+    const pending = entitlement.pending || 0;
+    updateData.remaining = (updateData.yearlyEntitlement || entitlement.yearlyEntitlement || 0) - (taken + pending);
+
+    const updatedEntitlement = await this.leaveEntitlementRepository.updateById(
+      entitlement._id.toString(),
+      updateData,
+    );
+
+    // 3. Store adjustment audit log
+    await this.leaveAdjustmentRepository.create({
+      employeeId: new Types.ObjectId(dto.employeeId),
+      leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
+      adjustmentType: dto.adjustmentType,
+      amount: dto.extraDays ?? dto.overrideYearlyEntitlement,
+      reason: dto.reason,
+      hrUserId: new Types.ObjectId(dto.hrUserId),
+    });
+
+    return updatedEntitlement;
+  }
+
+  // REQ-008 - Get Vacation/LeaveType by Code
+  async getVacationByCode(code: string){
+    return this.leaveTypeRepository.findByCode(code);
+  }
+
+  
 
   // REQ-009 - Configure leave parameters such as maximum duration, notice periods, and approval workflows
   async configureLeaveParameters(leaveTypeId: string, dto: ConfigureLeaveParametersDto) {
@@ -355,7 +362,13 @@ async assignPersonalizedEntitlement(dto: AssignPersonalizedEntitlementDto) {
     if(dto.minNoticeDays) {
       leavePolicy.minNoticeDays = dto.minNoticeDays;
     }
-
+    const approvalWorkflow = dto.approvalFlowRoles
+    
+    return {
+      leaveType,
+      leavePolicy,
+      approvalWorkflow
+    }
   }
 
   // REQ-010 — Create or update calendar for a specific year
@@ -386,7 +399,6 @@ async assignPersonalizedEntitlement(dto: AssignPersonalizedEntitlementDto) {
     const calendars = await this.calendarRepository.findByYear(year);
     return calendars || null;
   }
-
 
 // =============================
 // REQ-011: Configure Special Absence/Mission Types with Custom Rules - Testing
@@ -550,4 +562,11 @@ private async updateLeaveBalance(employeeId: string, leaveTypeId: string, adjust
 async getAdjustmentHistory(employeeId: string): Promise<LeaveAdjustment[]> {
   return this.leaveAdjustmentRepository.findByEmployeeId(employeeId);
 }
+
+//Ahmed Hebesha
+async getLeaveEntitlementByEmployeeId(employeeId: string ): Promise<LeaveEntitlement[]> {
+  return this.leaveEntitlementRepository.findByEmployeeId(employeeId);
+  
+}
+
 }

@@ -4,12 +4,13 @@ import { DocumentType } from '../enums/document-type.enum';
 
 @Schema({ timestamps: true })
 export class Document {
+
   @Prop({ type: Types.ObjectId, ref: 'User' })
   ownerId: Types.ObjectId;
 
   @Prop({
     enum: DocumentType,
-    required: true,
+    required: true
   })
   type: DocumentType;
 

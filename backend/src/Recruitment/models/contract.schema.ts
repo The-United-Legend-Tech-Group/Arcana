@@ -3,6 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Contract {
+
   @Prop({ type: Types.ObjectId, ref: 'Offer', required: true })
   offerId: Types.ObjectId;
 

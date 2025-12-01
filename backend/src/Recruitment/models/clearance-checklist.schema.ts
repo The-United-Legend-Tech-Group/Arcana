@@ -4,6 +4,7 @@ import { ApprovalStatus } from '../enums/approval-status.enum';
 
 @Schema({ timestamps: true })
 export class ClearanceChecklist {
+
   @Prop({ type: Types.ObjectId, ref: 'TerminationRequest', required: true })
   terminationId: Types.ObjectId;
 
@@ -13,15 +14,11 @@ export class ClearanceChecklist {
   @Prop([
     {
       department: String,
-      status: {
-        type: String,
-        enum: ApprovalStatus,
-        default: ApprovalStatus.PENDING,
-      },
+      status: { type: String, enum: ApprovalStatus, default: ApprovalStatus.PENDING },
       comments: String,
       updatedBy: { type: Types.ObjectId, ref: 'User' },
       updatedAt: Date,
-    },
+    }
   ])
   items: any[];
 
@@ -34,7 +31,7 @@ export class ClearanceChecklist {
       name: String,
       returned: Boolean,
       condition: String,
-    },
+    }
   ])
   equipmentList: any[];
 

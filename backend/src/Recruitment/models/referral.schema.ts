@@ -3,6 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Referral {
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   referringEmployeeId: Types.ObjectId;
 

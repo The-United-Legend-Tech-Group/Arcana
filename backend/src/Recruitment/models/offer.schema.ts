@@ -6,6 +6,7 @@ import { ApprovalStatus } from '../enums/approval-status.enum';
 
 @Schema({ timestamps: true })
 export class Offer {
+
   @Prop({ type: Types.ObjectId, ref: 'Application', required: true })
   applicationId: Types.ObjectId;
 
@@ -42,7 +43,7 @@ export class Offer {
 
   @Prop({
     enum: OfferResponseStatus,
-    default: OfferResponseStatus.PENDING,
+    default: OfferResponseStatus.PENDING
   })
   applicantResponse: OfferResponseStatus;
 
@@ -53,13 +54,13 @@ export class Offer {
       status: { type: String, enum: ApprovalStatus },
       actionDate: Date,
       comment: String,
-    },
+    }
   ])
   approvers: any[];
 
   @Prop({
     enum: OfferFinalStatus,
-    default: OfferFinalStatus.PENDING,
+    default: OfferFinalStatus.PENDING
   })
   finalStatus: OfferFinalStatus;
 

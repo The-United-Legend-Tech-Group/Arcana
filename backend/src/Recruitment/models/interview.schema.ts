@@ -6,12 +6,13 @@ import { ApplicationStage } from '../enums/application-stage.enum';
 
 @Schema({ timestamps: true })
 export class Interview {
+
   @Prop({ type: Types.ObjectId, ref: 'Application', required: true })
   applicationId: Types.ObjectId;
 
   @Prop({
     enum: ApplicationStage,
-    required: true,
+    required: true
   })
   stage: ApplicationStage;
 
@@ -32,7 +33,7 @@ export class Interview {
 
   @Prop({
     enum: InterviewStatus,
-    default: InterviewStatus.SCHEDULED,
+    default: InterviewStatus.SCHEDULED
   })
   status: InterviewStatus;
 

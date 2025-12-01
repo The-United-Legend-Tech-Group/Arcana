@@ -1,45 +1,45 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateJobTemplateDto {
   @ApiProperty({
     description: 'Job title',
-    example: 'Senior Software Engineer',
+    example: 'Senior Software Engineer'
   })
+  @IsNotEmpty()
   @IsString()
   title: string;
 
   @ApiProperty({
     description: 'Department name',
-    example: 'Engineering',
+    example: 'Engineering'
   })
+  @IsNotEmpty()
   @IsString()
   department: string;
 
   @ApiProperty({
     description: 'List of required qualifications',
-    example: [
-      "Bachelor's degree in Computer Science",
-      'Minimum 3 years experience',
-    ],
+    example: ['Bachelor\'s degree in Computer Science', 'Minimum 3 years experience']
   })
+  @IsNotEmpty()
   @IsArray()
   @IsString({ each: true })
   qualifications: string[];
 
   @ApiProperty({
     description: 'Required technical skills',
-    example: ['JavaScript', 'React', 'Node.js', 'MongoDB'],
+    example: ['JavaScript', 'React', 'Node.js', 'MongoDB']
   })
+  @IsNotEmpty()
   @IsArray()
   @IsString({ each: true })
   skills: string[];
 
   @ApiProperty({
     description: 'Detailed job description',
-    example:
-      'We are looking for a passionate software engineer to join our team...',
-    required: false,
+    example: 'We are looking for a passionate software engineer to join our team...',
+    required: false
   })
   @IsOptional()
   @IsString()

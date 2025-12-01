@@ -429,4 +429,96 @@ export class EmployeeService {
       },
     };
   }
+  async getEmployeeById(employeeId: string): Promise<EmployeeProfile | null> {
+    return this.employeeProfileRepository.findById(employeeId);
+  }
+
+  async getAppraisalRecordsByEmployeeId(employeeId: string): Promise<AppraisalRecord[]> {
+    return this.appraisalRecordModel
+      .find({ employeeProfileId: employeeId })
+      .sort({ managerSubmittedAt: -1, createdAt: -1 })
+      .lean();
+  }
+
+  async updateEmployeeStatusToTerminated(employeeId: string): Promise<{ previousStatus: string; employee: EmployeeProfile }> {
+    const employee = await this.employeeProfileRepository.findById(employeeId);
+    if (!employee) {
+      throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+    }
+
+    const previousStatus = employee.status;
+
+    const updatedEmployee = await this.employeeProfileRepository.updateById(
+      employeeId,
+      {
+        status: EmployeeStatus.TERMINATED,
+        statusEffectiveFrom: new Date(),
+      },
+    );
+
+    if (!updatedEmployee) {
+      throw new ConflictException('Failed to update employee status');
+    }
+
+    return {
+      previousStatus,
+      employee: updatedEmployee,
+    };
+  }
+
+  async deactivateSystemRole(employeeId: string): Promise<{
+    rolesDeactivated: boolean;
+    previousRoles: string[];
+    previousPermissions: string[]
+  }> {
+    const systemRole = await this.employeeSystemRoleRepository.findOne({
+      employeeProfileId: employeeId,
+    } as any);
+
+    if (!systemRole) {
+      return {
+        rolesDeactivated: false,
+        previousRoles: [],
+        previousPermissions: [],
+      };
+    }
+
+    const previousRoles = [...systemRole.roles];
+    const previousPermissions = [...systemRole.permissions];
+
+    await this.employeeSystemRoleRepository.update(
+      { employeeProfileId: employeeId },
+      { $set: { isActive: false } },
+    );
+
+    return {
+      rolesDeactivated: true,
+      previousRoles,
+      previousPermissions,
+    };
+  }
+
+  async findDepartmentHead(departmentName: string): Promise<{ id: string; employeeNumber: string } | null> {
+    try {
+      const departmentHead = await this.employeeProfileModel
+        .findOne({
+          department: departmentName,
+          position: { $regex: /manager|head|director/i },
+          status: EmployeeStatus.ACTIVE
+        })
+        .exec();
+
+      if (!departmentHead) {
+        return null;
+      }
+
+      return {
+        id: departmentHead._id.toString(),
+        employeeNumber: departmentHead.employeeNumber
+      };
+    } catch (error) {
+      console.error(`Error finding department head for ${departmentName}:`, error);
+      return null;
+    }
+  }
 }

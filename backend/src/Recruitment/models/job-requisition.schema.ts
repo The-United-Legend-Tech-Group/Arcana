@@ -3,6 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class JobRequisition {
+
   @Prop({ required: true })
   requisitionId: string;
 
@@ -20,7 +21,7 @@ export class JobRequisition {
 
   @Prop({
     enum: ['draft', 'published', 'closed'],
-    default: 'draft',
+    default: 'draft'
   })
   publishStatus: string;
 
@@ -32,5 +33,4 @@ export class JobRequisition {
 }
 
 export type JobRequisitionDocument = HydratedDocument<JobRequisition>;
-export const JobRequisitionSchema =
-  SchemaFactory.createForClass(JobRequisition);
+export const JobRequisitionSchema = SchemaFactory.createForClass(JobRequisition);

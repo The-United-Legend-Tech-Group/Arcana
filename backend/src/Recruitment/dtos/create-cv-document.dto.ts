@@ -1,40 +1,37 @@
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsDateString,
-  IsMongoId,
-} from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsDateString, IsMongoId, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DocumentType } from '../enums/document-type.enum';
 
 export class CreateCVDocumentDto {
   @ApiProperty({
     description: 'Document owner MongoDB ObjectId',
-    example: '507f1f77bcf86cd799439011',
+    example: '507f1f77bcf86cd799439011'
   })
+  @IsNotEmpty()
   @IsMongoId()
   ownerId: string;
 
   @ApiProperty({
     description: 'Type of document',
     enum: DocumentType,
-    example: DocumentType.CV,
+    example: DocumentType.CV
   })
+  @IsNotEmpty()
   @IsEnum(DocumentType)
   type: DocumentType;
 
   @ApiProperty({
     description: 'File storage path',
-    example: '/uploads/documents/john-doe-cv.pdf',
+    example: '/uploads/documents/john-doe-cv.pdf'
   })
+  @IsNotEmpty()
   @IsString()
   filePath: string;
 
   @ApiProperty({
     description: 'Document upload timestamp',
     example: '2024-11-27T10:00:00.000Z',
-    required: false,
+    required: false
   })
   @IsOptional()
   @IsDateString()

@@ -428,7 +428,7 @@ export class RecruitmentService {
   // need guards for auth and roles
   //ONB-001
   async hrSignContract(dto: HrSignContractDto) {
-    const { contractId, hrEmployeeId, signedAt } = dto;
+    const { contractId, hrEmployeeId, signedAt, useCustomEmployeeData } = dto;
 
     const contract = await this.contractRepository.findById(contractId);
     if (!contract) {
@@ -464,23 +464,42 @@ export class RecruitmentService {
         { status: CandidateStatus.HIRED } as UpdateCandidateStatusDto
       );
 
-      // Create employee profile first using candidate's actual data
-      const employeeData = {
-        firstName: candidate.firstName || 'New',
-        lastName: candidate.lastName || 'Employee',
-        nationalId: candidate.nationalId,
-        employeeNumber: `EMP-${Date.now()}`,
-        dateOfHire: new Date(),
-        workEmail: candidate.personalEmail,
-        status: 'PROBATION' as any,
-        contractStartDate: new Date(),
-        contractType: 'FULL_TIME_CONTRACT' as any,
-        workType: 'FULL_TIME' as any,
-      };
+      // Create employee profile using either custom data or candidate's data
+      let employeeData: any;
 
-      // Validate that candidate has a national ID
+      if (useCustomEmployeeData) {
+        // Use custom employee data provided by HR
+        employeeData = {
+          firstName: dto.customFirstName || candidate.firstName || 'New',
+          lastName: dto.customLastName || candidate.lastName || 'Employee',
+          nationalId: dto.customNationalId || candidate.nationalId,
+          employeeNumber: dto.customEmployeeNumber || `EMP-${Date.now()}`,
+          dateOfHire: new Date(),
+          workEmail: dto.customWorkEmail || candidate.personalEmail,
+          status: dto.customStatus || 'PROBATION' as any,
+          contractStartDate: new Date(),
+          contractType: dto.customContractType || 'FULL_TIME_CONTRACT' as any,
+          workType: dto.customWorkType || 'FULL_TIME' as any,
+        };
+      } else {
+        // Use candidate's data (default behavior)
+        employeeData = {
+          firstName: candidate.firstName || 'New',
+          lastName: candidate.lastName || 'Employee',
+          nationalId: candidate.nationalId,
+          employeeNumber: `EMP-${Date.now()}`,
+          dateOfHire: new Date(),
+          workEmail: candidate.personalEmail,
+          status: 'PROBATION' as any,
+          contractStartDate: new Date(),
+          contractType: 'FULL_TIME_CONTRACT' as any,
+          workType: 'FULL_TIME' as any,
+        };
+      }
+
+      // Validate that employee has a national ID
       if (!employeeData.nationalId) {
-        throw new BadRequestException('Candidate must have a national ID before creating employee profile');
+        throw new BadRequestException('Employee must have a national ID before creating employee profile');
       }
 
       const createdEmployee = await this.employeeService.onboard(employeeData);

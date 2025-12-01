@@ -433,6 +433,22 @@ export class EmployeeService {
       },
     };
   }
+  async updateCandidateStatus(candidateId: string, updateCandidateStatusDto: UpdateCandidateStatusDto): Promise<Candidate> {
+    const candidate = await this.candidateRepository.findById(candidateId);
+    if (!candidate) {
+      throw new NotFoundException(`Candidate with ID ${candidateId} not found`);
+    }
+
+    const { status } = updateCandidateStatusDto;
+
+    const updatedCandidate = await this.candidateRepository.updateById(candidateId, { status });
+
+    if (!updatedCandidate) {
+      throw new NotFoundException(`Candidate with ID ${candidateId} not found during update`);
+    }
+
+    return updatedCandidate;
+  }
   async getEmployeeById(employeeId: string): Promise<EmployeeProfile | null> {
     return this.employeeProfileRepository.findById(employeeId);
   }

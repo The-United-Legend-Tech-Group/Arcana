@@ -44,7 +44,8 @@ import { ApplicationStage } from './enums/application-stage.enum';
 import { ApplicationStatus } from './enums/application-status.enum';
 import { InterviewStatus } from './enums/interview-status.enum';
 import { InterviewMethod } from './enums/interview-method.enum';
-import { SystemRole, EmployeeStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole, EmployeeStatus, CandidateStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import type { UpdateCandidateStatusDto } from '../employee-subsystem/employee/dto/update-candidate-status.dto';
 
 import { CreateJobTemplateDto } from './dtos/create-job-template.dto';
 import { CreateJobRequisitionDto } from './dtos/create-job-requisition.dto';
@@ -264,7 +265,7 @@ export class RecruitmentService {
     // Update candidate status to OFFER_SENT
     await this.employeeService.updateCandidateStatus(
       offer.candidateId.toString(),
-      'OFFER_SENT'
+      { status: CandidateStatus.OFFER_SENT } as UpdateCandidateStatusDto
     );
 
     // TODO: Send email/notification to candidate with offer letter
@@ -310,7 +311,7 @@ export class RecruitmentService {
       // Update candidate status to OFFER_ACCEPTED
       await this.employeeService.updateCandidateStatus(
         candidateId,
-        'OFFER_ACCEPTED'
+        { status: CandidateStatus.OFFER_ACCEPTED } as UpdateCandidateStatusDto
       );
 
       // Automatically create contract when offer is accepted
@@ -342,7 +343,7 @@ export class RecruitmentService {
       // Update candidate status to REJECTED
       await this.employeeService.updateCandidateStatus(
         candidateId,
-        'REJECTED'
+        { status: CandidateStatus.REJECTED } as UpdateCandidateStatusDto
       );
 
       // Notify HR
@@ -467,7 +468,7 @@ export class RecruitmentService {
       // Update candidate status to HIRED
       await this.employeeService.updateCandidateStatus(
         candidate._id ? candidate._id.toString() : candidate.toString(),
-        'HIRED'
+        { status: CandidateStatus.HIRED } as UpdateCandidateStatusDto
       );
 
       // Create employee profile first using candidate's actual data

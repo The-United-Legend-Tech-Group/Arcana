@@ -29,6 +29,7 @@ import { LeavesRequestController } from './request/leave-requests.controller';
 import { LeavesRequestService } from './request/leave-requests.service';
 import { LeavesReportController } from './reports/leave-reports.controller';
 import { LeavesReportService } from './reports/leave-reports.service';
+import { LeavesService } from './leaves.service';
 import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
 import { NotificationModule } from '../employee-subsystem/notification/notification.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
@@ -69,6 +70,7 @@ import {
     LeavesPolicyService,
     LeavesRequestService,
     LeavesReportService,
+    LeavesService,
     LeavePolicyRepository,
     LeaveEntitlementRepository,
     LeaveTypeRepository,
@@ -77,6 +79,6 @@ import {
     AttachmentRepository,
     CalendarRepository,
   ],
-  exports: [MongooseModule],
+  exports: [MongooseModule, LeavesService],
 })
-export class LeavesModule {}
+export class LeavesModule { }

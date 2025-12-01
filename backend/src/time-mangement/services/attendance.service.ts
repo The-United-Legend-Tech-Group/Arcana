@@ -3,17 +3,17 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { AttendanceRepository } from './repository/attendance.repository';
-import { PunchType, PunchPolicy, HolidayType } from './models/enums/index';
-import { PunchDto } from './dto/punch.dto';
-import { CreateAttendanceCorrectionDto } from './dto/create-attendance-correction.dto';
-import { SubmitCorrectionEssDto } from './dto/submit-correction-ess.dto';
-import { ApproveRejectCorrectionDto } from './dto/approve-reject-correction.dto';
-import { AttendanceCorrectionRepository } from './repository/attendance-correction.repository';
-import { HolidayRepository } from './repository/holiday.repository';
-import { ApprovalWorkflowService } from './services/approval-workflow.service';
-import { ShiftAssignmentRepository } from './repository/shift-assignment.repository';
-import { ShiftRepository } from './repository/shift.repository';
+import { AttendanceRepository } from '../repository/attendance.repository';
+import { PunchType, PunchPolicy, HolidayType } from '../models/enums/index';
+import { PunchDto } from '../dto/punch.dto';
+import { CreateAttendanceCorrectionDto } from '../dto/create-attendance-correction.dto';
+import { SubmitCorrectionEssDto } from '../dto/submit-correction-ess.dto';
+import { ApproveRejectCorrectionDto } from '../dto/approve-reject-correction.dto';
+import { AttendanceCorrectionRepository } from '../repository/attendance-correction.repository';
+import { HolidayRepository } from '../repository/holiday.repository';
+import { ApprovalWorkflowService } from '../services/approval-workflow.service';
+import { ShiftAssignmentRepository } from '../repository/shift-assignment.repository';
+import { ShiftRepository } from '../repository/shift.repository';
 // note: no cross-repo injections needed here; keep attendance service focused
 
 interface PenaltyInfo {
@@ -32,7 +32,7 @@ export class AttendanceService {
     private readonly shiftAssignmentRepo?: ShiftAssignmentRepository,
     private readonly shiftRepo?: ShiftRepository,
     private readonly approvalWorkflowService?: ApprovalWorkflowService,
-  ) { }
+  ) {}
 
   private calculatePenalty(
     checkInTime: Date,
@@ -362,7 +362,7 @@ export class AttendanceService {
     let finalPunches: any[] = punches;
 
     if (policy === PunchPolicy.MULTIPLE) {
-      for (let i = 0; i < punches.length;) {
+      for (let i = 0; i < punches.length; ) {
         const current = punches[i];
         if (current.type === PunchType.IN) {
           if (i + 1 < punches.length && punches[i + 1].type === PunchType.OUT) {
@@ -515,7 +515,8 @@ export class AttendanceService {
     return d;
   }
 
-  async getAttendanceSummary( //Performance Integration
+  async getAttendanceSummary(
+    //Performance Integration
     employeeId: string,
     startDate: Date,
     endDate: Date,

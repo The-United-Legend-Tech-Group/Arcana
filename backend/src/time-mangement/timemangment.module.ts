@@ -17,9 +17,9 @@ import {
   ScheduleRuleSchema,
 } from './models/schedule-rule.schema';
 import { TimeController } from './time.controller';
-import { ShiftService } from './shift.service';
-import { AttendanceService } from './attendance.service';
-import { ShiftAssignmentService } from './shift-assignment.service';
+import { ShiftService } from './services/shift.service';
+import { AttendanceService } from './services/attendance.service';
+import { ShiftAssignmentService } from './services/shift-assignment.service';
 import { ApprovalWorkflowService } from './services/approval-workflow.service';
 import { ApprovalWorkflowRepository } from './repository/approval-workflow.repository';
 import { PermissionDurationConfigRepository } from './repository/permission-duration-config.repository';

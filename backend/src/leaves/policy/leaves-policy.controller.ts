@@ -32,6 +32,7 @@ import { ConfigureCalendarDto } from '../dtos/configure-calender.dto';
 import { ManualAdjustmentDto } from '../dtos/manual-adjustment.dto';
 import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { AssignPersonalizedEntitlementDto } from '../dtos/personalized-entitlement.dto';
+import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
 
 @ApiTags('Leaves Policy')
 @Controller('leaves')
@@ -103,6 +104,40 @@ export class LeavesPolicyController {
       employeeId,
       leaveTypeId,
     );
+  }
+
+  /**
+   * PATCH /leaves/update-entitlement-internal/:employeeId/:leaveTypeId
+   * Recalculate entitlement for an employee/leaveType
+   */
+  @Patch('update-entitlement-internal/:employeeId/:leaveTypeId')
+  @ApiOperation({ summary: 'Recalculate and update leave entitlement (internal)' })
+  @ApiParam({ name: 'employeeId', description: 'Employee ID' })
+  @ApiParam({ name: 'leaveTypeId', description: 'Leave Type ID' })
+  @ApiResponse({ status: 200, description: 'Leave entitlement recalculated and updated.' })
+  @ApiResponse({ status: 404, description: 'Entitlement or employee or policy not found.' })
+  async updateEntitlementInternal(
+    @Param('employeeId') employeeId: string,
+    @Param('leaveTypeId') leaveTypeId: string
+  ) {
+    return this.leavesService.updateEntitlementInternal(employeeId, leaveTypeId);
+  }
+
+  /**
+   * POST /leaves/configure-leave-parameters/:leaveTypeId
+   * Configure leave parameters for a leave type
+   */
+  @Post('configure-leave-parameters/:leaveTypeId')
+  @ApiOperation({ summary: 'Configure leave parameters such as max duration, notice period, approval flow' })
+  @ApiParam({ name: 'leaveTypeId', description: 'Leave Type ID' })
+  @ApiBody({ type: ConfigureLeaveParametersDto })
+  @ApiResponse({ status: 200, description: 'Leave parameters configured.' })
+  @ApiResponse({ status: 404, description: 'Leave type or policy not found.' })
+  async configureLeaveParameters(
+    @Param('leaveTypeId') leaveTypeId: string,
+    @Body() dto: ConfigureLeaveParametersDto
+  ) {
+    return this.leavesService.configureLeaveParameters(leaveTypeId, dto);
   }
 
   // ------------------------------
@@ -217,37 +252,37 @@ export class LeavesPolicyController {
     return this.leavesService.getCalendarByYear(year);
   }
 
-  // Sync holidays from Time Management to Leaves Calendar
-  @Post('calendar/sync-holidays/:year')
-  @ApiOperation({
-    summary: 'Sync holidays from Time Management to Leaves Calendar',
-    description:
-      'Imports holiday data from the attendance/time-management system and updates the calendar for the specified year',
-  })
-  @ApiParam({ name: 'year', description: 'Target year for holiday sync' })
-  @ApiResponse({ status: 200, description: 'Holidays synced successfully' })
-  @ApiResponse({
-    status: 404,
-    description: 'No holidays found in Time Management system',
-  })
-  async syncHolidaysToCalendar(@Param('year') year: number) {
-    return this.leavesService.syncHolidaysToCalendar(year);
-  }
-
-  // Auto-sync holidays for current year
-  @Post('calendar/auto-sync-holidays')
-  @ApiOperation({
-    summary: 'Auto-sync holidays for current year',
-    description:
-      'Automatically imports holidays from Time Management for the current year',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Holidays synced successfully for current year',
-  })
-  async autoSyncHolidays() {
-    return this.leavesService.autoSyncHolidaysForCurrentYear();
-  }
+   // Sync holidays from Time Management to Leaves Calendar
+   @Post('calendar/sync-holidays/:year')
+   @ApiOperation({
+     summary: 'Sync holidays from Time Management to Leaves Calendar',
+     description:
+       'Imports holiday data from the attendance/time-management system and updates the calendar for the specified year',
+   })
+   @ApiParam({ name: 'year', description: 'Target year for holiday sync' })
+   @ApiResponse({ status: 200, description: 'Holidays synced successfully' })
+   @ApiResponse({
+     status: 404,
+     description: 'No holidays found in Time Management system',
+   })
+   async syncHolidaysToCalendar(@Param('year') year: number) {
+     return this.leavesService.syncHolidaysToCalendar(year);
+   }
+ 
+   // Auto-sync holidays for current year
+   @Post('calendar/auto-sync-holidays')
+   @ApiOperation({
+     summary: 'Auto-sync holidays for current year',
+     description:
+       'Automatically imports holidays from Time Management for the current year',
+   })
+   @ApiResponse({
+     status: 200,
+     description: 'Holidays synced successfully for current year',
+   })
+   async autoSyncHolidays() {
+     return this.leavesService.autoSyncHolidaysForCurrentYear();
+   }
 
   // ------------------------------
   // REQ-011: Configure Special Absence Types with Custom Rules - Tested
@@ -345,4 +380,31 @@ export class LeavesPolicyController {
   ): Promise<LeaveAdjustment[]> {
     return this.leavesService.getAdjustmentHistory(employeeId);
   }
-}
+
+  // Get all leave entitlements for an employee
+  @Get('leave-entitlements/:employeeId')
+  @ApiOperation({ summary: 'Get all leave entitlements for an employee' })
+  @ApiParam({ name: 'employeeId', description: 'Employee ID' })
+  @ApiResponse({ status: 200, description: 'Employee leave entitlements retrieved successfully' })
+  async getLeaveEntitlementByEmployeeId(@Param('employeeId') employeeId: string) {
+    return this.leavesService.getLeaveEntitlementByEmployeeId(employeeId);
+  }
+
+  // Get all leave policies
+  @Get('policies')
+  @ApiOperation({ summary: 'Get all leave policies' })
+  @ApiResponse({ status: 200, description: 'All leave policies retrieved successfully' })
+  async managePolicy(): Promise<LeavePolicy[]> {
+    return this.leavesService.managePolicy();
+  }
+
+  // Get leave/vacation type by code
+  @Get('leave-types/code/:code')
+  @ApiOperation({ summary: 'Get leave type by code' })
+  @ApiParam({ name: 'code', description: 'Leave type code' })
+  @ApiResponse({ status: 200, description: 'Leave type found by code' })
+  @ApiResponse({ status: 404, description: 'Leave type not found by code' })
+  async getVacationByCode(@Param('code') code: string) {
+    return this.leavesService.getVacationByCode(code);
+  }
+  }

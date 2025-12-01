@@ -15,6 +15,7 @@ import {
   LeaveRequestRepository,
   LeaveAdjustmentRepository,
   LeavePolicyRepository,
+  LeaveTypeRepository,
 } from '../repository';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class LeavesReportService {
     private readonly leaveRequestRepository: LeaveRequestRepository,
     private readonly leaveAdjustmentRepository: LeaveAdjustmentRepository,
     private readonly leavePolicyRepository: LeavePolicyRepository,
+    private readonly leaveTypeRepository: LeaveTypeRepository,
   ) {}
 
   // =============================
@@ -339,10 +341,6 @@ export class LeavesReportService {
     return results;
   }
 
-  // =============================
-  // REQ-040 & REQ-042 — Automatic Leave Accrual with Suspension
-  // ⚠️ No controller needed; this is an automatic scheduled job
-  // =============================
   async accrueLeaves() {
     const policies = await this.leavePolicyRepository.find();
     const entitlements = await this.leaveEntitlementRepository.find();
@@ -432,5 +430,26 @@ export class LeavesReportService {
 
       return results;
     }
+  }
+
+
+  //REQ-042
+  async payrollSync(employeeId: string) {
+    const unpaidLeaveTypes = await this.leaveTypeRepository.findUnpaidLeaveTypes();
+    const unpaidLeaveTypeIds = unpaidLeaveTypes.map(t => t._id);
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const totalUnpaidLeaves = await this.leaveRequestRepository.countDocuments({
+      employeeId,
+      leaveTypeId: { $in: unpaidLeaveTypeIds },
+      status: 'APPROVED',
+      'dates.from': { $lte: monthEnd },
+      'dates.to': { $gte: monthStart },
+    });
+
+    return totalUnpaidLeaves;
   }
 }

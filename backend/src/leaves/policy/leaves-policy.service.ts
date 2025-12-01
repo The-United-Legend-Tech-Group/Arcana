@@ -11,7 +11,7 @@ import {
   LeaveAdjustmentRepository,
   CalendarRepository
 } from '../repository';
-import { EmployeeProfileRepository } from '../../employee-subsystem/employee/repository/employee-profile.repository';
+import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
 import { InitiatePolicyDto } from '../dtos/initiate-policy.dto';
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
 import { CreateLeaveTypeDto } from '../dtos/create-leave-type.dto'
@@ -36,7 +36,7 @@ export class LeavesPolicyService {
     private readonly leaveTypeRepository: LeaveTypeRepository,
     private readonly leaveAdjustmentRepository: LeaveAdjustmentRepository,
     private readonly calendarRepository: CalendarRepository,
-    private readonly employeeProfileRepository: EmployeeProfileRepository,
+    private readonly employeeService: EmployeeService,
   ) {}
 
   // REQ-001: Initiate a leave policy
@@ -171,7 +171,7 @@ async updateEntitlementInternal(
   leaveTypeId: string,
 ): Promise<LeaveEntitlement> {
   
-  const employeeProfile = await this.employeeProfileRepository.findById(employeeId);
+  const employeeProfile = await this.employeeService.getProfile(employeeId);
   if (!employeeProfile) throw new NotFoundException('Employee profile not found');
 
 
@@ -187,7 +187,7 @@ async updateEntitlementInternal(
   /** ---------------------
    * 1. CALCULATE ACCRUAL
    * --------------------- */
-  const accrualActual = this.calculateAccrual(policy, employeeProfile.workType?.toString() ?? '');
+  const accrualActual = this.calculateAccrual(policy, employeeProfile.profile?.workType?.toString() ?? '');
 
   /** ---------------------
    * 2. APPLY ROUNDING RULE

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppraisalRecordService } from '../appraisal-record.service';
-import { AttendanceService } from '../../../time-mangement/attendance.service';
+import { AttendanceService } from '../../../time-mangement/services/attendance.service';
 import { AppraisalRecordRepository } from '../repository/appraisal-record.repository';
 import { AppraisalCycleRepository } from '../repository/appraisal-cycle.repository';
 import { AppraisalTemplateRepository } from '../repository/appraisal-template.repository';

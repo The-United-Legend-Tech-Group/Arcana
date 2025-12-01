@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 
 import { DocumentDocument } from './models/document.schema';
 
@@ -22,10 +21,9 @@ import { ApproveOfferDto } from './DTO/approve-offer.dto';
 import { SendOfferDto } from './DTO/send-offer.dto';
 import { CandidateRespondOfferDto } from './DTO/candidate-respond-offer.dto';
 import { EmployeeService } from '../employee-subsystem/employee/employee.service';
+import { ConfigSetupService } from '../payroll/config_setup/config_setup.service';
 //import { PayrollExecutionService } from '../payroll-execution/payroll-execution.service';
 
-import { signingBonus, signingBonusDocument } from '../payroll/config_setup/models/signingBonus.schema';
-import { payGrade, payGradeDocument } from '../payroll/config_setup/models/payGrades.schema';
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
 import { OfferFinalStatus } from './enums/offer-final-status.enum';
 
@@ -80,9 +78,6 @@ import {
 @Injectable()
 export class RecruitmentService {
   constructor(
-    @InjectModel(Notification.name) private notificationModel: mongoose.Model<Notification>,
-    @InjectModel(signingBonus.name) private signingBonusModel: mongoose.Model<signingBonusDocument>,
-    @InjectModel(payGrade.name) private payGradeModel: mongoose.Model<payGradeDocument>,
     private readonly employeeService: EmployeeService,
     // Repository dependencies
     private readonly jobTemplateRepository: JobTemplateRepository,
@@ -100,6 +95,7 @@ export class RecruitmentService {
     private readonly employeeProfileRepository: EmployeeProfileRepository,
     private readonly candidateRepository: CandidateRepository,
     private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
+    private readonly configSetupService: ConfigSetupService,
     //private payrollExecutionService: PayrollExecutionService,
   ) { }
 
@@ -109,13 +105,13 @@ export class RecruitmentService {
     const { applicationId, candidateId, hrEmployeeId, role, benefits, conditions, insurances, content, deadline } = dto;
 
     // Lookup signing bonus by role/position from payroll configuration
-    const bonusConfig = await this.signingBonusModel.findOne({
+    const bonusConfig = await this.configSetupService.signingBonus.findOne({
       positionName: role,
       status: 'approved'
     });
 
     // Lookup gross salary by role/position from payroll configuration
-    const salaryConfig = await this.payGradeModel.findOne({
+    const salaryConfig = await this.configSetupService.payGrade.findOne({
       grade: role,
       status: 'approved'
     });
@@ -269,8 +265,8 @@ export class RecruitmentService {
     );
 
     // TODO: Send email/notification to candidate with offer letter
-    const notification = new this.notificationModel({
-      recipientId: [new mongoose.Types.ObjectId(offer.candidateId.toString())],
+    await this.notificationService.create({
+      recipientId: [offer.candidateId.toString()],
       type: 'Info',
       deliveryType: 'UNICAST',
       title: 'Job Offer Sent',
@@ -278,7 +274,6 @@ export class RecruitmentService {
       relatedModule: 'Recruitment',
       isRead: false,
     });
-    await notification.save();
 
     return {
       success: true,
@@ -326,8 +321,8 @@ export class RecruitmentService {
       await this.contractRepository.create(contractData);
 
       // Send notification
-      const notification = new this.notificationModel({
-        recipientId: [new mongoose.Types.ObjectId(offer.hrEmployeeId.toString())],
+      await this.notificationService.create({
+        recipientId: [offer.hrEmployeeId.toString()],
         type: 'Success',
         deliveryType: 'UNICAST',
         title: 'Offer Accepted',
@@ -335,7 +330,6 @@ export class RecruitmentService {
         relatedModule: 'Recruitment',
         isRead: false,
       });
-      await notification.save();
 
     } else if (response === 'rejected') {
       offer.finalStatus = OfferFinalStatus.REJECTED;
@@ -347,8 +341,8 @@ export class RecruitmentService {
       );
 
       // Notify HR
-      const notification = new this.notificationModel({
-        recipientId: [new mongoose.Types.ObjectId(offer.hrEmployeeId.toString())],
+      await this.notificationService.create({
+        recipientId: [offer.hrEmployeeId.toString()],
         type: 'Warning',
         deliveryType: 'UNICAST',
         title: 'Offer Rejected',
@@ -356,7 +350,6 @@ export class RecruitmentService {
         relatedModule: 'Recruitment',
         isRead: false,
       });
-      await notification.save();
     }
 
     await offer.save();
@@ -506,8 +499,8 @@ export class RecruitmentService {
       });
 
       // Send notification to new employee with their employee details
-      const welcomeNotification = new this.notificationModel({
-        recipientId: [new mongoose.Types.ObjectId(employeeProfileId)],
+      await this.notificationService.create({
+        recipientId: [employeeProfileId],
         type: 'Success',
         deliveryType: 'UNICAST',
         title: 'Welcome to the Team!',
@@ -515,11 +508,10 @@ export class RecruitmentService {
         relatedModule: 'Recruitment',
         isRead: false,
       });
-      await welcomeNotification.save();
 
       // Send notification to candidate (before they become employee) about acceptance
-      const candidateNotification = new this.notificationModel({
-        recipientId: [new mongoose.Types.ObjectId(offer.candidateId._id.toString())],
+      await this.notificationService.create({
+        recipientId: [offer.candidateId._id.toString()],
         type: 'Success',
         deliveryType: 'UNICAST',
         title: 'Contract Fully Signed - You Are Hired!',
@@ -527,7 +519,6 @@ export class RecruitmentService {
         relatedModule: 'Recruitment',
         isRead: false,
       });
-      await candidateNotification.save();
     }
 
     // Automatically process signing bonus when BOTH employee and HR have signed
@@ -806,17 +797,16 @@ export class RecruitmentService {
       if (includeITTasks) tasksList.push('IT setup tasks (Email, Laptop, System Access)');
       if (includeAdminTasks) tasksList.push('Admin tasks (Workspace, ID Badge)');
 
-      const adminNotification = new this.notificationModel({
+      await this.notificationService.create({
         recipientId: [],
         type: 'Info',
         deliveryType: 'BROADCAST',
-        deliverToRole: 'System Admin',
+        deliverToRole: SystemRole.SYSTEM_ADMIN,
         title: 'New Employee Onboarding Tasks Assigned',
         message: `New onboarding tasks have been created for employee ${employeeId}. Tasks: ${tasksList.join(', ')}. Deadline: ${deadline.toDateString()}. Total tasks: ${itAdminTaskCount}.`,
         relatedModule: 'Recruitment',
         isRead: false,
       });
-      await adminNotification.save();
     }
 
     return {
@@ -896,8 +886,8 @@ export class RecruitmentService {
         if (taskDeadline >= now && taskDeadline <= reminderThreshold) {
           const daysUntilDeadline = Math.ceil((taskDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-          const notification = new this.notificationModel({
-            recipientId: [new mongoose.Types.ObjectId(employeeId)],
+          const notification = await this.notificationService.create({
+            recipientId: [employeeId],
             type: 'Warning',
             deliveryType: 'UNICAST',
             title: 'Onboarding Task Reminder',
@@ -905,7 +895,6 @@ export class RecruitmentService {
             relatedModule: 'Recruitment',
             isRead: false,
           });
-          await notification.save();
           notifications.push(notification);
         }
       }
@@ -1009,8 +998,8 @@ export class RecruitmentService {
 
     await onboarding.save();
 
-    const notification = new this.notificationModel({
-      recipientId: [new mongoose.Types.ObjectId(employeeId)],
+    await this.notificationService.create({
+      recipientId: [employeeId],
       type: 'Alert',
       deliveryType: 'UNICAST',
       title: 'Onboarding Cancelled',
@@ -1018,7 +1007,6 @@ export class RecruitmentService {
       relatedModule: 'Recruitment',
       isRead: false,
     });
-    await notification.save();
 
     return {
       success: true,

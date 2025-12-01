@@ -33,8 +33,6 @@ import { LeaveType, LeaveTypeSchema } from '../leaves/models/leave-type.schema';
 
 // Payroll schemas
 import { EmployeeTerminationResignation, EmployeeTerminationResignationSchema } from '../payroll/execution/models/EmployeeTerminationResignation.schema';
-import { signingBonus, signingBonusSchema } from '../payroll/config_setup/models/signingBonus.schema';
-import { payGrade, payGradeSchema } from '../payroll/config_setup/models/payGrades.schema';
 
 // Repository implementations
 import {
@@ -59,6 +57,7 @@ import { NotificationModule } from '../employee-subsystem/notification/notificat
 import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
+import { ConfigSetupModule } from '../payroll/config_setup/config_setup.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -90,8 +89,6 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
 
       // Payroll schemas
       { name: EmployeeTerminationResignation.name, schema: EmployeeTerminationResignationSchema },
-      { name: signingBonus.name, schema: signingBonusSchema },
-      { name: payGrade.name, schema: payGradeSchema },
     ]),
 
     // Module imports
@@ -100,6 +97,7 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     PerformanceModule,
     OrganizationStructureModule,
     LeavesModule,
+    ConfigSetupModule,
   ],
   controllers: [
     RecruitmentController,

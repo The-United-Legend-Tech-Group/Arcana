@@ -21,15 +21,16 @@ import { ConfigStatus } from '../../config_setup/enums/payroll-configuration-enu
 import { refunds } from 'src/payroll/tracking/models/refunds.schema';
 import { CalculateSalaryDto } from '../dto/createSalary.dto';
 import { EmployeeSystemRole } from 'src/employee-subsystem/employee/models/employee-system-role.schema';
+import { EmployeeProfile } from 'src/employee-subsystem/employee/models/employee-profile.schema';
 import { employeePenalties } from '../models/employeePenalties.schema';
 import {
   employeeSigningBonus,
   employeeSigningBonusDocument,
 } from '../models/EmployeeSigningBonus.schema';
 import { BonusStatus, BankStatus } from '../enums/payroll-execution-enum';
-//import { ConfigSetupService } from 'src/config-setup/config-setup.service';
 import { EmployeePenaltyService } from './EmployeePenalty.service';
 import { ConfigSetupService } from '../../config_setup/config_setup.service';
+import { AttendanceService } from '../../../time-mangement/services/attendance.service';
 
 @Injectable()
 export class PayrollCalculationService {
@@ -49,6 +50,9 @@ export class PayrollCalculationService {
     @InjectModel(EmployeeSystemRole.name)
     private readonly employeeSystemRoleModel: Model<EmployeeSystemRole>,
 
+    @InjectModel(EmployeeProfile.name)
+    private readonly employeeProfileModel: Model<EmployeeProfile>,
+
     @InjectModel(employeePenalties.name)
     private readonly employeePenaltiesModel: Model<employeePenalties>,
 
@@ -57,7 +61,7 @@ export class PayrollCalculationService {
     private readonly employeePenaltyService: EmployeePenaltyService,
 
     private readonly configSetupService: ConfigSetupService,
-
+    private readonly attendanceService: AttendanceService,
   ) {}
 
   private async getActiveTaxRule(): Promise<{
@@ -116,8 +120,9 @@ export class PayrollCalculationService {
       .findOne({ employeeProfileId: dto.employeeId })
       .exec();
 
-    const role = employee ? employee.roles[0] : "";
-    const grossFromGrade = await this.configSetupService.payGrade.getPayGradeByName(role);
+    const role = employee ? employee.roles[0] : '';
+    const grossFromGrade =
+      await this.configSetupService.payGrade.getPayGradeByName(role);
     if (!grossFromGrade) {
       throw new Error(`No pay grade found for role: ${role}`);
     }
@@ -166,7 +171,7 @@ export class PayrollCalculationService {
     const tax = Number((rateFraction * totalGrossSalary).toFixed(2));
 
     // Insurance
-    const { employeeInsurance} =
+    const { employeeInsurance } =
       await this.getInsuranceBracketAndAmounts(totalGrossSalary);
 
     // Refunds
@@ -187,7 +192,10 @@ export class PayrollCalculationService {
       now.getFullYear(),
     );
 
-    const missingHoursPenalty = missingPenaltyData.penaltyAmount;
+    const missingHoursPenalty = missingPenaltyData.penalties?.reduce(
+      (sum, p) => sum + p.amount,
+      0
+    ) ?? 0;
 
     // Add missing hours to deductions
     deductionsTotal += missingHoursPenalty;
@@ -200,7 +208,10 @@ export class PayrollCalculationService {
       (netSalary - deductionsTotal + totalRefunds).toFixed(2),
     );
 
-    const isvalidBankStatus = employee.bankName ? true : false;
+    const employeeProfile = await this.employeeProfileModel
+      .findById(dto.employeeId)
+      .exec();
+    const isvalidBankStatus = employeeProfile?.bankName ? true : false;
 
     const employeeDetails = new this.employeePayrollDetailsModel({
       employeeId: dto.employeeId,
@@ -225,21 +236,31 @@ export class PayrollCalculationService {
     month: number,
     year: number,
   ) {
-    const attendanceData =
-      await this.attendanceService.importEmployeeAttendance(
-        employeeId,
-        month,
-        year,
-      );
+    // Sync attendance data from time management module
+    const attendanceData = await this.attendanceService.syncEmployeeAttendanceToPayroll(
+      employeeId,
+      month - 1, // JavaScript months are 0-indexed
+      year,
+    );
 
-    const missingHours = attendanceData.missingHours ?? 0;
+    // Calculate missing hours based on expected work hours
+    // Assuming 8 hours per day, calculate expected vs actual
+    const expectedMinutesPerDay = 8 * 60; // 480 minutes
+    const daysPresent = attendanceData?.attendance?.daysPresent ?? 0;
+    
+    // Calculate total expected minutes and missing minutes
+    const totalExpectedMinutes = expectedMinutesPerDay * daysPresent;
+    const totalActualMinutes = attendanceData?.attendance?.totalWorkedMinutes ?? 0;
+    const missingMinutes = Math.max(0, totalExpectedMinutes - totalActualMinutes);
+    const missingHours = missingMinutes / 60;
 
     const emp = await this.employeeSystemRoleModel
       .findOne({ employeeProfileId: employeeId })
       .exec();
 
-    const role = emp ? emp.roles[0] : "";
-    const gross =  await this.configSetupService.payGrade.getPayGradeByName(role);
+    const role = emp ? emp.roles[0] : '';
+    const gross =
+      await this.configSetupService.payGrade.getPayGradeByName(role);
     if (!gross) {
       throw new Error(`No pay grade found for role: ${role}`);
     }

@@ -21,9 +21,9 @@ import { CreateExpenseClaimDto } from './dto/create-expense-claim.dto';
 import { ApproveRejectClaimDto } from './dto/approve-reject-claim.dto';
 import { CreatePayrollSummaryDto } from './dto/create-payroll-summary.dto';
 import { CreateTaxDocumentDto } from './dto/create-tax-document.dto';
-import { AuthGuard } from '../../employee-subsystem/guards/authentication.guard';
-import { authorizationGuard } from '../../employee-subsystem/guards/authorization.guard';
-import { Roles } from '../../employee-subsystem/employee/decorators/roles.decorator';
+import { AuthGuard } from '../../common/guards/authentication.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 
 @Controller('tracking')

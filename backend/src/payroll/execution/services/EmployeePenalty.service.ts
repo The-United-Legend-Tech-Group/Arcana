@@ -22,7 +22,6 @@ export class EmployeePenaltyService {
         amount: p.amount,
       })),
     });
-
     return await penaltiesToCreate.save();
   }
 }

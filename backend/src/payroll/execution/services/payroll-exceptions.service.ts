@@ -1,29 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import {
-  employeePayrollDetails,
-  employeePayrollDetailsDocument,
-} from '../models/employeePayrollDetails.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 
 @Injectable()
 export class PayrollExceptionsService {
-  constructor(
-    @InjectModel(employeePayrollDetails.name)
-    private employeePayrollDetailsModel: Model<employeePayrollDetailsDocument>,
-  ) {}
+  constructor() {}
 
   async detectExceptions(payrollData: any) {
     const exceptions: string[] = [];
 
-    const {
-      bankStatus,
-      netPay,
-      grossSalary,
-      netSalary,
-      bonusesTotal,
-      payGradeId,
-    } = payrollData;
+    const { bankStatus, netPay, grossSalary, netSalary, payGradeId } =
+      payrollData;
 
     // 1. Missing bank details
     if (!bankStatus || bankStatus === 'missing') {

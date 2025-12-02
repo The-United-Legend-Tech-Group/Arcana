@@ -22,5 +22,6 @@ dotenv.config();
       inject: [ConfigService],
     }),
   ],
+  exports: [JwtModule, AuthService],
 })
 export class AuthModule { }

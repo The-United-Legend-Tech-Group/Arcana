@@ -16,12 +16,9 @@ import { ApprovePayrollFinanceDto } from './dto/approve-payroll-finance.dto';
 import { FreezePayrollDto } from './dto/freeze-payroll.dto';
 import { UnfreezePayrollDto } from './dto/unfreeze-payroll.dto';
 import { GeneratePayslipsDto } from './dto/generate-payslips.dto';
-import { authorizationGuard } from '../../employee-subsystem/guards/authorization.guard';
-import {
-  Roles,
-  Role,
-} from '../../employee-subsystem/employee/decorators/roles.decorator';
-
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 import { PayrollRunService } from './services/payroll-run.service';
 import { GenerateDraftDto } from './dto/generateDraft.dto';
 
@@ -76,7 +73,7 @@ export class ExecutionController {
    * Get all payroll runs that are under review
    */
   @Get('review/payrolls')
-  @Roles(Role.Payroll_Specialist, Role.Payroll_Manager)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER)
   async getPayrollsForReview() {
     return await this.executionService.getPayrollsForReview();
   }
@@ -85,7 +82,7 @@ export class ExecutionController {
    * REQ-PY-6: Get detailed preview of a specific payroll run
    */
   @Get('review/:payrollRunId')
-  @Roles(Role.Payroll_Specialist, Role.Payroll_Manager, Role.Finance_Staff)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF)
   async getPayrollPreview(
     @Param('payrollRunId') payrollRunId: string,
   ): Promise<any> {
@@ -96,7 +93,7 @@ export class ExecutionController {
    * REQ-PY-12: Payroll Specialist publishes payroll for Manager and Finance approval
    */
   @Post('publish')
-  @Roles(Role.Payroll_Specialist)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   async publishPayrollForApproval(@Body() publishDto: PublishPayrollDto) {
     return await this.executionService.publishPayrollForApproval(publishDto);
   }
@@ -106,7 +103,7 @@ export class ExecutionController {
    * Status changes to PENDING_FINANCE_APPROVAL
    */
   @Post('approve/manager')
-  @Roles(Role.Payroll_Manager)
+  @Roles(SystemRole.PAYROLL_MANAGER)
   async approvePayrollByManager(@Body() approveDto: ApprovePayrollManagerDto) {
     return await this.executionService.approvePayrollByManager(approveDto);
   }
@@ -115,7 +112,7 @@ export class ExecutionController {
    * REQ-PY-20: Manager or Finance rejects payroll
    */
   @Post('reject')
-  @Roles(Role.Payroll_Manager, Role.Finance_Staff)
+  @Roles(SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF)
   async rejectPayroll(@Body() rejectDto: RejectPayrollDto) {
     return await this.executionService.rejectPayroll(rejectDto);
   }
@@ -125,7 +122,7 @@ export class ExecutionController {
    * Payment status becomes PAID
    */
   @Post('approve/finance')
-  @Roles(Role.Finance_Staff)
+  @Roles(SystemRole.FINANCE_STAFF)
   async approvePayrollByFinance(@Body() approveDto: ApprovePayrollFinanceDto) {
     return await this.executionService.approvePayrollByFinance(approveDto);
   }
@@ -134,7 +131,7 @@ export class ExecutionController {
    * REQ-PY-7: Payroll Manager locks/freezes payroll
    */
   @Post('freeze')
-  @Roles(Role.Payroll_Manager)
+  @Roles(SystemRole.PAYROLL_MANAGER)
   async freezePayroll(@Body() freezeDto: FreezePayrollDto) {
     return await this.executionService.freezePayroll(freezeDto);
   }
@@ -143,7 +140,7 @@ export class ExecutionController {
    * REQ-PY-19: Payroll Manager unfreezes payroll with justification
    */
   @Post('unfreeze')
-  @Roles(Role.Payroll_Manager)
+  @Roles(SystemRole.PAYROLL_MANAGER)
   async unfreezePayroll(@Body() unfreezeDto: UnfreezePayrollDto) {
     return await this.executionService.unfreezePayroll(unfreezeDto);
   }
@@ -155,7 +152,7 @@ export class ExecutionController {
    * Automatically triggered after finance approval and manager lock
    */
   @Post('payslips/generate')
-  @Roles(Role.Payroll_Specialist, Role.Payroll_Manager)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER)
   async generateAndDistributePayslips(
     @Body() generateDto: GeneratePayslipsDto,
   ): Promise<any> {
@@ -168,7 +165,7 @@ export class ExecutionController {
    * Get payslip for a specific employee
    */
   @Get('payslips/:payrollRunId/employee/:employeeId')
-  @Roles(Role.Payroll_Specialist, Role.Payroll_Manager, Role.Finance_Staff)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF)
   async getEmployeePayslip(
     @Param('payrollRunId') payrollRunId: string,
     @Param('employeeId') employeeId: string,
@@ -183,7 +180,7 @@ export class ExecutionController {
    * Get all payslips for a payroll run
    */
   @Get('payslips/:payrollRunId')
-  @Roles(Role.Payroll_Specialist, Role.Payroll_Manager, Role.Finance_Staff)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF)
   async getAllPayslipsForRun(@Param('payrollRunId') payrollRunId: string) {
     return await this.executionService.getAllPayslipsForRun(payrollRunId);
   }

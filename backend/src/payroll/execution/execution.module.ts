@@ -10,8 +10,9 @@ import { PayrollEventsService } from './services/payroll-events.service';
 import { PayrollCalculationService } from './services/payroll-calculation.service';
 import { PayrollExceptionsService } from './services/payroll-exceptions.service';
 import { PayslipService } from './services/payslip.service';
+import { EmployeePenaltyService } from './services/EmployeePenalty.service';
 
-// Schemas
+// Schemas - Execution
 import { payrollRuns, payrollRunsSchema } from './models/payrollRuns.schema';
 import { paySlip, paySlipSchema } from './models/payslip.schema';
 import {
@@ -30,11 +31,47 @@ import {
   EmployeeTerminationResignation,
   EmployeeTerminationResignationSchema,
 } from './models/EmployeeTerminationResignation.schema';
-//
-import { ConfigSetupService } from '../config_setup/config_setup.service';
+
+// Schemas - Employee Subsystem
+import {
+  EmployeeProfile,
+  EmployeeProfileSchema,
+} from '../../employee-subsystem/employee/models/employee-profile.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../../employee-subsystem/employee/models/employee-system-role.schema';
+
+// Schemas - Config Setup
+import { taxRules, taxRulesSchema } from '../config_setup/models/taxRules.schema';
+import {
+  insuranceBrackets,
+  insuranceBracketsSchema,
+} from '../config_setup/models/insuranceBrackets.schema';
+import {
+  signingBonus,
+  signingBonusSchema,
+} from '../config_setup/models/signingBonus.schema';
+import {
+  terminationAndResignationBenefits,
+  terminationAndResignationBenefitsSchema,
+} from '../config_setup/models/terminationAndResignationBenefits';
+
+// Schemas - Tracking
+import { refunds, refundsSchema } from '../tracking/models/refunds.schema';
+
+// Modules
+import { ConfigSetupModule } from '../config_setup/config_setup.module';
+import { TimeMangementModule } from '../../time-mangement/timemangment.module';
+import { AuthModule } from '../../employee-subsystem/employee/auth.module';
+
 @Module({
   imports: [
+    ConfigSetupModule,
+    TimeMangementModule,
+    AuthModule,
     MongooseModule.forFeature([
+      // Execution schemas
       { name: payrollRuns.name, schema: payrollRunsSchema },
       { name: paySlip.name, schema: paySlipSchema },
       {
@@ -47,6 +84,19 @@ import { ConfigSetupService } from '../config_setup/config_setup.service';
         name: EmployeeTerminationResignation.name,
         schema: EmployeeTerminationResignationSchema,
       },
+      // Employee subsystem schemas
+      { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
+      { name: EmployeeSystemRole.name, schema: EmployeeSystemRoleSchema },
+      // Config setup schemas
+      { name: taxRules.name, schema: taxRulesSchema },
+      { name: insuranceBrackets.name, schema: insuranceBracketsSchema },
+      { name: signingBonus.name, schema: signingBonusSchema },
+      {
+        name: terminationAndResignationBenefits.name,
+        schema: terminationAndResignationBenefitsSchema,
+      },
+      // Tracking schemas
+      { name: refunds.name, schema: refundsSchema },
     ]),
   ],
   controllers: [PayrollController],
@@ -56,7 +106,7 @@ import { ConfigSetupService } from '../config_setup/config_setup.service';
     PayrollCalculationService,
     PayrollExceptionsService,
     PayslipService,
-    ConfigSetupService,
+    EmployeePenaltyService,
   ],
   exports: [
     MongooseModule, // export schemas

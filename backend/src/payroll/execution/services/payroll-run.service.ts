@@ -61,14 +61,9 @@ export class PayrollRunService {
       const penaltiesDoc = await this.payrollEventsService.getEmployeePenalties(
         employee._id,
       );
-      const bonusesDoc = await this.payrollEventsService.getEmployeeBonuses(
-        employee._id,
-      );
-      const terminationDoc =
-        await this.payrollEventsService.getTerminationBenefits(employee._id);
 
       const employeePayload = {
-        employeeId: employee._id,
+        employeeId: employee._id.toString(),
       };
 
       // Run salary calculation (YOUR REAL IMPLEMENTATION)

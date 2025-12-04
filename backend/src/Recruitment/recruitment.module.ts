@@ -33,6 +33,8 @@ import { LeaveType, LeaveTypeSchema } from '../leaves/models/leave-type.schema';
 
 // Payroll schemas
 import { EmployeeTerminationResignation, EmployeeTerminationResignationSchema } from '../payroll/execution/models/EmployeeTerminationResignation.schema';
+import { signingBonus, signingBonusSchema } from '../payroll/config_setup/models/signingBonus.schema';
+import { payGrade, payGradeSchema } from '../payroll/config_setup/models/payGrades.schema';
 
 // Repository implementations
 import {
@@ -48,7 +50,8 @@ import {
   OnboardingRepository,
   TerminationRequestRepository,
   ClearanceChecklistRepository,
-  EmployeeTerminationResignationRepository
+  EmployeeTerminationResignationRepository,
+  AssessmentResultRepository
 } from './repositories';
 
 // Module imports
@@ -57,8 +60,6 @@ import { NotificationModule } from '../employee-subsystem/notification/notificat
 import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
-import { ConfigSetupModule } from '../payroll/config_setup/config_setup.module';
-import { ExecutionModule } from '../payroll/execution/execution.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -90,6 +91,8 @@ import { ExecutionModule } from '../payroll/execution/execution.module';
 
       // Payroll schemas
       { name: EmployeeTerminationResignation.name, schema: EmployeeTerminationResignationSchema },
+      { name: signingBonus.name, schema: signingBonusSchema },
+      { name: payGrade.name, schema: payGradeSchema },
     ]),
 
     // Module imports
@@ -98,8 +101,6 @@ import { ExecutionModule } from '../payroll/execution/execution.module';
     PerformanceModule,
     OrganizationStructureModule,
     LeavesModule,
-    ConfigSetupModule,
-    ExecutionModule,
   ],
   controllers: [
     RecruitmentController,
@@ -122,6 +123,7 @@ import { ExecutionModule } from '../payroll/execution/execution.module';
     TerminationRequestRepository,
     ClearanceChecklistRepository,
     EmployeeTerminationResignationRepository,
+    AssessmentResultRepository,
   ],
   exports: [
     RecruitmentService,

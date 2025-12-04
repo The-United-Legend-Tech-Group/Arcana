@@ -35,7 +35,9 @@ import { CreateInterviewDto } from './dtos/create-interview.dto';
 import { UpdateInterviewDto } from './dtos/Update-interview.dto';
 import { SendNotificationDto } from './dtos/send-notification.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
+import { CreateAssessmentDto } from './dtos/create-assessment.dto';
 import { ReferralDocument } from './models/referral.schema';
+import { AssessmentResultDocument } from './models/assessment-result.schema';
 
 
 @ApiTags('Recruitment')
@@ -299,5 +301,95 @@ export class RecruitmentController {
   @Post('Application/referral/:candidateId')
   async createReferral(@Param('candidateId') candidateId: string, @Body() createReferralDto: CreateReferralDto): Promise<ReferralDocument> {
     return this.recruitmentService.createReferral(candidateId, createReferralDto);
+  }
+
+  // =================== ASSESSMENT ENDPOINTS ===================
+
+  @ApiOperation({
+    summary: 'Create assessment result for interview',
+    description: 'Allows panel members to create assessment results for interviews they participated in. Validates interviewer is part of the panel and prevents duplicate assessments.'
+  })
+  @ApiParam({
+    name: 'interviewId',
+    description: 'Interview MongoDB ObjectId',
+    example: '507f1f77bcf86cd799439011',
+    type: 'string'
+  })
+  @ApiBody({
+    type: CreateAssessmentDto,
+    description: 'Assessment data with interviewer ID, score (1-10), and optional comments',
+    examples: {
+      'Excellent Assessment': {
+        value: {
+          interviewerId: '507f1f77bcf86cd799439012',
+          score: 9.5,
+          comments: 'Exceptional technical skills, excellent communication, strong problem-solving abilities. Highly recommend for hire.'
+        }
+      },
+      'Good Assessment': {
+        value: {
+          interviewerId: '507f1f77bcf86cd799439013',
+          score: 7.5,
+          comments: 'Good technical knowledge, needs improvement in system design concepts.'
+        }
+      },
+      'Poor Assessment': {
+        value: {
+          interviewerId: '507f1f77bcf86cd799439014',
+          score: 3.0,
+          comments: 'Lacks required technical skills, communication needs significant improvement.'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Assessment result created successfully',
+    schema: {
+      example: {
+        _id: '507f1f77bcf86cd799439020',
+        interviewId: '507f1f77bcf86cd799439011',
+        interviewerId: '507f1f77bcf86cd799439012',
+        score: 9.5,
+        comments: 'Exceptional technical skills, excellent communication, strong problem-solving abilities.',
+        createdAt: '2025-12-01T10:30:00.000Z',
+        updatedAt: '2025-12-01T10:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Interviewer not part of panel or assessment already exists',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Assessment already exists for this interviewer and interview',
+        error: 'Bad Request'
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Interview not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Interview with id 507f1f77bcf86cd799439011 not found',
+        error: 'Not Found'
+      }
+    }
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @Post('Interview/Assessment/:interviewId')
+  async createAssessment(
+    @Param('interviewId') interviewId: string,
+    @Body() createAssessmentDto: CreateAssessmentDto
+  ): Promise<AssessmentResultDocument> {
+    // Merge interviewId from URL param with DTO
+    const assessmentData = {
+      ...createAssessmentDto,
+      interviewId
+    };
+    return this.recruitmentService.createAssessment(interviewId, assessmentData);
   }
 }

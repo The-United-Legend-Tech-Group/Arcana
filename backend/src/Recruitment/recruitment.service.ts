@@ -22,7 +22,7 @@ import { SendOfferDto } from './DTO/send-offer.dto';
 import { CandidateRespondOfferDto } from './DTO/candidate-respond-offer.dto';
 import { EmployeeService } from '../employee-subsystem/employee/employee.service';
 import { ConfigSetupService } from '../payroll/config_setup/config_setup.service';
-import { EmployeeSigningBonusService } from '../payroll/execution/services/EmployeesigningBonus.service';
+//import { EmployeeSigningBonusService } from '../payroll/execution/services';
 //import { PayrollExecutionService } from '../payroll-execution/payroll-execution.service';
 
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
@@ -43,7 +43,7 @@ import { ApplicationStage } from './enums/application-stage.enum';
 import { ApplicationStatus } from './enums/application-status.enum';
 import { InterviewStatus } from './enums/interview-status.enum';
 import { InterviewMethod } from './enums/interview-method.enum';
-import { /*SystemRole, EmployeeStatus,*/ CandidateStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { /*SystemRole, EmployeeStatus,*/ CandidateStatus, SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
 import type { UpdateCandidateStatusDto } from '../employee-subsystem/employee/dto/update-candidate-status.dto';
 
 import { CreateJobTemplateDto } from './dtos/create-job-template.dto';
@@ -56,11 +56,11 @@ import { CreateInterviewDto } from './dtos/create-interview.dto';
 import { CreateNotificationDto } from '../employee-subsystem/notification/dto/create-notification.dto';
 import { UpdateInterviewDto } from './dtos/Update-interview.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
+import { CreateAssessmentDto } from './dtos/create-assessment.dto';
 
 
 //import { EmployeeProfileRepository } from '../employee-subsystem/employee/repository/employee-profile.repository';
 import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
-//import { EmployeeSystemRoleRepository } from '../employee-subsystem/employee/repository/employee-system-role.repository';
 
 // Repository implementations
 import {
@@ -73,8 +73,10 @@ import {
   ApplicationHistoryRepository,
   OfferRepository,
   ContractRepository,
-  OnboardingRepository
+  OnboardingRepository,
+  AssessmentResultRepository
 } from './repositories';
+import { AssessmentResultDocument } from './models/assessment-result.schema';
 
 @Injectable()
 export class RecruitmentService {
@@ -91,14 +93,15 @@ export class RecruitmentService {
     private readonly offerRepository: OfferRepository,
     private readonly contractRepository: ContractRepository,
     private readonly onboardingRepository: OnboardingRepository,
+    private readonly assessmentResultRepository: AssessmentResultRepository,
 
     private readonly notificationService: NotificationService,
     // private readonly employeeProfileRepository: EmployeeProfileRepository,
     private readonly candidateRepository: CandidateRepository,
     //private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
-    private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
+    //   private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     private readonly configSetupService: ConfigSetupService,
-    private readonly employeeSigningBonusService: EmployeeSigningBonusService,
+    // private readonly employeeSigningBonusService: EmployeeSigningBonusService,
     //private payrollExecutionService: PayrollExecutionService,
   ) { }
 
@@ -120,10 +123,10 @@ export class RecruitmentService {
     }
 
     // Validate HR employee exists and has proper role
-    const isValidHR = await this.validateEmployeeExistence(hrEmployeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
+    /*const isValidHR = await this.validateEmployeeExistence(hrEmployeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
     if (!isValidHR) {
       throw new NotFoundException(`HR Employee with id ${hrEmployeeId} is not valid or not active`);
-    }
+    }*/
 
     // Lookup signing bonus by role/position from payroll configuration
     const bonusConfig = await this.configSetupService.signingBonus.findOne({
@@ -180,12 +183,12 @@ export class RecruitmentService {
     if (!offer) {
       throw new NotFoundException('Offer not found');
     }
-
-    // Validate employee exists and is active
-    const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
-    if (!isValidEmployee) {
-      throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
-    }
+    /*
+        // Validate employee exists and is active
+        const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
+        if (!isValidEmployee) {
+          throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
+        }*/
 
     // Check if approver already exists
     const existingApprover = offer.approvers.find(
@@ -223,12 +226,12 @@ export class RecruitmentService {
     if (!offer) {
       throw new NotFoundException('Offer not found');
     }
-
-    // Validate employee exists and is active
-    const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
-    if (!isValidEmployee) {
-      throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
-    }
+    /*
+        // Validate employee exists and is active
+        const isValidEmployee = await this.validateEmployeeExistence(employeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.PAYROLL_MANAGER]);
+        if (!isValidEmployee) {
+          throw new NotFoundException(`Employee with id ${employeeId} is not valid or not active`);
+        }*/
 
     // Find the approver in the list
     const approver = offer.approvers.find(
@@ -279,13 +282,13 @@ export class RecruitmentService {
     if (!offer) {
       throw new NotFoundException('Offer not found');
     }
-
-    // Validate HR employee who created the offer still exists and is active
-    const isValidHR = await this.validateEmployeeExistence(offer.hrEmployeeId.toString(), [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
-    if (!isValidHR) {
-      throw new NotFoundException(`HR Employee who created this offer (${offer.hrEmployeeId}) is not valid or not active`);
-    }
-
+    /*
+        // Validate HR employee who created the offer still exists and is active
+        const isValidHR = await this.validateEmployeeExistence(offer.hrEmployeeId.toString(), [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
+        if (!isValidHR) {
+          throw new NotFoundException(`HR Employee who created this offer (${offer.hrEmployeeId}) is not valid or not active`);
+        }
+    */
     // Check if all required approvals are obtained
     if (offer.approvers.length > 0) {
       const allApproved = offer.approvers.every(a => a.status === 'approved');
@@ -515,14 +518,14 @@ export class RecruitmentService {
 
     // Get candidateId from the offer for onboarding and bonus processing
     const updatedContract = await this.contractRepository.findById(contractId);
-    
+
     if (!updatedContract?.offerId) {
       throw new NotFoundException('Contract does not have an associated offer');
     }
 
     // Fetch the offer to get candidate information
     const offer = await this.offerRepository.findById(updatedContract.offerId.toString());
-    
+
     if (!offer) {
       throw new NotFoundException('Offer associated with this contract not found');
     }
@@ -531,7 +534,7 @@ export class RecruitmentService {
     if (offer.candidateId) {
       // Fetch the candidate details
       const candidate = await this.candidateRepository.findById(offer.candidateId.toString());
-      
+
       if (!candidate) {
         throw new NotFoundException('Candidate associated with this offer not found');
       }
@@ -586,19 +589,11 @@ export class RecruitmentService {
         const createdEmployee = await this.employeeService.onboard(employeeData);
         employeeProfileId = String((createdEmployee as any)._id || (createdEmployee as any).id);
       } catch (error) {
-        // If employee already exists (409 Conflict), try to find them by national ID
+        // If employee already exists (409 Conflict), handle gracefully
         if (error.status === 409 || error.message?.includes('already exists')) {
-          const existingEmployee = await this.employeeProfileRepository.findOne({ 
-            nationalId: employeeData.nationalId 
-          });
-          
-          if (existingEmployee) {
-            employeeProfileId = existingEmployee._id.toString();
-            console.log(`Employee already exists with ID: ${employeeProfileId}. Using existing employee profile.`);
-          } else {
-            // If we can't find the employee, re-throw the original error
-            throw error;
-          }
+          throw new BadRequestException(
+            `An employee with National ID ${employeeData.nationalId} already exists in the system. Please contact HR to resolve this conflict.`
+          );
         } else {
           throw error;
         }
@@ -1835,5 +1830,61 @@ export class RecruitmentService {
     };
     return await this.referralRepository.create(referralData);
   }
+  async createAssessment(interviewId: string, createAssessmentDto: CreateAssessmentDto): Promise<AssessmentResultDocument> {
+    const { interviewerId, score, comments } = createAssessmentDto;
 
+    // Validate interview exists
+    const interview = await this.interviewRepository.findById(interviewId);
+    if (!interview) {
+      throw new NotFoundException(`Interview with id ${interviewId} not found`);
+    }
+
+    // Validate interviewer is part of the panel
+    const isInterviewerInPanel = interview.panel.some(
+      member => member.toString() === interviewerId
+    );
+
+    if (!isInterviewerInPanel) {
+      throw new BadRequestException('Interviewer is not part of this interview panel');
+    }
+
+    // Check if assessment already exists for this interviewer and interview
+    const existingAssessment = await this.assessmentResultRepository.findOne({
+      interviewId: new Types.ObjectId(interviewId),
+      interviewerId: new Types.ObjectId(interviewerId)
+    });
+
+    if (existingAssessment) {
+      throw new BadRequestException('Assessment already exists for this interviewer and interview');
+    }
+
+    // Validate score range
+    if (score < 1 || score > 10) {
+      throw new BadRequestException('Score must be between 1 and 10');
+    }
+
+    // Create the assessment
+    const assessmentData = {
+      interviewId: new Types.ObjectId(interviewId),
+      interviewerId: new Types.ObjectId(interviewerId),
+      score,
+      comments
+    };
+
+    const createdAssessment = await this.assessmentResultRepository.create(assessmentData);
+
+    // Send notification to HR about the assessment
+    await this.notificationService.create({
+      recipientId: [], // Will be broadcast to HR role
+      type: 'Info',
+      deliveryType: 'BROADCAST',
+      deliverToRole: SystemRole.HR_MANAGER,
+      title: 'New Assessment Submitted',
+      message: `Assessment has been submitted for interview ${interviewId} by interviewer ${interviewerId}. Score: ${score}/10`,
+      relatedModule: 'Recruitment',
+      isRead: false,
+    });
+
+    return createdAssessment;
+  }
 }

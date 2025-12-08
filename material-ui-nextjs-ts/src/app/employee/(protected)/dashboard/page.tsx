@@ -143,7 +143,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 border: 'none',
                                                 ...(employee?.status === 'ON_LEAVE' && {
                                                     bgcolor: '#ffface',
-                                                    color: 'black'
+                                                    color: '#666666'
                                                 })
                                             }} 
                                         />
@@ -230,7 +230,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                     border: 'none',
                                                     ...(employee?.status === 'ON_LEAVE' && {
                                                         bgcolor: '#ffface',
-                                                        color: 'black'
+                                                        color: '#666666'
                                                     })
                                                 }}
                                             />

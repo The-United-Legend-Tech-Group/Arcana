@@ -5,18 +5,10 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
-import Avatar from '@mui/material/Avatar';
-import Stack from '@mui/material/Stack';
-import SaveIcon from '@mui/icons-material/Save';
-import PersonIcon from '@mui/icons-material/Person';
+import ProfileCard from './components/ProfileCard';
+import ContactCard from './components/ContactCard';
 
 interface Address {
     city?: string;
@@ -56,6 +48,8 @@ export default function SettingsPage() {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
+    const sanitize = (val: any) => (typeof val === 'string' ? val : '');
+
     React.useEffect(() => {
         const fetchProfile = async () => {
             const token = localStorage.getItem('access_token');
@@ -76,15 +70,15 @@ export default function SettingsPage() {
                     const data = await res.json();
                     const p = data.profile || data;
                     setProfile(p);
-                    
-                    // Initialize form
-                    setBiography(p.biography || '');
-                    setMobilePhone(p.mobilePhone || '');
-                    setHomePhone(p.homePhone || '');
-                    setCity(p.address?.city || '');
-                    setStreetAddress(p.address?.streetAddress || '');
-                    setCountry(p.address?.country || '');
-                    setProfilePictureUrl(p.profilePictureUrl || '');
+
+                    // Initialize form using sanitize helper
+                    setBiography(sanitize(p.biography));
+                    setMobilePhone(sanitize(p.mobilePhone));
+                    setHomePhone(sanitize(p.homePhone));
+                    setCity(sanitize(p.address?.city));
+                    setStreetAddress(sanitize(p.address?.streetAddress));
+                    setCountry(sanitize(p.address?.country));
+                    setProfilePictureUrl(sanitize(p.profilePictureUrl));
                 } else {
                     setError('Failed to load profile');
                 }
@@ -111,7 +105,7 @@ export default function SettingsPage() {
             const profilePayload = { biography, profilePictureUrl };
             const profileRes = await fetch(`${apiUrl}/employee/${employeeId}/profile`, {
                 method: 'PATCH',
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
@@ -128,7 +122,7 @@ export default function SettingsPage() {
             };
             const contactRes = await fetch(`${apiUrl}/employee/${employeeId}/contact-info`, {
                 method: 'PATCH',
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
@@ -138,10 +132,10 @@ export default function SettingsPage() {
             if (!contactRes.ok) throw new Error('Failed to update contact info');
 
             setSuccess('Settings updated successfully');
-            
+
             // Refresh local profile state slightly to reflect changes if needed, 
             // but we already have the form values.
-            
+
         } catch (e: any) {
             console.error(e);
             setError(e.message || 'An error occurred while saving');
@@ -170,147 +164,32 @@ export default function SettingsPage() {
             <Grid container spacing={3}>
                 {/* Profile Picture & Bio */}
                 <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-                    <Card variant="outlined" sx={{ height: '100%' }}>
-                        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2 }}>
-                            <Avatar 
-                                src={profilePictureUrl} 
-                                sx={{ width: 120, height: 120, bgcolor: 'primary.main', fontSize: 60 }}
-                            >
-                                {!profilePictureUrl && <PersonIcon fontSize="inherit" />}
-                            </Avatar>
-                            <Box>
-                                <Typography variant="h6" gutterBottom>{profile?.firstName} {profile?.lastName}</Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {profile?.workEmail || profile?.personalEmail}
-                                </Typography>
-                            </Box>
-                            
-                            <Divider flexItem sx={{ my: 1 }} />
-
-                            <input
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                id="profile-picture-upload"
-                                type="file"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        // Optional: Check file size (e.g. 2MB limit)
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            setError('File size too large. Please select an image under 2MB.');
-                                            return;
-                                        }
-                                        
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            setProfilePictureUrl(reader.result as string);
-                                            setError(null); // Clear any previous errors
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
-                            />
-                            <label htmlFor="profile-picture-upload">
-                                <Button 
-                                    variant="outlined" 
-                                    component="span" 
-                                    fullWidth
-                                    sx={{ mt: 2, mb: 2 }}
-                                >
-                                    Upload Picture
-                                </Button>
-                            </label>
-
-                            <TextField
-                                fullWidth
-                                label="Biography"
-                                multiline
-                                rows={6}
-                                variant="outlined"
-                                value={biography}
-                                onChange={(e) => setBiography(e.target.value)}
-                                placeholder="Tell us about yourself..."
-                            />
-                        </CardContent>
-                    </Card>
+                    <ProfileCard
+                        profile={profile}
+                        profilePictureUrl={profilePictureUrl}
+                        setProfilePictureUrl={setProfilePictureUrl}
+                        biography={biography}
+                        setBiography={setBiography}
+                        setError={setError}
+                    />
                 </Grid>
 
                 {/* Contact Information */}
                 <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-                    <Card variant="outlined" sx={{ height: '100%' }}>
-                        <CardHeader 
-                            title="Contact Information" 
-                            subheader="Update your personal details and address" 
-                            action={
-                                <Button 
-                                    variant="contained" 
-                                    startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                                    onClick={handleSaveProfile}
-                                    disabled={saving}
-                                >
-                                    {saving ? 'Saving...' : 'Save Changes'}
-                                </Button>
-                            }
-                        />
-                        <Divider />
-                        <CardContent>
-                            <Stack spacing={3}>
-                                <Box>
-                                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>Phone Numbers</Typography>
-                                    <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <TextField
-                                                fullWidth
-                                                label="Mobile Phone"
-                                                value={mobilePhone}
-                                                onChange={(e) => setMobilePhone(e.target.value)}
-                                            />
-                                        </Grid>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <TextField
-                                                fullWidth
-                                                label="Home Phone"
-                                                value={homePhone}
-                                                onChange={(e) => setHomePhone(e.target.value)}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-
-                                <Divider />
-
-                                <Box>
-                                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>Address</Typography>
-                                    <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12 }}>
-                                            <TextField
-                                                fullWidth
-                                                label="Street Address"
-                                                value={streetAddress}
-                                                onChange={(e) => setStreetAddress(e.target.value)}
-                                            />
-                                        </Grid>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <TextField
-                                                fullWidth
-                                                label="City"
-                                                value={city}
-                                                onChange={(e) => setCity(e.target.value)}
-                                            />
-                                        </Grid>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <TextField
-                                                fullWidth
-                                                label="Country"
-                                                value={country}
-                                                onChange={(e) => setCountry(e.target.value)}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
+                    <ContactCard
+                        saving={saving}
+                        handleSaveProfile={handleSaveProfile}
+                        mobilePhone={mobilePhone}
+                        setMobilePhone={setMobilePhone}
+                        homePhone={homePhone}
+                        setHomePhone={setHomePhone}
+                        streetAddress={streetAddress}
+                        setStreetAddress={setStreetAddress}
+                        city={city}
+                        setCity={setCity}
+                        country={country}
+                        setCountry={setCountry}
+                    />
                 </Grid>
             </Grid>
         </Box>

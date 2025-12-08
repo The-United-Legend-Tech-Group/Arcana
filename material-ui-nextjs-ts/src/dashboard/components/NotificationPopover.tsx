@@ -82,6 +82,47 @@ export default function NotificationPopover() {
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
+    const handleMarkAsRead = async (id: string, event: React.MouseEvent) => {
+        event.stopPropagation();
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+        try {
+            const res = await fetch(`${apiUrl}/notification/${id}/read`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                // Optimistic update
+                setNotifications(prev => prev.map(n =>
+                    n._id === id ? { ...n, isRead: true } : n
+                ));
+            }
+        } catch (error) {
+            console.error('Error marking notification as read', error);
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+        try {
+            const res = await fetch(`${apiUrl}/notification/read-all`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                // Optimistic update
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            }
+        } catch (error) {
+            console.error('Error marking all as read', error);
+        }
+    };
+
     return (
         <React.Fragment>
             <MenuButton
@@ -134,7 +175,12 @@ export default function NotificationPopover() {
                     <Box sx={{ p: 2, pb: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>Notifications</Typography>
                         {notifications.length > 0 && notifications.some(n => !n.isRead) && (
-                            <Typography variant="caption" color="primary" sx={{ cursor: 'pointer', fontWeight: 600 }}>
+                            <Typography
+                                variant="caption"
+                                color="primary"
+                                onClick={handleMarkAllAsRead}
+                                sx={{ cursor: 'pointer', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}
+                            >
                                 Mark all read
                             </Typography>
                         )}
@@ -147,10 +193,27 @@ export default function NotificationPopover() {
                             </Box>
                         ) : (
                             <List disablePadding>
-                                {notifications.map((notification) => (
+                                {/* Sort: Unread first, then Read (max 3) */}
+                                {[
+                                    ...notifications.filter(n => !n.isRead).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+                                    ...notifications.filter(n => n.isRead).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3)
+                                ].map((notification) => (
                                     <ListItem
                                         key={notification._id}
                                         alignItems="flex-start"
+                                        secondaryAction={
+                                            !notification.isRead && (
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label="mark as read"
+                                                    size="small"
+                                                    onClick={(e) => handleMarkAsRead(notification._id, e)}
+                                                    sx={{ ml: 1, color: 'primary.main', bgcolor: 'transparent', '&:hover': { bgcolor: 'action.hover' } }}
+                                                >
+                                                    <CheckCircleRoundedIcon fontSize="small" />
+                                                </IconButton>
+                                            )
+                                        }
                                         sx={(theme) => ({
                                             bgcolor: notification.isRead ? 'transparent' : alpha(theme.palette.primary.main, 0.04),
                                             mx: 1, // Margin for floating effect
@@ -163,6 +226,7 @@ export default function NotificationPopover() {
                                                 transform: 'translateY(-1px)',
                                             },
                                             p: 1.5, // More compact padding
+                                            pr: notification.isRead ? 1.5 : 5, // Make room for secondary action if unread
                                         })}
                                     >
                                         <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
@@ -186,9 +250,6 @@ export default function NotificationPopover() {
                                             }
                                             sx={{ m: 0 }}
                                         />
-                                        {!notification.isRead && (
-                                            <CircleIcon sx={{ fontSize: 8, color: 'primary.main', mt: 1, ml: 1 }} />
-                                        )}
                                     </ListItem>
                                 ))}
                             </List>

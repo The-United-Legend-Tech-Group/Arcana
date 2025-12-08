@@ -27,4 +27,18 @@ export class NotificationService {
       $or: [{ recipientId: recipientId }, { deliveryType: 'BROADCAST' }],
     });
   }
+
+  async markAsRead(id: string): Promise<Notification | null> {
+    return this.notificationRepository.updateById(
+      id,
+      { isRead: true },
+    );
+  }
+
+  async markAllAsRead(recipientId: string): Promise<any> {
+    return this.notificationRepository.updateMany(
+      { recipientId: new Types.ObjectId(recipientId), isRead: false },
+      { isRead: true },
+    );
+  }
 }

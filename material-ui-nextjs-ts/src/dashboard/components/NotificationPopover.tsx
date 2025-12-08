@@ -26,6 +26,7 @@ interface Notification {
     type: string;
     isRead: boolean;
     createdAt: string;
+    deadline?: string;
 }
 
 const getNotificationIcon = (type: string) => {

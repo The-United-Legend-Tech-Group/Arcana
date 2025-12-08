@@ -10,8 +10,6 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) { }
 
   @Post()
-  @UseGuards(AuthGuard)
-  @ApiOperation({ summary: 'Create a new notification' })
   @ApiResponse({
     status: 201,
     description: 'The notification has been successfully created.',

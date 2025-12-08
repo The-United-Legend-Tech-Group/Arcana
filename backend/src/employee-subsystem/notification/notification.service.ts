@@ -10,16 +10,14 @@ export type NotificationDocument = Notification & Document;
 export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
-  ) {}
+  ) { }
 
   async create(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
     const payload: Partial<Notification> = {
       ...createNotificationDto,
-      recipientId: createNotificationDto.recipientId.map(
-        (id) => new Types.ObjectId(id),
-      ),
+      recipientId: createNotificationDto.recipientId?.map(id => new Types.ObjectId(id)),
     };
     return this.notificationRepository.create(payload);
   }

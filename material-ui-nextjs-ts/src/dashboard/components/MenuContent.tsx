@@ -11,13 +11,15 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import { usePathname, useRouter } from 'next/navigation';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon /> },
-  { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Team', icon: <PeopleRoundedIcon /> },
-  { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
+  { text: 'Home', icon: <HomeRoundedIcon />, path: '/employee/dashboard' },
+  { text: 'Calendar', icon: <CalendarMonthRoundedIcon />, path: '/employee/calendar' },
+  { text: 'Team', icon: <PeopleRoundedIcon />, path: '/employee/team' },
+  { text: 'Analytics', icon: <AnalyticsRoundedIcon />, path: '/employee/analytics' },
+  { text: 'Clients', icon: <AssignmentRoundedIcon />, path: '/employee/clients' },
 ];
 
 const secondaryListItems = [
@@ -42,7 +44,8 @@ export default function MenuContent() {
     if (text === 'Team' && pathname === '/employee/team') return true;
     if (text === 'Analytics' && pathname === '/employee/analytics') return true;
     if (text === 'Settings' && pathname === '/employee/settings') return true;
-    // Add other mapping as needed
+    if (text === 'Calendar' && pathname === '/employee/calendar') return true;
+    if (text === 'Clients' && pathname === '/employee/clients') return true;
     return false;
   }
 
@@ -57,6 +60,8 @@ export default function MenuContent() {
     if (text === 'Team') router.push('/employee/team');
     if (text === 'Analytics') router.push('/employee/analytics');
     if (text === 'Settings') router.push('/employee/settings');
+    if (text === 'Calendar') router.push('/employee/calendar');
+    if (text === 'Clients') router.push('/employee/clients');
   };
 
   return (

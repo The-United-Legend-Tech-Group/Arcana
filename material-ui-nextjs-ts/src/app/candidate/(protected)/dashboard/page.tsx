@@ -120,10 +120,12 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                     <CardContent>
                         <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
                             <Avatar
-                                src={candidate?.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                src={candidate?.profilePictureUrl}
                                 alt={`${candidate?.firstName} ${candidate?.lastName}`}
-                                sx={{ width: 160, height: 160, boxShadow: 3 }}
-                            />
+                                sx={{ width: 160, height: 160, boxShadow: 3, bgcolor: 'grey.300' }}
+                            >
+                                <PersonIcon sx={{ fontSize: 100, color: 'grey.600' }} />
+                            </Avatar>
                             <Box sx={{ flex: 1, width: '100%' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
                                     <Box>

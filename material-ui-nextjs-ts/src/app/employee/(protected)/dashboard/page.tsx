@@ -121,10 +121,12 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                     <CardContent>
                         <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
                             <Avatar
-                                src={employee?.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                src={employee?.profilePictureUrl}
                                 alt={`${employee?.firstName} ${employee?.lastName}`}
-                                sx={{ width: 160, height: 160, boxShadow: 3 }}
-                            />
+                                sx={{ width: 160, height: 160, boxShadow: 3, bgcolor: 'grey.300' }}
+                            >
+                                <PersonIcon sx={{ fontSize: 100, color: 'grey.600' }} />
+                            </Avatar>
                             <Box sx={{ flex: 1, width: '100%' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
                                     <Box>
@@ -135,7 +137,15 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                             label={employee?.status} 
                                             color={getStatusColor(employee?.status || '') as any} 
                                             size="medium" 
-                                            sx={{ fontWeight: 'bold' }} 
+                                            variant="filled"
+                                            sx={{ 
+                                                fontWeight: 'bold',
+                                                border: 'none',
+                                                ...(employee?.status === 'ON_LEAVE' && {
+                                                    bgcolor: '#FFC107', // Amber 500
+                                                    color: 'black'
+                                                })
+                                            }} 
                                         />
                                     </Box>
                                 </Box>
@@ -215,7 +225,14 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 color={getStatusColor(employee?.status || '') as any}
                                                 size="small"
                                                 variant="filled"
-                                                sx={{ fontWeight: 'bold' }}
+                                                sx={{ 
+                                                    fontWeight: 'bold',
+                                                    border: 'none',
+                                                    ...(employee?.status === 'ON_LEAVE' && {
+                                                        bgcolor: '#FFC107', // Amber 500
+                                                        color: 'black'
+                                                    })
+                                                }}
                                             />
                                         </TableCell>
                                     </TableRow>

@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
+
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -41,6 +41,8 @@ interface Employee {
     dateOfHire: string;
     profilePictureUrl?: string;
 }
+
+import OrganizationHierarchy from './OrganizationHierarchy';
 
 export default function EmployeeDashboard(props: { disableCustomTheme?: boolean }) {
     const router = useRouter();
@@ -133,27 +135,27 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                         <Typography variant="h4" fontWeight="bold" gutterBottom>
                                             {employee?.firstName} {employee?.middleName} {employee?.lastName}
                                         </Typography>
-                                            <Chip 
-                                            label={employee?.status} 
-                                            color={getStatusColor(employee?.status || '') as any} 
-                                            size="medium" 
+                                        <Chip
+                                            label={employee?.status}
+                                            color={getStatusColor(employee?.status || '') as any}
+                                            size="medium"
                                             variant="filled"
-                                            sx={{ 
+                                            sx={{
                                                 fontWeight: 'bold',
                                                 border: 'none',
                                                 ...(employee?.status === 'ON_LEAVE' && {
                                                     bgcolor: '#ffface',
                                                     color: '#666666'
                                                 })
-                                            }} 
+                                            }}
                                         />
                                     </Box>
                                 </Box>
-                                
+
                                 <Divider sx={{ mb: 3 }} />
-                                
-                                <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6} md={3}>
+
+                                <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+                                    <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 24px)', md: 'calc(25% - 24px)' } }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <WorkIcon color="action" />
                                             <Box>
@@ -161,8 +163,8 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{employee?.workEmail || 'N/A'}</Typography>
                                             </Box>
                                         </Stack>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    </Box>
+                                    <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 24px)', md: 'calc(25% - 24px)' } }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <PhoneIcon color="action" />
                                             <Box>
@@ -170,8 +172,8 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 <Typography variant="body1">{employee?.mobilePhone || 'N/A'}</Typography>
                                             </Box>
                                         </Stack>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    </Box>
+                                    <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 24px)', md: 'calc(25% - 24px)' } }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <BadgeIcon color="action" />
                                             <Box>
@@ -179,8 +181,8 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 <Typography variant="body1">{employee?.nationalId}</Typography>
                                             </Box>
                                         </Stack>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    </Box>
+                                    <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 24px)', md: 'calc(25% - 24px)' } }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <PersonIcon color="action" />
                                             <Box>
@@ -188,8 +190,8 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 <Typography variant="body1">{employee?.employeeNumber}</Typography>
                                             </Box>
                                         </Stack>
-                                    </Grid>
-                                </Grid>
+                                    </Box>
+                                </Stack>
                             </Box>
                         </Stack>
                     </CardContent>
@@ -225,7 +227,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 color={getStatusColor(employee?.status || '') as any}
                                                 size="small"
                                                 variant="filled"
-                                                sx={{ 
+                                                sx={{
                                                     fontWeight: 'bold',
                                                     border: 'none',
                                                     ...(employee?.status === 'ON_LEAVE' && {
@@ -241,7 +243,10 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                         </TableContainer>
                     </CardContent>
                 </Card>
+
+                {/* Organization Hierarchy Section */}
+                <OrganizationHierarchy />
             </Stack>
-        </Box>
+        </Box >
     );
 }

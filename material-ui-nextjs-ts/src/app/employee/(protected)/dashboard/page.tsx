@@ -2,10 +2,6 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import type { } from '@mui/x-date-pickers/themeAugmentation';
-import type { } from '@mui/x-charts/themeAugmentation';
-import type { } from '@mui/x-data-grid/themeAugmentation';
-import type { } from '@mui/x-tree-view/themeAugmentation';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -22,8 +18,14 @@ import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
-import { alpha } from '@mui/material/styles';
-// Adjust imports to point to the dashboard directory
+import Divider from '@mui/material/Divider';
+
+// Icons
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import BadgeIcon from '@mui/icons-material/Badge';
+import PersonIcon from '@mui/icons-material/Person';
+import WorkIcon from '@mui/icons-material/Work';
 
 interface Employee {
     _id: string;
@@ -108,100 +110,138 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
     }
 
     return (
-        <React.Fragment>
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-                Overview
+        <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+            <Typography component="h2" variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
+                Welcome back, {employee?.firstName}!
             </Typography>
 
-            {employee && (
-                <Grid container spacing={3}>
-                    {/* Profile Section */}
-                    <Grid size={{ xs: 12 }}>
-                        <Card variant="outlined" sx={{ mb: 2 }}>
-                            <CardContent>
-                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-                                    <Avatar
-                                        src={employee.profilePictureUrl || '/static/images/avatar/7.jpg'}
-                                        alt={`${employee.firstName} ${employee.lastName}`}
-                                        sx={{ width: 100, height: 100 }}
-                                    />
-                                    <Box sx={{ width: '100%', flex: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                            <Typography variant="h5" fontWeight="bold">
-                                                {employee.firstName} {employee.middleName} {employee.lastName}
-                                            </Typography>
-                                            <Chip label="Employee" color="secondary" size="small" variant="outlined" />
-                                        </Box>
-
-                                        <Grid container spacing={2}>
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <Typography variant="subtitle2" color="text.secondary">Employee Number</Typography>
-                                                <Typography variant="body1">{employee.employeeNumber}</Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <Typography variant="subtitle2" color="text.secondary">National ID</Typography>
-                                                <Typography variant="body1">{employee.nationalId}</Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <Typography variant="subtitle2" color="text.secondary">Work Email</Typography>
-                                                <Typography variant="body1">{employee.workEmail || 'N/A'}</Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 12, md: 6 }}>
-                                                <Typography variant="subtitle2" color="text.secondary">Mobile</Typography>
-                                                <Typography variant="body1">{employee.mobilePhone || 'N/A'}</Typography>
-                                            </Grid>
-                                        </Grid>
+            <Stack spacing={4}>
+                {/* Profile Section - Wider and Horizontal */}
+                <Card variant="outlined">
+                    <CardContent>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
+                            <Avatar
+                                src={employee?.profilePictureUrl}
+                                alt={`${employee?.firstName} ${employee?.lastName}`}
+                                sx={{ width: 160, height: 160, boxShadow: 3, bgcolor: 'grey.300' }}
+                            >
+                                <PersonIcon sx={{ fontSize: 100, color: 'grey.600' }} />
+                            </Avatar>
+                            <Box sx={{ flex: 1, width: '100%' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                                    <Box>
+                                        <Typography variant="h4" fontWeight="bold" gutterBottom>
+                                            {employee?.firstName} {employee?.middleName} {employee?.lastName}
+                                        </Typography>
+                                            <Chip 
+                                            label={employee?.status} 
+                                            color={getStatusColor(employee?.status || '') as any} 
+                                            size="medium" 
+                                            variant="filled"
+                                            sx={{ 
+                                                fontWeight: 'bold',
+                                                border: 'none',
+                                                ...(employee?.status === 'ON_LEAVE' && {
+                                                    bgcolor: '#ffface',
+                                                    color: 'black'
+                                                })
+                                            }} 
+                                        />
                                     </Box>
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                                </Box>
+                                
+                                <Divider sx={{ mb: 3 }} />
+                                
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <WorkIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Work Email</Typography>
+                                                <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{employee?.workEmail || 'N/A'}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <PhoneIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Mobile</Typography>
+                                                <Typography variant="body1">{employee?.mobilePhone || 'N/A'}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <BadgeIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">National ID</Typography>
+                                                <Typography variant="body1">{employee?.nationalId}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <PersonIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Employee Number</Typography>
+                                                <Typography variant="body1">{employee?.employeeNumber}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Stack>
+                    </CardContent>
+                </Card>
 
-                    {/* Status Section */}
-                    <Grid size={{ xs: 12 }}>
-                        <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                            Employment Details
-                        </Typography>
-                        <Card variant="outlined">
-                            <CardContent sx={{ p: 0 }}>
-                                <TableContainer component={Paper} elevation={0} sx={{ boxShadow: 'none' }}>
-                                    <Table aria-label="employment status table">
-                                        <TableHead sx={{ bgcolor: 'action.hover' }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>Reference</TableCell>
-                                                <TableCell align="left" sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Join Date</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                                <TableCell component="th" scope="row">
-                                                    <Typography variant="body2" fontWeight="medium">Employment Contract</Typography>
-                                                    <Typography variant="caption" color="text.secondary">Full Time</Typography>
-                                                </TableCell>
-                                                <TableCell align="left">Standard</TableCell>
-                                                <TableCell align="right">
-                                                    {new Date(employee.dateOfHire).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Chip
-                                                        label={employee.status}
-                                                        color={getStatusColor(employee.status) as any}
-                                                        size="small"
-                                                        variant="filled"
-                                                        sx={{ fontWeight: 'bold' }}
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            )}
-        </React.Fragment>
+                {/* Employment Details - Aligned Left (Full Width) */}
+                <Card variant="outlined">
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>Employment Details</Typography>
+                        <TableContainer component={Paper} elevation={0} sx={{ boxShadow: 'none' }}>
+                            <Table aria-label="employment status table">
+                                <TableHead sx={{ bgcolor: 'action.hover' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Reference</TableCell>
+                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>Type</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Join Date</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                        <TableCell component="th" scope="row">
+                                            <Typography variant="body2" fontWeight="medium">Employment Contract</Typography>
+                                            <Typography variant="caption" color="text.secondary">Full Time</Typography>
+                                        </TableCell>
+                                        <TableCell align="left">Standard</TableCell>
+                                        <TableCell align="right">
+                                            {employee?.dateOfHire ? new Date(employee.dateOfHire).toLocaleDateString() : '-'}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Chip
+                                                label={employee?.status}
+                                                color={getStatusColor(employee?.status || '') as any}
+                                                size="small"
+                                                variant="filled"
+                                                sx={{ 
+                                                    fontWeight: 'bold',
+                                                    border: 'none',
+                                                    ...(employee?.status === 'ON_LEAVE' && {
+                                                        bgcolor: '#ffface',
+                                                        color: 'black'
+                                                    })
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </CardContent>
+                </Card>
+            </Stack>
+        </Box>
     );
 }

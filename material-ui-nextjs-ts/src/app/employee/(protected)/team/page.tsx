@@ -28,6 +28,7 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import PersonIcon from '@mui/icons-material/Person';
 
 // Adjust imports if needed
 
@@ -326,8 +327,11 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                     height: MANAGER_AVATAR_SIZE,
                                     boxShadow: '0 0 30px rgba(0,0,0,0.15)',
                                     border: `6px solid ${theme.palette.background.default}`,
+                                    bgcolor: 'grey.300'
                                 }}
-                            />
+                            >
+                                <PersonIcon sx={{ fontSize: MANAGER_AVATAR_SIZE * 0.6, color: 'grey.600' }} />
+                            </Avatar>
                             <Box sx={{
                                 mt: 2,
                                 bgcolor: theme.palette.mode === 'dark'
@@ -386,15 +390,18 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                         }}
                                     >
                                         <Avatar
-                                            src={member.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                            src={member.profilePictureUrl}
                                             alt={member.firstName}
                                             sx={{
                                                 width: BASE_AVATAR_SIZE,
                                                 height: BASE_AVATAR_SIZE,
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                                 border: `2px solid ${theme.palette.background.default}`,
+                                                bgcolor: 'grey.300'
                                             }}
-                                        />
+                                        >
+                                            <PersonIcon sx={{ fontSize: BASE_AVATAR_SIZE * 0.6, color: 'grey.600' }} />
+                                        </Avatar>
                                         <Typography
                                             variant="caption"
                                             sx={{
@@ -454,7 +461,7 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                         }}>
                                             {/* Duplicate Avatar for visual continuity */}
                                             <Avatar
-                                                src={member.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                                src={member.profilePictureUrl}
                                                 alt={member.firstName}
                                                 sx={{
                                                     width: 80,
@@ -462,8 +469,11 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                                     mb: 2,
                                                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                                     border: `3px solid ${theme.palette.primary.main}`,
+                                                    bgcolor: 'grey.300'
                                                 }}
-                                            />
+                                            >
+                                                <PersonIcon sx={{ fontSize: 50, color: 'grey.600' }} />
+                                            </Avatar>
 
                                             <Typography variant="h6" fontWeight="bold" gutterBottom>
                                                 {member.firstName} {member.lastName}

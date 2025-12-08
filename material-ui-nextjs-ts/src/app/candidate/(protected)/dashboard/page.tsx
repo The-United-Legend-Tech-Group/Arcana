@@ -19,6 +19,16 @@ import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+
+// Icons
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import BadgeIcon from '@mui/icons-material/Badge';
+import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 interface Candidate {
     _id: string;
@@ -99,100 +109,123 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
     }
 
     return (
-        <React.Fragment>
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-                Candidate Overview
+        <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+            <Typography component="h2" variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
+                Welcome back, {candidate?.firstName}!
             </Typography>
 
-            {candidate && (
-                <Grid container spacing={3}>
-                    {/* Profile Section */}
-                    <Grid item xs={12}>
-                        <Card variant="outlined" sx={{ mb: 2 }}>
-                            <CardContent>
-                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-                                    <Avatar
-                                        src={candidate.profilePictureUrl || '/static/images/avatar/default.jpg'}
-                                        alt={`${candidate.firstName} ${candidate.lastName}`}
-                                        sx={{ width: 100, height: 100 }}
-                                    />
-                                    <Box sx={{ width: '100%', flex: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                            <Typography variant="h5" fontWeight="bold">
-                                                {candidate.firstName} {candidate.middleName} {candidate.lastName}
-                                            </Typography>
-                                            <Chip label={candidate.status} color="primary" size="small" variant="outlined" />
-                                        </Box>
-
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="subtitle2" color="text.secondary">Candidate Number</Typography>
-                                                <Typography variant="body1">{candidate.candidateNumber}</Typography>
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="subtitle2" color="text.secondary">National ID</Typography>
-                                                <Typography variant="body1">{candidate.nationalId}</Typography>
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="subtitle2" color="text.secondary">Email</Typography>
-                                                <Typography variant="body1">{candidate.personalEmail}</Typography>
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <Typography variant="subtitle2" color="text.secondary">Mobile</Typography>
-                                                <Typography variant="body1">{candidate.mobilePhone || 'N/A'}</Typography>
-                                            </Grid>
-                                        </Grid>
+            <Stack spacing={4}>
+                {/* Profile Section - Wider and Horizontal */}
+                <Card variant="outlined">
+                    <CardContent>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
+                            <Avatar
+                                src={candidate?.profilePictureUrl}
+                                alt={`${candidate?.firstName} ${candidate?.lastName}`}
+                                sx={{ width: 160, height: 160, boxShadow: 3, bgcolor: 'grey.300' }}
+                            >
+                                <PersonIcon sx={{ fontSize: 100, color: 'grey.600' }} />
+                            </Avatar>
+                            <Box sx={{ flex: 1, width: '100%' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                                    <Box>
+                                        <Typography variant="h4" fontWeight="bold" gutterBottom>
+                                            {candidate?.firstName} {candidate?.middleName} {candidate?.lastName}
+                                        </Typography>
+                                        <Chip 
+                                            label={candidate?.status} 
+                                            color={getStatusColor(candidate?.status || '') as any} 
+                                            size="medium" 
+                                            sx={{ fontWeight: 'bold' }} 
+                                        />
                                     </Box>
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                                </Box>
+                                
+                                <Divider sx={{ mb: 3 }} />
+                                
+                                <Grid container spacing={3}>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <EmailIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Email</Typography>
+                                                <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{candidate?.personalEmail}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <PhoneIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Phone</Typography>
+                                                <Typography variant="body1">{candidate?.mobilePhone || 'N/A'}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <BadgeIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">National ID</Typography>
+                                                <Typography variant="body1">{candidate?.nationalId}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={3}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <PersonIcon color="action" />
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Candidate Number</Typography>
+                                                <Typography variant="body1">{candidate?.candidateNumber}</Typography>
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Stack>
+                    </CardContent>
+                </Card>
 
-                    {/* Status Section */}
-                    <Grid item xs={12}>
-                        <Typography component="h3" variant="h6" sx={{ mb: 2 }}>
-                            Application Status
-                        </Typography>
-                        <Card variant="outlined">
-                            <CardContent sx={{ p: 0 }}>
-                                <TableContainer component={Paper} elevation={0} sx={{ boxShadow: 'none' }}>
-                                    <Table aria-label="application status table">
-                                        <TableHead sx={{ bgcolor: 'action.hover' }}>
-                                            <TableRow>
-                                                <TableCell sx={{ fontWeight: 'bold' }}>Reference</TableCell>
-                                                <TableCell align="left" sx={{ fontWeight: 'bold' }}>Current Stage</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Submission Date</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                                <TableCell component="th" scope="row">
-                                                    <Typography variant="body2" fontWeight="medium">General Application</Typography>
-                                                    <Typography variant="caption" color="text.secondary">Main Candidate Flow</Typography>
-                                                </TableCell>
-                                                <TableCell align="left">HR Review</TableCell>
-                                                <TableCell align="right">
-                                                    {new Date(candidate.createdAt).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Chip
-                                                        label={candidate.status}
-                                                        color={getStatusColor(candidate.status) as any}
-                                                        size="small"
-                                                        variant="filled"
-                                                        sx={{ fontWeight: 'bold' }}
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            )}
-        </React.Fragment>
+                {/* Application Status - Aligned Left (Full Width) */}
+                <Card variant="outlined">
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>Application Status</Typography>
+                        <TableContainer component={Paper} elevation={0} sx={{ boxShadow: 'none' }}>
+                            <Table aria-label="application status table">
+                                <TableHead sx={{ bgcolor: 'action.hover' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Reference</TableCell>
+                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>Current Stage</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Submission Date</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                        <TableCell component="th" scope="row">
+                                            <Typography variant="body2" fontWeight="medium">General Application</Typography>
+                                            <Typography variant="caption" color="text.secondary">Main Candidate Flow</Typography>
+                                        </TableCell>
+                                        <TableCell align="left">HR Review</TableCell>
+                                        <TableCell align="right">
+                                            {candidate?.createdAt ? new Date(candidate.createdAt).toLocaleDateString() : '-'}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Chip
+                                                label={candidate?.status}
+                                                color={getStatusColor(candidate?.status || '') as any}
+                                                size="small"
+                                                variant="filled"
+                                                sx={{ fontWeight: 'bold' }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </CardContent>
+                </Card>
+            </Stack>
+        </Box>
     );
 }

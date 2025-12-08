@@ -5,10 +5,9 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
-
 import OptionsMenu from './OptionsMenu';
+import ArcanaLogo from './ArcanaLogo';
 
 const drawerWidth = 240;
 
@@ -55,7 +54,7 @@ export default function SideMenu({ user }: SideMenuProps) {
           p: 1.5,
         }}
       >
-        <SelectContent />
+        <ArcanaLogo />
       </Box>
       <Divider />
       <Box

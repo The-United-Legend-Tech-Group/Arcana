@@ -11,12 +11,12 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const mainListItems = [
   { text: 'Home', icon: <HomeRoundedIcon /> },
   { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Clients', icon: <PeopleRoundedIcon /> },
+  { text: 'Team', icon: <PeopleRoundedIcon /> },
   { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
 ];
 
@@ -28,24 +28,26 @@ const secondaryListItems = [
 
 export default function MenuContent() {
   const pathname = usePathname();
-  // Simple check: active if pathname exactly matches or starts with (for nested)
-  // For 'Home', we might expect '/employee/dashboard'
-  // But strict Logic: Home is index 0.
-  // Actually, we should check what paths map to what.
-  // Assuming 'Home' -> /employee/dashboard.
+  const router = useRouter();
 
   const isSelected = (text: string) => {
     if (text === 'Home' && (pathname === '/employee/dashboard' || pathname === '/candidate/dashboard')) return true;
+    if (text === 'Team' && pathname === '/employee/team') return true;
     // Add other mapping as needed
     return false;
   }
+
+  const handleNavigation = (text: string) => {
+    if (text === 'Home') router.push('/employee/dashboard');
+    if (text === 'Team') router.push('/employee/team');
+  };
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton selected={isSelected(item.text)}>
+            <ListItemButton selected={isSelected(item.text)} onClick={() => handleNavigation(item.text)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
@@ -55,7 +57,7 @@ export default function MenuContent() {
       <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton>
+            <ListItemButton onClick={() => handleNavigation(item.text)}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>

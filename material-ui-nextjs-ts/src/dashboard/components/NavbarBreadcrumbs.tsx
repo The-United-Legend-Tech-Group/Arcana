@@ -24,7 +24,7 @@ export default function NavbarBreadcrumbs() {
     >
       <Typography variant="body1">Dashboard</Typography>
       <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600 }}>
-        {pathname.includes('/notifications') ? 'Notifications' : 'Home'}
+        {pathname.includes('/notifications') ? 'Notifications' : pathname.includes('/team') ? 'Team' : 'Home'}
       </Typography>
     </StyledBreadcrumbs>
   );

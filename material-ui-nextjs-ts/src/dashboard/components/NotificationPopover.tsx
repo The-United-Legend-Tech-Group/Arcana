@@ -111,9 +111,10 @@ export default function NotificationPopover() {
                     sx: {
                         mt: 1.5,
                         width: 360,
-                        overflow: 'visible', // For arrow
+                        overflow: 'visible',
                         filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                        '&:before': { // Arrow
+                        borderRadius: 3, // More rounded popover
+                        '&:before': {
                             content: '""',
                             display: 'block',
                             position: 'absolute',
@@ -128,11 +129,16 @@ export default function NotificationPopover() {
                     },
                 }}
             >
-                <Box sx={{ position: 'relative', zIndex: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                    <Box sx={{ p: 2, pb: 1 }}>
-                        <Typography variant="h6">Notifications</Typography>
+                <Box sx={{ position: 'relative', zIndex: 1, bgcolor: 'background.paper', borderRadius: 3 }}>
+                    <Box sx={{ p: 2, pb: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>Notifications</Typography>
+                        {notifications.length > 0 && notifications.some(n => !n.isRead) && (
+                            <Typography variant="caption" color="primary" sx={{ cursor: 'pointer', fontWeight: 600 }}>
+                                Mark all read
+                            </Typography>
+                        )}
                     </Box>
-                    <Divider />
+                    <Divider sx={{ mb: 1 }} />
                     <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
                         {notifications.length === 0 ? (
                             <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -146,38 +152,51 @@ export default function NotificationPopover() {
                                         alignItems="flex-start"
                                         sx={(theme) => ({
                                             bgcolor: notification.isRead ? 'transparent' : alpha(theme.palette.primary.main, 0.04),
+                                            mx: 1, // Margin for floating effect
+                                            my: 0.5,
+                                            width: 'auto',
+                                            borderRadius: 2, // Rounded items
+                                            transition: 'all 0.2s',
                                             '&:hover': {
-                                                bgcolor: alpha(theme.palette.action.active, 0.04),
+                                                bgcolor: alpha(theme.palette.action.focus, 0.08),
+                                                transform: 'translateY(-1px)',
                                             },
+                                            p: 1.5, // More compact padding
                                         })}
                                     >
-                                        <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                                        <ListItemIcon sx={{ minWidth: 32, mt: 0.25 }}>
                                             {getNotificationIcon(notification.type)}
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={
-                                                <Typography variant="body2" fontWeight={notification.isRead ? 'medium' : 'bold'}>
+                                                <Typography variant="body2" sx={{ fontWeight: notification.isRead ? 400 : 700, fontSize: '0.875rem', mb: 0.5 }}>
                                                     {notification.title}
                                                 </Typography>
                                             }
                                             secondary={
                                                 <React.Fragment>
-                                                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                    <Typography variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.4 }}>
                                                         {notification.message}
                                                     </Typography>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.7rem' }}>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.65rem', opacity: 0.7 }}>
                                                         {new Date(notification.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </Typography>
                                                 </React.Fragment>
                                             }
+                                            sx={{ m: 0 }}
                                         />
                                         {!notification.isRead && (
-                                            <CircleIcon sx={{ fontSize: 8, color: 'primary.main', mt: 1 }} />
+                                            <CircleIcon sx={{ fontSize: 8, color: 'primary.main', mt: 1, ml: 1 }} />
                                         )}
                                     </ListItem>
                                 ))}
                             </List>
                         )}
+                    </Box>
+                    <Box sx={{ p: 1, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ cursor: 'pointer', '&:hover': { color: 'text.primary' } }}>
+                            View all notifications
+                        </Typography>
                     </Box>
                 </Box>
             </Popover>

@@ -185,7 +185,6 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                 orbitMembers.map((member, index) => {
                     const pos = calculatePosition(index, orbitMembers.length, orbitIndex);
                     const isHovered = hoveredMember?._id === member._id;
-
                     return (
                         <Box
                             key={member._id}
@@ -194,100 +193,143 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                 top: `${pos.y}%`,
                                 left: `${pos.x}%`,
                                 transform: 'translate(-50%, -50%)',
-                                transition: 'all 0.5s ease-out',
-                                zIndex: isHovered ? 20 : 5,
+                                zIndex: isHovered ? 100 : 5, // High z-index on hover
                                 cursor: 'pointer',
+                                width: BASE_AVATAR_SIZE, // Fixed size trigger area
+                                height: BASE_AVATAR_SIZE,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                             }}
                             onMouseEnter={() => setHoveredMember(member)}
                             onMouseLeave={() => setHoveredMember(null)}
                         >
-                            <Avatar
-                                src={member.profilePictureUrl || '/static/images/avatar/default.jpg'}
-                                alt={member.firstName}
+                            {/* 1. Default Avatar Layer */}
+                            <Box
                                 sx={{
-                                    width: isHovered ? 80 : BASE_AVATAR_SIZE,
-                                    height: isHovered ? 80 : BASE_AVATAR_SIZE,
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: isHovered
+                                        ? 'translate(-50%, -50%) scale(0.8)'
+                                        : 'translate(-50%, -50%) scale(1)',
+                                    opacity: isHovered ? 0 : 1,
                                     transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                    boxShadow: isHovered ? '0 8px 24px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.1)',
-                                    border: isHovered ? `3px solid ${theme.palette.primary.main}` : '2px solid white',
+                                    zIndex: 1,
+                                    pointerEvents: isHovered ? 'none' : 'auto',
                                 }}
-                            />
-                            {/* Name Label under avatar if not hovered (hover shows card) */}
-                            <Fade in={!isHovered}>
+                            >
+                                <Avatar
+                                    src={member.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                    alt={member.firstName}
+                                    sx={{
+                                        width: BASE_AVATAR_SIZE,
+                                        height: BASE_AVATAR_SIZE,
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        border: '2px solid white',
+                                    }}
+                                />
                                 <Typography
                                     variant="caption"
-                                    sx={{
-                                        mt: 0.5,
-                                        display: 'block',
-                                        textAlign: 'center',
-                                        bgcolor: 'rgba(255,255,255,0.8)',
-                                        borderRadius: 1,
-                                        px: 0.5,
-                                        fontWeight: 'bold',
-                                        backdropFilter: 'blur(4px)',
-                                    }}
-                                >
-                                    {member.firstName}
-                                </Typography>
-                            </Fade>
-
-                            {/* Hover Card */}
-                            <Fade in={isHovered} timeout={200}>
-                                <Card
                                     sx={{
                                         position: 'absolute',
                                         top: '100%',
                                         left: '50%',
                                         transform: 'translateX(-50%)',
                                         mt: 1,
-                                        minWidth: 200,
-                                        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                                        borderRadius: 2,
-                                        overflow: 'visible',
-                                        pointerEvents: 'none', // Prevent card from flickering mouse leave
+                                        fontWeight: 'bold',
+                                        textAlign: 'center',
+                                        width: 'max-content',
+                                        textShadow: '0 1px 2px rgba(255,255,255,0.8)',
+                                        color: 'text.primary',
+                                        bgcolor: 'rgba(255,255,255,0.6)',
+                                        borderRadius: 1,
+                                        px: 0.5,
                                     }}
                                 >
-                                    {/* Triangle Arrow */}
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        top: -8,
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        width: 0,
-                                        height: 0,
-                                        borderLeft: '8px solid transparent',
-                                        borderRight: '8px solid transparent',
-                                        borderBottom: '8px solid white',
-                                    }} />
+                                    {member.firstName}
+                                </Typography>
+                            </Box>
 
-                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {member.firstName} {member.lastName}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            {member.position?.title || 'Team Member'}
-                                        </Typography>
+                            {/* 2. Expanded Card Layer (Pops over) */}
+                            <Card
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: isHovered
+                                        ? 'translate(-50%, -50%) scale(1)'
+                                        : 'translate(-50%, -50%) scale(0.5)',
+                                    opacity: isHovered ? 1 : 0,
+                                    visibility: isHovered ? 'visible' : 'hidden', // Ensure it doesn't block clicks when hidden
+                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                    zIndex: 2,
+                                    width: 260,
+                                    borderRadius: 4,
+                                    boxShadow: 24,
+                                    overflow: 'visible', // Allow content to flow nicely
+                                    pointerEvents: isHovered ? 'auto' : 'none',
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Optional: Click handling
+                                }}
+                            >
+                                <CardContent sx={{
+                                    p: 3,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    textAlign: 'center',
+                                    position: 'relative'
+                                }}>
+                                    {/* Duplicate Avatar for visual continuity */}
+                                    <Avatar
+                                        src={member.profilePictureUrl || '/static/images/avatar/default.jpg'}
+                                        alt={member.firstName}
+                                        sx={{
+                                            width: 80,
+                                            height: 80,
+                                            mb: 2,
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                            border: `3px solid ${theme.palette.primary.main}`,
+                                        }}
+                                    />
 
-                                        <Box sx={{ mt: 1.5, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                            <Chip
-                                                label={member.status}
-                                                size="small"
-                                                color={member.status === 'ACTIVE' ? 'success' : 'default'}
-                                                variant="outlined"
-                                            />
-                                            <Chip
-                                                label={member.department?.name || 'Department'}
-                                                size="small"
-                                                variant="outlined"
-                                            />
-                                        </Box>
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                        {member.firstName} {member.lastName}
+                                    </Typography>
 
-                                        <Typography variant="caption" display="block" sx={{ mt: 1.5, color: 'text.secondary' }}>
-                                            {member.email}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Fade>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        {member.position?.title || 'Team Member'}
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center', width: '100%', mb: 2 }}>
+                                        <Chip
+                                            label={member.status}
+                                            size="small"
+                                            color={member.status === 'ACTIVE' ? 'success' : 'default'}
+                                            variant="filled"
+                                        />
+                                        <Chip
+                                            label={member.department?.name || 'Dept'}
+                                            size="small"
+                                            variant="outlined"
+                                        />
+                                    </Box>
+
+                                    <Typography variant="caption" color="text.secondary">
+                                        {member.email}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+
+                            {/* Tiny Name Tag when NOT hovered (Optional, maybe remove if we rely on morph) */}
+                            {/* User asked to replace popout with morph. Usually morph implies the element itself is the feedback.
+                                We can keep a small label below if needed, but 'morph' suggests the circle transformation is cleaner.
+                                Let's remove the extra Fade label to keep it clean, as the expanded card shows the name.
+                            */}
+
                         </Box>
                     );
                 })

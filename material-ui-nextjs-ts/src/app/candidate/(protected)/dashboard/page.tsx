@@ -132,19 +132,19 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                                         <Typography variant="h4" fontWeight="bold" gutterBottom>
                                             {candidate?.firstName} {candidate?.middleName} {candidate?.lastName}
                                         </Typography>
-                                        <Chip 
-                                            label={candidate?.status} 
-                                            color={getStatusColor(candidate?.status || '') as any} 
-                                            size="medium" 
-                                            sx={{ fontWeight: 'bold' }} 
+                                        <Chip
+                                            label={candidate?.status}
+                                            color={getStatusColor(candidate?.status || '') as any}
+                                            size="medium"
+                                            sx={{ fontWeight: 'bold' }}
                                         />
                                     </Box>
                                 </Box>
-                                
+
                                 <Divider sx={{ mb: 3 }} />
-                                
+
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <EmailIcon color="action" />
                                             <Box>
@@ -153,7 +153,7 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                                             </Box>
                                         </Stack>
                                     </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <PhoneIcon color="action" />
                                             <Box>
@@ -162,7 +162,7 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                                             </Box>
                                         </Stack>
                                     </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <BadgeIcon color="action" />
                                             <Box>
@@ -171,7 +171,7 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                                             </Box>
                                         </Stack>
                                     </Grid>
-                                    <Grid item xs={12} sm={6} md={3}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                                         <Stack direction="row" spacing={1.5} alignItems="center">
                                             <PersonIcon color="action" />
                                             <Box>

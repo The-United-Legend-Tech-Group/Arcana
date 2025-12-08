@@ -15,9 +15,9 @@ import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 
 // Adjust imports based on your project structure
-import AppTheme from '../../../shared-theme/AppTheme';
-import ColorModeSelect from '../../../shared-theme/ColorModeSelect';
-import { SitemarkIcon } from '../../../sign-up/components/CustomIcons';
+import AppTheme from '../../../common/material-ui/shared-theme/AppTheme';
+
+import ArcanaLogo from '../../../common/material-ui/shared-theme/ArcanaLogo';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -141,10 +141,10 @@ export default function EmployeeLogin() {
     return (
         <AppTheme>
             <CssBaseline enableColorScheme />
-            <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+
             <SignUpContainer direction="column" justifyContent="center">
                 <Card variant="outlined">
-                    <SitemarkIcon />
+                    <ArcanaLogo />
                     <Typography
                         component="h1"
                         variant="h4"

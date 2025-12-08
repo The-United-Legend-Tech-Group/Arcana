@@ -20,7 +20,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 
-import StatCard from '../../../../dashboard/components/StatCard';
+import StatCard from '../../../../common/material-ui/dashboard/components/StatCard';
 
 // --- Interfaces ---
 

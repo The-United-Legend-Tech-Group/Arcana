@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
-import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
-import theme from '@/theme';
+import AppTheme from '../common/material-ui/shared-theme/AppTheme';
 import ModeSwitch from '@/components/ModeSwitch';
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -12,12 +11,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body>
         <InitColorSchemeScript attribute="class" />
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
+          <AppTheme>
             {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
             {/* <ModeSwitch /> */}
             {props.children}
-          </ThemeProvider>
+          </AppTheme>
         </AppRouterCacheProvider>
       </body>
     </html>

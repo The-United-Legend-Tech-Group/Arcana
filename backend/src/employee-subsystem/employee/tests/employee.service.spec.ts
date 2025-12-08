@@ -34,10 +34,9 @@ describe('EmployeeService', () => {
 
     const mockEmployeeProfileChangeRequestRepository = {};
     const mockEmployeeSystemRoleRepository = {};
-    const mockEmployeeProfileModel = {
-        db: {
-            model: jest.fn()
-        }
+    const mockEmployeeProfileModel = jest.fn();
+    (mockEmployeeProfileModel as any).db = {
+        model: jest.fn()
     };
     const mockAppraisalRecordModel = {};
     const mockCandidateRepository = {

@@ -93,10 +93,10 @@ export class CreateEmployeeDto {
   address?: AddressDto;
 
   // EmployeeProfile fields
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty()
+  @IsNotEmpty()
   @IsString()
-  employeeNumber?: string;
+  employeeNumber: string;
 
   @ApiProperty()
   @IsNotEmpty()

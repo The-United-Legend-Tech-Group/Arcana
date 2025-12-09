@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import AppTheme from '../../../common/material-ui/shared-theme/AppTheme';
 
 import ArcanaLogo from '../../../common/material-ui/shared-theme/ArcanaLogo';
+import ColorModeSelect from '../../../common/material-ui/shared-theme/ColorModeSelect';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -146,6 +147,7 @@ export default function CandidateLogin() {
             <CssBaseline enableColorScheme />
 
             <SignUpContainer direction="column" justifyContent="center">
+                <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
                 <Card variant="outlined">
                     <ArcanaLogo />
                     <Typography

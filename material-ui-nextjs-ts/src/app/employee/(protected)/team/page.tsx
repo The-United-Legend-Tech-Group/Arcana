@@ -326,24 +326,26 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                     width: MANAGER_AVATAR_SIZE,
                                     height: MANAGER_AVATAR_SIZE,
                                     boxShadow: '0 0 30px rgba(0,0,0,0.15)',
-                                    border: `6px solid ${theme.palette.background.default}`,
+                                    border: '6px solid',
+                                    borderColor: 'background.default',
                                     bgcolor: 'grey.300'
                                 }}
                             >
                                 <PersonIcon sx={{ fontSize: MANAGER_AVATAR_SIZE * 0.6, color: 'grey.600' }} />
                             </Avatar>
-                            <Box sx={{
+                            <Box sx={(theme) => ({
                                 mt: 2,
-                                bgcolor: theme.palette.mode === 'dark'
-                                    ? alpha(theme.palette.common.black, 0.6)
-                                    : alpha(theme.palette.common.white, 0.85),
+                                bgcolor: alpha(theme.palette.common.white, 0.85),
                                 px: 2,
                                 py: 1,
                                 borderRadius: 4,
                                 backdropFilter: 'blur(4px)',
                                 textAlign: 'center',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                            }}>
+                                ...theme.applyStyles('dark', {
+                                    bgcolor: alpha(theme.palette.common.black, 0.6),
+                                }),
+                            })}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', lineHeight: 1 }}>You</Typography>
                                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Team Lead</Typography>
                             </Box>
@@ -396,7 +398,8 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                                 width: BASE_AVATAR_SIZE,
                                                 height: BASE_AVATAR_SIZE,
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                                border: `2px solid ${theme.palette.background.default}`,
+                                                border: '2px solid',
+                                                borderColor: 'background.default',
                                                 bgcolor: 'grey.300'
                                             }}
                                         >
@@ -404,7 +407,7 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                         </Avatar>
                                         <Typography
                                             variant="caption"
-                                            sx={{
+                                            sx={(theme) => ({
                                                 position: 'absolute',
                                                 top: '100%',
                                                 left: '50%',
@@ -414,14 +417,15 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                                 textAlign: 'center',
                                                 width: 'max-content',
                                                 color: 'text.primary',
-                                                bgcolor: theme.palette.mode === 'dark'
-                                                    ? alpha(theme.palette.common.black, 0.6)
-                                                    : alpha(theme.palette.common.white, 0.8),
+                                                bgcolor: alpha(theme.palette.common.white, 0.8),
                                                 borderRadius: 1,
                                                 px: 1,
                                                 py: 0.5,
                                                 backdropFilter: 'blur(4px)',
-                                            }}
+                                                ...theme.applyStyles('dark', {
+                                                    bgcolor: alpha(theme.palette.common.black, 0.6),
+                                                }),
+                                            })}
                                         >
                                             {member.firstName}
                                         </Typography>
@@ -566,7 +570,8 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                         />
                     </Box>
                 </Box>
-            )}
-        </Box>
+            )
+            }
+        </Box >
     );
 }

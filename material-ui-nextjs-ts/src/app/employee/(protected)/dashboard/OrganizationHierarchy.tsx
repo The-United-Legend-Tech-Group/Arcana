@@ -205,16 +205,19 @@ export default function OrganizationHierarchy() {
     return (
         <Card
             elevation={0}
-            sx={{
+            sx={(theme) => ({
                 mt: 4,
                 width: '100%',
                 overflowX: 'auto',
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1, // Standardizes with other dashboard cards
-                backgroundImage: 'linear-gradient(to top right, rgba(255,255,255,0.8), rgba(255,255,255,0.5))',
-                backdropFilter: 'blur(8px)',
-            }}
+                bgcolor: 'background.paper',
+                ...theme.applyStyles('light', {
+                    backgroundImage: 'linear-gradient(to top right, rgba(255,255,255,0.8), rgba(255,255,255,0.5))',
+                    backdropFilter: 'blur(8px)',
+                }),
+            })}
         >
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Typography variant="h6" gutterBottom component="div" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>

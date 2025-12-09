@@ -30,11 +30,7 @@ export default function AppTheme(props: AppThemeProps) {
           colorSchemeSelector: 'data-mui-color-scheme',
           cssVarPrefix: 'template',
         },
-        // colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
-        palette: {
-          mode: 'light',
-          ...colorSchemes.light.palette,
-        },
+        colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
         typography,
         shadows,
         shape,

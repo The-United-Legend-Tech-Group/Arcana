@@ -19,7 +19,7 @@ declare module '@mui/material/styles' {
     900: string;
   }
 
-  interface PaletteColor extends ColorRange {}
+  interface PaletteColor extends ColorRange { }
 
   interface Palette {
     baseShadow: string;
@@ -106,7 +106,7 @@ export const getDesignTokens = (mode: PaletteMode) => {
       mode,
       primary: {
         light: brand[200],
-        main: brand[400],
+        main: '#1E40AF',
         dark: brand[700],
         contrastText: brand[50],
         ...(mode === 'dark' && {
@@ -243,7 +243,7 @@ export const colorSchemes = {
     palette: {
       primary: {
         light: brand[200],
-        main: brand[400],
+        main: '#1E40AF',
         dark: brand[700],
         contrastText: brand[50],
       },

@@ -5,14 +5,16 @@ import Tooltip from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
 import { useColorScheme } from "@mui/material/styles";
 
-const ModeSwitch = styled(Switch)(({ theme }) => ({
+const ModeSwitchRoot = styled(Switch)(({ theme }) => ({
   width: 64,
   height: 36,
   padding: 0,
   display: "flex",
   "& .MuiSwitch-switchBase": {
     padding: 4,
-    transitionDuration: "220ms",
+    transitionDuration: "280ms",
+    transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+    transitionProperty: "transform",
     "&.Mui-checked": {
       transform: "translateX(28px)",
       color: "#fff",
@@ -42,6 +44,10 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
       theme.palette.mode === "dark"
         ? "0px 6px 18px rgba(0, 0, 0, 0.35)"
         : "0px 6px 18px rgba(0, 0, 0, 0.25)",
+    transition: theme.transitions.create(["background-color", "box-shadow"], {
+      duration: 260,
+      easing: theme.transitions.easing.easeInOut,
+    }),
     "&:before": {
       content: "''",
       position: "absolute",
@@ -66,8 +72,14 @@ const ModeSwitch = styled(Switch)(({ theme }) => ({
       theme.palette.mode === "dark"
         ? "inset 0 0 0 1px rgba(255, 255, 255, 0.08)"
         : "inset 0 0 0 1px rgba(17, 44, 97, 0.08)",
+    transition: theme.transitions.create("background-color", {
+      duration: 320,
+      easing: theme.transitions.easing.easeInOut,
+    }),
   },
 }));
+
+export const ColorModeToggleSwitch = ModeSwitchRoot;
 
 export default function ColorModeSelect(props: SwitchProps) {
   const { mode, setMode, systemMode } = useColorScheme();
@@ -92,7 +104,7 @@ export default function ColorModeSelect(props: SwitchProps) {
 
   return (
     <Tooltip title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
-      <ModeSwitch
+      <ModeSwitchRoot
         data-screenshot="toggle-mode"
         disableRipple
         checked={isDark}

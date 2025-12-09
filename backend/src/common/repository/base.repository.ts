@@ -23,7 +23,6 @@ export interface IRepository<T> {
   ): Promise<T | null>;
   delete(filter: FilterQuery<T>): Promise<{ deletedCount?: number }>;
   deleteById(id: string): Promise<any>;
-  updateMany(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<any>;
 }
 
 export class BaseRepository<T extends Document> implements IRepository<T> {
@@ -77,9 +76,5 @@ export class BaseRepository<T extends Document> implements IRepository<T> {
 
   async countDocuments(query: FilterQuery<T> = {}): Promise<number> {
     return this.model.countDocuments(query).exec();
-  }
-
-  async updateMany(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<any> {
-    return this.model.updateMany(filter, update).exec();
   }
 }

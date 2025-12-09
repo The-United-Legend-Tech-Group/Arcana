@@ -17,8 +17,7 @@ export class CreateNotificationDto {
   @IsArray()
   @IsMongoId({ each: true })
   @IsNotEmpty()
-  @IsOptional()
-  recipientId?: string[];
+  recipientId: string[];
 
   @ApiProperty({
     enum: ['Alert', 'Info', 'Success', 'Warning'],
@@ -67,12 +66,6 @@ export class CreateNotificationDto {
   @IsEnum(SystemRole)
   @IsOptional()
   deliverToRole?: SystemRole;
-
-  @ApiPropertyOptional({ description: 'Deadline for the notification' })
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  deadline?: Date;
 
   @ApiPropertyOptional({ description: 'Date when the notification was read' })
   @IsDate()

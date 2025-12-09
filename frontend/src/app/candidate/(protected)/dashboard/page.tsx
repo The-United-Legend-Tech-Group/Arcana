@@ -29,6 +29,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { decryptData } from '../../../../common/utils/encryption';
 
 interface Candidate {
     _id: string;
@@ -52,14 +53,17 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
     React.useEffect(() => {
         const fetchCandidate = async () => {
             const token = localStorage.getItem('access_token');
-            const candidateId = localStorage.getItem('candidateId');
+            const encryptedCandidateId = localStorage.getItem('candidateId');
 
-            if (!token || !candidateId) {
+            if (!token || !encryptedCandidateId) {
                 router.push('/candidate/login');
                 return;
             }
 
             try {
+                const candidateId = await decryptData(encryptedCandidateId, token);
+                if (!candidateId) throw new Error('Decryption failed');
+
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
                 const response = await fetch(`${apiUrl}/employee/candidate/${candidateId}`, {
                     headers: {

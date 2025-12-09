@@ -17,6 +17,7 @@ import AppTheme from '../../../common/material-ui/shared-theme/AppTheme';
 
 import ArcanaLogo from '../../../common/material-ui/shared-theme/ArcanaLogo';
 import ColorModeSelect from '../../../common/material-ui/shared-theme/ColorModeSelect';
+import { encryptData } from '../../../common/utils/encryption';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -97,6 +98,7 @@ export default function EmployeeLogin() {
         return isValid;
     };
 
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setFormError('');
@@ -125,7 +127,11 @@ export default function EmployeeLogin() {
                 // Successful login
                 const data = await response.json();
                 localStorage.setItem('access_token', data.access_token);
-                localStorage.setItem('employeeId', data.employeeId);
+
+                // Encrypt employeeId before storing
+                const encryptedEmployeeId = await encryptData(data.employeeId, data.access_token);
+                localStorage.setItem('employeeId', encryptedEmployeeId);
+
                 router.push('/employee/dashboard');
             } else {
                 const errorData = await response.json();

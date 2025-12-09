@@ -22,8 +22,7 @@ import { SendOfferDto } from './DTO/send-offer.dto';
 import { CandidateRespondOfferDto } from './DTO/candidate-respond-offer.dto';
 import { EmployeeService } from '../employee-subsystem/employee/employee.service';
 import { ConfigSetupService } from '../payroll/config_setup/config_setup.service';
-//import { EmployeeSigningBonusService } from '../payroll/execution/services';
-//import { PayrollExecutionService } from '../payroll-execution/payroll-execution.service';
+import { EmployeeSigningBonusService } from '../payroll/execution/services/EmployeesigningBonus.service';
 
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
 import { OfferFinalStatus } from './enums/offer-final-status.enum';
@@ -100,7 +99,7 @@ export class RecruitmentService {
     //private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     //   private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     private readonly configSetupService: ConfigSetupService,
-    // private readonly employeeSigningBonusService: EmployeeSigningBonusService,
+    private readonly employeeSigningBonusService: EmployeeSigningBonusService,
     //private payrollExecutionService: PayrollExecutionService,
   ) { }
 
@@ -553,7 +552,7 @@ export class RecruitmentService {
           firstName: dto.customFirstName || candidate.firstName || 'New',
           lastName: dto.customLastName || candidate.lastName || 'Employee',
           nationalId: dto.customNationalId || candidate.nationalId,
-          employeeNumber: dto.customEmployeeNumber || `EMP-${Date.now()}`,
+          employeeNumber: dto.customEmployeeNumber || `EMP-${candidate.candidateNumber.slice(3)}`,
           dateOfHire: new Date(),
           workEmail: dto.customWorkEmail || candidate.personalEmail,
           status: dto.customStatus || 'PROBATION' as any,
@@ -567,7 +566,7 @@ export class RecruitmentService {
           firstName: candidate.firstName || 'New',
           lastName: candidate.lastName || 'Employee',
           nationalId: candidate.nationalId,
-          employeeNumber: `EMP-${Date.now()}`,
+          employeeNumber: `EMP-${candidate.candidateNumber.slice(3)}`,
           dateOfHire: new Date(),
           workEmail: candidate.personalEmail,
           status: 'PROBATION' as any,

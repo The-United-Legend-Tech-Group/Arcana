@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 
 import { DocumentDocument } from './models/document.schema';
 
@@ -26,8 +25,6 @@ import { ConfigSetupService } from '../payroll/config_setup/config_setup.service
 //import { EmployeeSigningBonusService } from '../payroll/execution/services';
 //import { PayrollExecutionService } from '../payroll-execution/payroll-execution.service';
 
-import { signingBonus, signingBonusDocument } from '../payroll/config_setup/models/signingBonus.schema';
-import { payGrade, payGradeDocument } from '../payroll/config_setup/models/payGrades.schema';
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
 import { OfferFinalStatus } from './enums/offer-final-status.enum';
 
@@ -63,7 +60,6 @@ import { CreateAssessmentDto } from './dtos/create-assessment.dto';
 
 //import { EmployeeProfileRepository } from '../employee-subsystem/employee/repository/employee-profile.repository';
 import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
-//import { EmployeeSystemRoleRepository } from '../employee-subsystem/employee/repository/employee-system-role.repository';
 
 // Repository implementations
 import {
@@ -1344,6 +1340,7 @@ export class RecruitmentService {
     });
 
     if (existingApplication) {
+      throw new BadRequestException(`Application already exists for candidate ${createApplicationDto.candidateId} and requisition ${createApplicationDto.requisitionId}`);
       throw new BadRequestException(`Application already exists for candidate ${createApplicationDto.candidateId} and requisition ${createApplicationDto.requisitionId}`);
     }
 

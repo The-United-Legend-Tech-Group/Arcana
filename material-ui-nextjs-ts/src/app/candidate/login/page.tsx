@@ -81,7 +81,7 @@ export default function CandidateLogin() {
 
         let isValid = true;
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+        if (!email.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
             setEmailError(true);
             setEmailErrorMessage('Please enter a valid email address.');
             isValid = false;

@@ -1,10 +1,8 @@
 'use client';
-
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
@@ -78,7 +76,7 @@ export default function EmployeeLogin() {
 
         let isValid = true;
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+        if (!email.value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
             setEmailError(true);
             setEmailErrorMessage('Please enter a valid email address.');
             isValid = false;

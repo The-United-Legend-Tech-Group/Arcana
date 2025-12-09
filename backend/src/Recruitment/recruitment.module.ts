@@ -50,7 +50,8 @@ import {
   OnboardingRepository,
   TerminationRequestRepository,
   ClearanceChecklistRepository,
-  EmployeeTerminationResignationRepository
+  EmployeeTerminationResignationRepository,
+  AssessmentResultRepository
 } from './repositories';
 
 // Module imports
@@ -122,6 +123,7 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     TerminationRequestRepository,
     ClearanceChecklistRepository,
     EmployeeTerminationResignationRepository,
+    AssessmentResultRepository,
   ],
   exports: [
     RecruitmentService,

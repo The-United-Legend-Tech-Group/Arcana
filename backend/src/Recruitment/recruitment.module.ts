@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
 import { RecruitmentController } from './recruitment.controller';
 import { RecruitmentService } from './recruitment.service';
 import { OffboardingController } from './offboarding.controller';
 import { OffboardingService } from './offboarding.service';
+import { AuthGuard } from '../common/guards/authentication.guard';
+import { authorizationGuard } from '../common/guards/authorization.guard';
 
 // Recruitment schemas
 import { JobTemplate, JobTemplateSchema } from './models/job-template.schema';
@@ -101,6 +104,10 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     PerformanceModule,
     OrganizationStructureModule,
     LeavesModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'default-secret-key',
+      signOptions: { expiresIn: '24h' },
+    }),
   ],
   controllers: [
     RecruitmentController,
@@ -124,6 +131,9 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     ClearanceChecklistRepository,
     EmployeeTerminationResignationRepository,
     AssessmentResultRepository,
+    // Guards
+    AuthGuard,
+    authorizationGuard,
   ],
   exports: [
     RecruitmentService,

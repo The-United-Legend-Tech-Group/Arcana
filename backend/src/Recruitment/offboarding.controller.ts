@@ -1,6 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UsePipes, ValidationPipe, Get, Query, Patch } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UsePipes, ValidationPipe, Get, Query, Patch, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBadRequestResponse, ApiNotFoundResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { OffboardingService } from './offboarding.service';
+import { AuthGuard } from '../common/guards/authentication.guard';
+import { authorizationGuard } from '../common/guards/authorization.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
 import { InitiateTerminationReviewDto } from './offboardingDtos/initiate-termination-review.dto';
 import { InitiateOffboardingChecklistDto } from './offboardingDtos/initiate-offboarding-checklist.dto';
 //import { SendOffboardingNotificationDto } from './offboardingDtos/send-offboarding-notification.dto';
@@ -15,6 +19,7 @@ import { Notification } from '../employee-subsystem/notification/models/notifica
 
 @ApiTags('Offboarding')
 @Controller('offboarding')
+@UseGuards(AuthGuard, authorizationGuard)
 export class OffboardingController {
   constructor(private readonly offboardingService: OffboardingService) { }
 
@@ -25,6 +30,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Employee or contract not found' })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.DEPARTMENT_HEAD)
   async initiateTerminationReview(@Body() dto: InitiateTerminationReviewDto): Promise<TerminationRequest> {
     return this.offboardingService.initiateTerminationReview(dto);
   }
@@ -36,6 +42,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Termination request not found' })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE)
   async initiateOffboardingChecklist(@Body() dto: InitiateOffboardingChecklistDto): Promise<ClearanceChecklist> {
     return this.offboardingService.initiateOffboardingChecklist(dto);
   }
@@ -58,6 +65,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Employee or contract not found' })
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.HR_EMPLOYEE, SystemRole.HR_MANAGER)
   async submitResignation(@Body() dto: SubmitResignationDto): Promise<TerminationRequest> {
     return this.offboardingService.submitResignation(dto);
   }
@@ -71,6 +79,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Employee not found' })
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD, SystemRole.HR_EMPLOYEE, SystemRole.HR_MANAGER, SystemRole.HR_ADMIN)
   async trackResignationStatus(@Query() dto: TrackResignationStatusDto): Promise<TerminationRequest[]> {
     return this.offboardingService.trackResignationStatus(dto);
   }
@@ -101,6 +110,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Clearance checklist or department not found' })
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.DEPARTMENT_HEAD, SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN, SystemRole.FINANCE_STAFF)
   async processDepartmentSignOff(@Body() dto: DepartmentClearanceSignOffDto): Promise<{
     message: string;
     clearanceChecklistId: string;
@@ -127,6 +137,7 @@ export class OffboardingController {
   @ApiNotFoundResponse({ description: 'Termination request not found' })
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN)
   async approveTermination(@Body() dto: ApproveTerminationDto): Promise<TerminationRequest> {
     return this.offboardingService.approveTermination(dto);
   }

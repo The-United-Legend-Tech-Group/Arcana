@@ -64,9 +64,13 @@ export default function CandidateLayout({ children }: LayoutProps) {
                 if (response.ok) {
                     const data = await response.json();
                     setCandidate(data);
+                } else {
+                    console.error('Failed to fetch candidate profile', response.status, response.statusText);
+                    router.push('/candidate/login');
                 }
             } catch (error) {
                 console.error('Failed to fetch candidate profile for layout', error);
+                router.push('/candidate/login');
             }
         };
 

@@ -74,9 +74,17 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                 if (response.ok) {
                     const data = await response.json();
                     setEmployee(data.profile || data);
+                } else {
+                    console.error('Failed to fetch employee profile', response.status, response.statusText);
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('employeeId');
+                    router.push('/employee/login');
                 }
             } catch (error) {
                 console.error('Failed to fetch employee profile for layout', error);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('employeeId');
+                router.push('/employee/login');
             }
         };
 

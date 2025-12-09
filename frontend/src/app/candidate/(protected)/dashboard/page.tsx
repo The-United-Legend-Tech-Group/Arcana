@@ -86,7 +86,7 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
     }, [router]);
 
     const getStatusColor = (status: string) => {
-        switch (status.toUpperCase()) {
+        switch (status?.toUpperCase()) {
             case 'ACTIVE':
                 return 'success';
             case 'PENDING':
@@ -95,6 +95,18 @@ export default function CandidateDashboard(props: { disableCustomTheme?: boolean
                 return 'error';
             case 'HIRED':
                 return 'success';
+            case 'APPLIED':
+                return 'info';
+            case 'SCREENING':
+                return 'warning';
+            case 'INTERVIEW':
+                return 'info';
+            case 'OFFER_SENT':
+                return 'warning';
+            case 'OFFER_ACCEPTED':
+                return 'success';
+            case 'WITHDRAWN':
+                return 'default';
             default:
                 return 'default';
         }

@@ -7,6 +7,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
@@ -145,6 +147,42 @@ export default function TimeManagementClient({
     );
   }, [sectionMap]);
 
+  const tabItems = React.useMemo(
+    () => [
+      overviewSection,
+      attendanceSection,
+      shiftsSection,
+      policiesSection,
+      exceptionsSection,
+    ],
+    [
+      overviewSection,
+      attendanceSection,
+      shiftsSection,
+      policiesSection,
+      exceptionsSection,
+    ]
+  );
+
+  const [activeSection, setActiveSection] = React.useState<string>(
+    tabItems[0]?.id ?? "overview"
+  );
+
+  React.useEffect(() => {
+    setActiveSection((prev) =>
+      tabItems.some((tab) => tab.id === prev)
+        ? prev
+        : tabItems[0]?.id ?? "overview"
+    );
+  }, [tabItems]);
+
+  const handleSectionChange = React.useCallback(
+    (_event: React.SyntheticEvent, value: string) => {
+      setActiveSection(value);
+    },
+    []
+  );
+
   React.useEffect(() => {
     let isMounted = true;
 
@@ -260,28 +298,28 @@ export default function TimeManagementClient({
         title: "Active shift templates",
         value: `${activeShifts}`,
         interval: "Configured in system",
-        trend: activeShifts > 0 ? "up" : "neutral",
+        trend: (activeShifts > 0 ? "up" : "neutral") as "up" | "neutral",
         data: buildSparkline(activeShifts),
       },
       {
         title: "Upcoming assignments",
         value: `${upcomingShifts}`,
         interval: "Next planning range",
-        trend: upcomingShifts > 0 ? "up" : "neutral",
+        trend: (upcomingShifts > 0 ? "up" : "neutral") as "up" | "neutral",
         data: buildSparkline(upcomingShifts),
       },
       {
         title: "Pending corrections",
         value: `${pendingCount}`,
         interval: "Awaiting manager",
-        trend: pendingCount > 0 ? "down" : "neutral",
+        trend: (pendingCount > 0 ? "down" : "neutral") as "down" | "neutral",
         data: buildSparkline(pendingCount),
       },
       {
         title: "Payroll ready items",
         value: `${payrollCount}`,
         interval: "Approved corrections",
-        trend: payrollCount > 0 ? "up" : "neutral",
+        trend: (payrollCount > 0 ? "up" : "neutral") as "up" | "neutral",
         data: buildSparkline(payrollCount),
       },
     ];
@@ -323,40 +361,65 @@ export default function TimeManagementClient({
 
         {error && <Alert severity="error">{error}</Alert>}
 
-        <Box>
-          <SectionHeading {...overviewSection} />
-          <OverviewMetrics metrics={overviewMetrics} loading={loading} />
+        <Tabs
+          value={activeSection}
+          onChange={handleSectionChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Time management sections"
+          sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
+        >
+          {tabItems.map((tab) => (
+            <Tab key={tab.id} value={tab.id} label={tab.title} />
+          ))}
+        </Tabs>
+
+        <Box sx={{ mt: 2 }}>
+          {activeSection === overviewSection.id && (
+            <Box>
+              <SectionHeading {...overviewSection} />
+              <OverviewMetrics metrics={overviewMetrics} loading={loading} />
+            </Box>
+          )}
+
+          {activeSection === attendanceSection.id && (
+            <AttendanceSection
+              section={attendanceSection}
+              history={correctionHistory}
+              pending={pendingCorrections}
+              loading={loading}
+              managerQueueEnabled={managerQueueEnabled}
+            />
+          )}
+
+          {activeSection === shiftsSection.id && (
+            <ShiftAssignmentsSection
+              section={shiftsSection}
+              assignments={shiftAssignments}
+              shifts={shiftDefinitions}
+              scheduleRules={scheduleRules}
+              loading={loading}
+            />
+          )}
+
+          {activeSection === policiesSection.id && (
+            <PolicyRulesSection
+              section={policiesSection}
+              shifts={shiftDefinitions}
+              scheduleRules={scheduleRules}
+              loading={loading}
+            />
+          )}
+
+          {activeSection === exceptionsSection.id && (
+            <ExceptionsSection
+              section={exceptionsSection}
+              holidays={holidays}
+              payrollQueue={payrollQueue}
+              loading={loading}
+            />
+          )}
         </Box>
-
-        <AttendanceSection
-          section={attendanceSection}
-          history={correctionHistory}
-          pending={pendingCorrections}
-          loading={loading}
-          managerQueueEnabled={managerQueueEnabled}
-        />
-
-        <ShiftAssignmentsSection
-          section={shiftsSection}
-          assignments={shiftAssignments}
-          shifts={shiftDefinitions}
-          scheduleRules={scheduleRules}
-          loading={loading}
-        />
-
-        <PolicyRulesSection
-          section={policiesSection}
-          shifts={shiftDefinitions}
-          scheduleRules={scheduleRules}
-          loading={loading}
-        />
-
-        <ExceptionsSection
-          section={exceptionsSection}
-          holidays={holidays}
-          payrollQueue={payrollQueue}
-          loading={loading}
-        />
       </Stack>
     </Box>
   );

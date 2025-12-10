@@ -17,16 +17,13 @@ const ModeSwitchRoot = styled(Switch)(({ theme }) => ({
     "&.Mui-checked": {
       transform: "translateX(28px)",
       color: "#fff",
+      // use theme background for the checked track so the toggle blends with the app background
       "& + .MuiSwitch-track": {
         opacity: 1,
-        backgroundImage:
-          theme.palette.mode === "dark"
-            ? "linear-gradient(135deg, rgba(20, 72, 128, 0.9), rgba(7, 25, 46, 0.85))"
-            : "linear-gradient(135deg, rgba(17, 44, 97, 0.85), rgba(76, 121, 203, 0.55))",
-        backgroundPosition: "100% 50%",
+        backgroundImage: "none",
         backgroundColor:
           theme.palette.mode === "dark"
-            ? "rgba(33, 150, 243, 0.4)"
+            ? theme.palette.background.default
             : "rgba(17, 44, 97, 0.85)",
       },
       "& .MuiSwitch-thumb:before": {

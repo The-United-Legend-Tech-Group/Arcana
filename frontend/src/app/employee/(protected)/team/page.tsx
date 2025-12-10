@@ -23,6 +23,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import { decryptData } from '../../../../common/utils/encryption';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import PersonIcon from '@mui/icons-material/Person';
+import Button from '@mui/material/Button';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 
 
 interface TeamMember {
@@ -77,10 +79,13 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
             renderCell: (params: GridRenderCellParams<TeamMember>) => {
                 const isManager = manager && params.row._id === manager._id;
                 return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%' }}>
+                    <Box
+                        onClick={() => router.push(`/employee/team/member-details/${params.row._id}`)}
+                        sx={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+                    >
                         <Avatar src={params.row.profilePictureUrl} alt={params.row.firstName} sx={{ width: 32, height: 32 }} />
                         <Box>
-                            <Typography variant="body2" fontWeight="medium">
+                            <Typography variant="body2" fontWeight="medium" sx={{ color: 'primary.main', textDecoration: 'underline' }}>
                                 {params.row.firstName} {params.row.lastName}
                             </Typography>
                             {isManager && (
@@ -495,6 +500,19 @@ export default function TeamPage(props: { disableCustomTheme?: boolean }) {
                                             <Typography variant="caption" color="text.secondary">
                                                 {member.email}
                                             </Typography>
+
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                endIcon={<ArrowForwardRoundedIcon />}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Prevent card bubble events
+                                                    router.push(`/employee/team/member-details/${member._id}`);
+                                                }}
+                                                sx={{ mt: 2, borderRadius: 2 }}
+                                            >
+                                                View Profile
+                                            </Button>
                                         </CardContent>
                                     </Card>
 

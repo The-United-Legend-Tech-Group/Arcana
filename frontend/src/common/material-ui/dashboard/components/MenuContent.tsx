@@ -26,6 +26,7 @@ const mainListItems = [
   { text: 'Clients', icon: <AssignmentRoundedIcon />, path: '/employee/clients' },
   { text: 'Submit Request', icon: <EditNoteRoundedIcon />, path: '/employee/submit-request' },
   { text: 'Manage Organization', icon: <ApartmentRoundedIcon />, path: '/employee/manage-organization' },
+  { text: 'Manage Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
 ];
 
 const secondaryListItems = [
@@ -54,6 +55,7 @@ export default function MenuContent() {
     if (text === 'Clients' && pathname === '/employee/clients') return true;
     if (text === 'Submit Request' && pathname === '/employee/submit-request') return true;
     if (text === 'Manage Organization' && pathname === '/employee/manage-organization') return true;
+    if (text === 'Manage Requests' && pathname === '/employee/manage-requests') return true;
     return false;
   }
 
@@ -72,6 +74,7 @@ export default function MenuContent() {
     if (text === 'Clients') router.push('/employee/clients');
     if (text === 'Submit Request') router.push('/employee/submit-request');
     if (text === 'Manage Organization') router.push('/employee/manage-organization');
+    if (text === 'Manage Requests') router.push('/employee/manage-requests');
   };
 
   return (

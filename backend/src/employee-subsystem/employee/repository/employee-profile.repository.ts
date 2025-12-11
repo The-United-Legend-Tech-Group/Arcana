@@ -16,8 +16,11 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
     }
 
     async findByEmail(email: string): Promise<EmployeeProfileDocument | null> {
+        if (typeof email !== "string") {
+            throw new Error("Invalid email value for lookup.");
+        }
         return this.model
-            .findOne({ personalEmail: email })
+            .findOne({ personalEmail: { $eq: email } })
             .select('+password')
             .exec();
     }

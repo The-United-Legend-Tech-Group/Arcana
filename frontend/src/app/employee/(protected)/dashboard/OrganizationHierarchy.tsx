@@ -81,30 +81,13 @@ const OrgChartNode = ({ node, currentPositionId }: { node: HierarchyNode; curren
     const isCurrentUser = node._id === currentPositionId;
     const groupColor = React.useMemo(() => stringToColor(node.departmentId || node._id), [node.departmentId, node._id]);
 
-    // Determine if we should be expanded by default (if we are on the path to the current user)
-    // We expanded if we contain the current user in our descendants.
-    // Also, if no user is selected, maybe we want to keep it collapsed?
-    // User req: "By default, only show the head position". So root is visible (always), but its children logic?
-    // The "expanded" state controls visibility of *children*.
-    // So if I am Root, I should be collapsed unless I contain the CurrentUser.
-    // Wait, the Root Card is always visible. "expanded" toggles the <Collapse> block below it.
-
     const [expanded, setExpanded] = React.useState(() => {
         // If current position is set, expand if on path
         if (currentPositionId) {
             return hasDescendant(node, currentPositionId);
         }
-        // If no user, default to collapsed (except maybe if it's the very top root? No, "only show head").
-        // Actually, seeing the immediate children of root might be nice, but strict interpretation: 
-        // "only show the head position" -> root children hidden -> root expanded=false.
         return false;
     });
-
-    const handleToggle = () => {
-        setExpanded(!expanded);
-    };
-
-    const childCount = node.children?.length || 0;
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

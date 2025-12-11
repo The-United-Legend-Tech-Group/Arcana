@@ -102,7 +102,6 @@ function EmployeeEditContent() {
             title={pageTitle}
             breadcrumbs={[
                 { title: 'Employees', path: '/employee/manage-employees' },
-                { title: `Employee ${employee.employeeNumber}`, path: `/employee/manage-employees/${params.id}` },
                 { title: 'Edit' },
             ]}
         >

@@ -15,6 +15,7 @@ import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ApartmentRoundedIcon from "@mui/icons-material/ApartmentRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
 import { usePathname, useRouter } from "next/navigation";
 
 const mainListItems = [
@@ -31,11 +32,6 @@ const mainListItems = [
     path: "/employee/analytics",
   },
   {
-    text: "Clients",
-    icon: <AssignmentRoundedIcon />,
-    path: "/employee/clients",
-  },
-  {
     text: "Time Management",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/time-mangemeant",
@@ -45,6 +41,8 @@ const mainListItems = [
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
   },
+  { text: 'Manage Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
+  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
 ];
 
 const secondaryListItems = [
@@ -65,24 +63,16 @@ export default function MenuContent() {
   });
 
   const isSelected = (text: string) => {
-    if (
-      text === "Home" &&
-      (pathname === "/employee/dashboard" ||
-        pathname === "/candidate/dashboard")
-    )
-      return true;
-    if (text === "Team" && pathname === "/employee/team") return true;
-    if (text === "Analytics" && pathname === "/employee/analytics") return true;
-    if (text === "Settings" && pathname === "/employee/settings") return true;
-    if (text === "Calendar" && pathname === "/employee/calendar") return true;
-    if (text === "Clients" && pathname === "/employee/clients") return true;
-    if (text === "Time Management" && pathname === "/employee/time-mangemeant")
-      return true;
-    if (
-      text === "Manage Organization" &&
-      pathname === "/employee/manage-organization"
-    )
-      return true;
+    if (text === 'Home' && (pathname === '/employee/dashboard' || pathname === '/candidate/dashboard')) return true;
+    if (text === 'Team' && pathname === '/employee/team') return true;
+    if (text === 'Analytics' && pathname === '/employee/analytics') return true;
+    if (text === 'Settings' && pathname === '/employee/settings') return true;
+    if (text === 'Calendar' && pathname === '/employee/calendar') return true;
+    if (text === 'Submit Request' && pathname === '/employee/submit-request') return true;
+    if (text === 'Manage Organization' && pathname === '/employee/manage-organization') return true;
+    if (text === 'Manage Requests' && pathname === '/employee/manage-requests') return true;
+    if (text === 'Manage Employees' && pathname.startsWith('/employee/manage-employees')) return true;
+    if (text === 'Time Management' && pathname === '/employee/time-mangemeant') return true;
     return false;
   };
 
@@ -94,14 +84,15 @@ export default function MenuContent() {
         router.push("/employee/dashboard");
       }
     }
-    if (text === "Team") router.push("/employee/team");
-    if (text === "Analytics") router.push("/employee/analytics");
-    if (text === "Settings") router.push("/employee/settings");
-    if (text === "Calendar") router.push("/employee/calendar");
-    if (text === "Clients") router.push("/employee/clients");
-    if (text === "Time Management") router.push("/employee/time-mangemeant");
-    if (text === "Manage Organization")
-      router.push("/employee/manage-organization");
+    if (text === 'Team') router.push('/employee/team');
+    if (text === 'Analytics') router.push('/employee/analytics');
+    if (text === 'Settings') router.push('/employee/settings');
+    if (text === 'Calendar') router.push('/employee/calendar');
+    if (text === 'Submit Request') router.push('/employee/submit-request');
+    if (text === 'Manage Organization') router.push('/employee/manage-organization');
+    if (text === 'Manage Requests') router.push('/employee/manage-requests');
+    if (text === 'Manage Employees') router.push('/employee/manage-employees');
+    if (text === 'Time Management') router.push('/employee/time-mangemeant');
   };
 
   return (

@@ -184,6 +184,8 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
         const [items, total] = await Promise.all([
             this.model
                 .find(query)
+                .populate('primaryDepartmentId', '_id name')
+                .populate('primaryPositionId', '_id title')
                 .skip(skip)
                 .limit(limit)
                 .sort({ createdAt: -1 })

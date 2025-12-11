@@ -21,7 +21,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useRouter } from 'next/navigation';
 import { AppraisalTemplate } from './types';
-import { appraisalTemplateService } from '../services/appraisal-template.service';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
 export default function AppraisalTemplatesPage() {
     const router = useRouter();
@@ -36,7 +37,17 @@ export default function AppraisalTemplatesPage() {
     const loadTemplates = async () => {
         try {
             setError(null);
-            const data = await appraisalTemplateService.findAll();
+            const response = await fetch(`${API_URL}/performance/templates`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                },
+                credentials: 'include',
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+            const data = await response.json();
             setTemplates(data);
         } catch (error: any) {
             console.error('Failed to load templates', error);
@@ -49,7 +60,17 @@ export default function AppraisalTemplatesPage() {
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this template?')) {
             try {
-                await appraisalTemplateService.remove(id);
+                const response = await fetch(`${API_URL}/performance/templates/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    },
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to delete template: ${response.status} ${response.statusText} - ${errorText}`);
+                }
                 loadTemplates();
             } catch (error) {
                 console.error('Failed to delete template', error);

@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Container, Typography, Box, CircularProgress } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
 import TemplateForm from '../components/TemplateForm';
-import { appraisalTemplateService } from '../../services/appraisal-template.service';
-import { organizationService } from '../../services/organization.service';
 import { CreateAppraisalTemplateDto, Department, Position, AppraisalTemplate } from '../types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
 export default function EditTemplatePage() {
     const router = useRouter();
@@ -21,14 +21,18 @@ export default function EditTemplatePage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [tmpl, depts, pos] = await Promise.all([
-                    appraisalTemplateService.findOne(id),
-                    organizationService.getDepartments(),
-                    organizationService.getPositions(),
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Authorization': `Bearer ${token}` };
+
+                const [tmplRes, deptsRes, posRes] = await Promise.all([
+                    fetch(`${API_URL}/performance/templates/${id}`, { headers, credentials: 'include' }),
+                    fetch(`${API_URL}/organization-structure/departments`, { headers, credentials: 'include' }),
+                    fetch(`${API_URL}/organization-structure/positions`, { headers, credentials: 'include' }),
                 ]);
-                setTemplate(tmpl);
-                setDepartments(depts);
-                setPositions(pos);
+
+                if (tmplRes.ok) setTemplate(await tmplRes.json());
+                if (deptsRes.ok) setDepartments(await deptsRes.json());
+                if (posRes.ok) setPositions(await posRes.json());
             } catch (error) {
                 console.error('Failed to fetch data', error);
             } finally {
@@ -42,7 +46,21 @@ export default function EditTemplatePage() {
 
     const handleSubmit = async (data: CreateAppraisalTemplateDto) => {
         try {
-            await appraisalTemplateService.update(id, data);
+            const response = await fetch(`${API_URL}/performance/templates/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                },
+                body: JSON.stringify(data),
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to update template: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
             router.push('/employee/performance/templates');
         } catch (error) {
             console.error('Failed to update template', error);

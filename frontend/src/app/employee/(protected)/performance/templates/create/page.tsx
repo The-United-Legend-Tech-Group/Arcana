@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Container, Typography, Box } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import TemplateForm from '../components/TemplateForm';
-import { appraisalTemplateService } from '../../services/appraisal-template.service';
-import { organizationService } from '../../services/organization.service';
 import { CreateAppraisalTemplateDto, Department, Position } from '../types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
 export default function CreateTemplatePage() {
     const router = useRouter();
@@ -16,12 +16,16 @@ export default function CreateTemplatePage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [depts, pos] = await Promise.all([
-                    organizationService.getDepartments(),
-                    organizationService.getPositions(),
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Authorization': `Bearer ${token}` };
+
+                const [deptsRes, posRes] = await Promise.all([
+                    fetch(`${API_URL}/organization-structure/departments`, { headers, credentials: 'include' }),
+                    fetch(`${API_URL}/organization-structure/positions`, { headers, credentials: 'include' }),
                 ]);
-                setDepartments(depts);
-                setPositions(pos);
+
+                if (deptsRes.ok) setDepartments(await deptsRes.json());
+                if (posRes.ok) setPositions(await posRes.json());
             } catch (error) {
                 console.error('Failed to fetch organization data', error);
             }
@@ -31,7 +35,21 @@ export default function CreateTemplatePage() {
 
     const handleSubmit = async (data: CreateAppraisalTemplateDto) => {
         try {
-            await appraisalTemplateService.create(data);
+            const response = await fetch(`${API_URL}/performance/templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                },
+                body: JSON.stringify(data),
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to create template: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
             router.push('/employee/performance/templates');
         } catch (error) {
             console.error('Failed to create template', error);

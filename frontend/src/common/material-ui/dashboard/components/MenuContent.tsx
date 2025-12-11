@@ -33,9 +33,19 @@ const mainListItems = [
     path: "/employee/analytics",
   },
   {
-    text: "Performance",
+    text: "Performance Templates",
     icon: <AssessmentRoundedIcon />,
     path: "/employee/performance/templates",
+  },
+  {
+    text: "Appraisal Cycles",
+    icon: <AccessTimeRoundedIcon />,
+    path: "/employee/performance/cycles",
+  },
+  {
+    text: "Appraisal Assignments",
+    icon: <AssignmentRoundedIcon />,
+    path: "/employee/performance/assignments",
   },
   {
     text: "Time Management",
@@ -79,7 +89,9 @@ export default function MenuContent() {
     if (text === 'Manage Requests' && pathname === '/employee/manage-requests') return true;
     if (text === 'Manage Employees' && pathname.startsWith('/employee/manage-employees')) return true;
     if (text === 'Time Management' && pathname === '/employee/time-mangemeant') return true;
-    if (text === 'Performance' && pathname.startsWith('/employee/performance')) return true;
+    if (text === 'Performance Templates' && pathname === '/employee/performance/templates') return true;
+    if (text === 'Appraisal Cycles' && pathname === '/employee/performance/cycles') return true;
+    if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
     return false;
   };
 
@@ -100,7 +112,9 @@ export default function MenuContent() {
     if (text === 'Manage Requests') router.push('/employee/manage-requests');
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
-    if (text === 'Performance') router.push('/employee/performance/templates');
+    if (text === 'Performance Templates') router.push('/employee/performance/templates');
+    if (text === 'Appraisal Cycles') router.push('/employee/performance/cycles');
+    if (text === 'Appraisal Assignments') router.push('/employee/performance/assignments');
   };
 
   return (

@@ -174,7 +174,7 @@ export default function TemplateForm({
                         <TextField
                             fullWidth
                             multiline
-                            rows={2}
+                            rows={1}
                             label="Description"
                             value={formData.description}
                             onChange={(e) => handleChange('description', e.target.value)}
@@ -184,7 +184,7 @@ export default function TemplateForm({
                         <TextField
                             fullWidth
                             multiline
-                            rows={3}
+                            rows={1}
                             label="Instructions"
                             value={formData.instructions}
                             onChange={(e) => handleChange('instructions', e.target.value)}

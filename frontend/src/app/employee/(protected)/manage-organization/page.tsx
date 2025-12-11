@@ -21,6 +21,9 @@ import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import DepartmentDetails from './DepartmentDetails';
 import PositionDetails from './PositionDetails';
+import CreatePositionForm from './CreatePositionForm';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
 
 interface Department {
     _id: string;
@@ -58,6 +61,7 @@ export default function ManageOrganizationPage() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
     const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null);
+    const [isCreatingPosition, setIsCreatingPosition] = React.useState(false);
 
     // Positions State
     const [positionSearchQuery, setPositionSearchQuery] = React.useState('');
@@ -120,6 +124,20 @@ export default function ManageOrganizationPage() {
 
     const handleRowClick = (dept: Department) => {
         setSelectedDepartment(dept);
+        setIsCreatingPosition(false);
+    };
+
+    const handleAddPositionClick = (e: React.MouseEvent, dept: Department) => {
+        e.stopPropagation();
+        setSelectedDepartment(dept);
+        setIsCreatingPosition(true);
+    };
+
+    const handleCreatePositionSuccess = () => {
+        setIsCreatingPosition(false);
+        setSuccess('Position created successfully');
+        fetchData();
+        setTimeout(() => setSuccess(null), 3000);
     };
 
     const handlePositionRowClick = (pos: Position) => {
@@ -280,16 +298,17 @@ export default function ManageOrganizationPage() {
                                     <TableCell>Description</TableCell>
                                     <TableCell>Status</TableCell>
                                     <TableCell>Created At</TableCell>
+                                    <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {loading && departments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">Loading...</TableCell>
+                                        <TableCell colSpan={6} align="center">Loading...</TableCell>
                                     </TableRow>
                                 ) : filteredRows.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">No departments found.</TableCell>
+                                        <TableCell colSpan={6} align="center">No departments found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     filteredRows
@@ -327,13 +346,23 @@ export default function ManageOrganizationPage() {
                                                         />
                                                     </TableCell>
                                                     <TableCell>{new Date(dept.createdAt).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            size="small"
+                                                            startIcon={<AddIcon />}
+                                                            onClick={(e) => handleAddPositionClick(e, dept)}
+                                                            variant="outlined"
+                                                        >
+                                                            Add Position
+                                                        </Button>
+                                                    </TableCell>
                                                 </TableRow>
                                             );
                                         })
                                 )}
                                 {emptyRows > 0 && (
                                     <TableRow style={{ height: 53 * emptyRows }}>
-                                        <TableCell colSpan={5} />
+                                        <TableCell colSpan={6} />
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -350,10 +379,19 @@ export default function ManageOrganizationPage() {
                     />
                 </Paper>
 
-                <DepartmentDetails
-                    department={selectedDepartment}
-                    onUpdate={handleUpdateDepartment}
-                />
+                {isCreatingPosition && selectedDepartment ? (
+                    <CreatePositionForm
+                        departmentId={selectedDepartment._id}
+                        departmentName={selectedDepartment.name}
+                        onSuccess={handleCreatePositionSuccess}
+                        onCancel={() => setIsCreatingPosition(false)}
+                    />
+                ) : (
+                    <DepartmentDetails
+                        department={selectedDepartment}
+                        onUpdate={handleUpdateDepartment}
+                    />
+                )}
             </Box>
 
             <Divider sx={{ my: 4 }} />

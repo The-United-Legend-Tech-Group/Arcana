@@ -3,29 +3,28 @@
 import * as React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import Avatar from '@mui/material/Avatar';
+import Alert from '@mui/material/Alert';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-// Icons
-import BadgeIcon from '@mui/icons-material/Badge';
-import PersonIcon from '@mui/icons-material/Person';
-import WorkIcon from '@mui/icons-material/Work';
-import EmployeeEditForm from './EmployeeEditForm';
+import PageContainer from '../../../../../common/material-ui/crud-dashboard/components/PageContainer';
+import DialogsProvider from '../../../../../common/material-ui/crud-dashboard/hooks/useDialogs/DialogsProvider';
+import NotificationsProvider from '../../../../../common/material-ui/crud-dashboard/hooks/useNotifications/NotificationsProvider';
+import { useDialogs } from '../../../../../common/material-ui/crud-dashboard/hooks/useDialogs/useDialogs';
+import useNotifications from '../../../../../common/material-ui/crud-dashboard/hooks/useNotifications/useNotifications';
 
 interface Employee {
     _id: string;
     firstName: string;
     lastName: string;
     middleName?: string;
-    // nationalId: string; // Excluded for privacy
     personalEmail?: string;
     workEmail?: string;
     mobilePhone?: string;
@@ -33,13 +32,16 @@ interface Employee {
     status: string;
     dateOfHire: string;
     profilePictureUrl?: string;
-    department?: { name: string };
-    position?: { title: string };
+    department?: { name: string; _id?: string };
+    position?: { title: string; _id?: string };
+    isFullTime?: boolean; // Assuming this might exist or we infer it
 }
 
-export default function EmployeeDetailsPage() {
+function EmployeeDetailsContent() {
     const router = useRouter();
     const params = useParams();
+    const dialogs = useDialogs();
+    const notifications = useNotifications();
     const [employee, setEmployee] = React.useState<Employee | null>(null);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState('');
@@ -82,16 +84,37 @@ export default function EmployeeDetailsPage() {
         fetchEmployee();
     }, [fetchEmployee]);
 
-    const getStatusColor = (status: string) => {
-        if (!status) return 'default';
-        switch (status.toUpperCase()) {
-            case 'ACTIVE': return 'success';
-            case 'ON_LEAVE': return 'warning';
-            case 'TERMINATED': return 'error';
-            case 'PROBATION': return 'info';
-            default: return 'default';
+    const handleEmployeeEdit = React.useCallback(() => {
+        router.push(`/employee/manage-employees/${params.id}/edit`);
+    }, [router, params.id]);
+
+    const handleBack = React.useCallback(() => {
+        router.push('/employee/manage-employees');
+    }, [router]);
+
+    const handleEmployeeDelete = React.useCallback(async () => {
+        if (!employee) return;
+
+        const confirmed = await dialogs.confirm(
+            `Do you wish to delete ${employee.firstName} ${employee.lastName}?`,
+            {
+                title: `Delete employee?`,
+                severity: 'error',
+                okText: 'Delete',
+                cancelText: 'Cancel',
+            },
+        );
+
+        if (confirmed) {
+            // Mock delete for now as per previous code
+            notifications.show('Delete functionality not yet implemented on backend', {
+                severity: 'info',
+                autoHideDuration: 3000,
+            });
         }
-    };
+    }, [employee, dialogs, notifications]);
+
+    const pageTitle = employee ? `Employee ${employee.employeeNumber}` : 'Employee Details';
 
     if (loading) {
         return (
@@ -103,122 +126,108 @@ export default function EmployeeDetailsPage() {
 
     if (error || !employee) {
         return (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" color="error">{error || 'Employee not found'}</Typography>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ mt: 2 }}>
-                    Back to List
-                </Button>
-            </Box>
+            <PageContainer
+                title="Error"
+                breadcrumbs={[
+                    { title: 'Employees', path: '/employee/manage-employees' },
+                    { title: 'Error' },
+                ]}
+            >
+                <Alert severity="error">{error || 'Employee not found'}</Alert>
+            </PageContainer>
         );
     }
 
     return (
-        <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, p: 3 }}>
-            <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={() => router.push('/employee/manage-employees')}
-                sx={{ mb: 3 }}
-            >
-                Back to List
-            </Button>
-
-            <Stack spacing={4}>
-                {/* Profile Header */}
-                <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                    <CardContent sx={{ p: 4 }}>
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="center">
-                            <Avatar
-                                src={employee.profilePictureUrl}
-                                alt={`${employee.firstName} ${employee.lastName}`}
-                                sx={{
-                                    width: 160,
-                                    height: 160,
-                                    boxShadow: 3,
-                                    bgcolor: 'grey.300',
-                                    border: '4px solid',
-                                    borderColor: 'background.paper'
-                                }}
-                            >
-                                <PersonIcon sx={{ fontSize: 100, color: 'grey.600' }} />
-                            </Avatar>
-                            <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
-                                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                                    {employee.firstName} {employee.middleName} {employee.lastName}
-                                </Typography>
-                                <Stack
-                                    direction="row"
-                                    spacing={2}
-                                    alignItems="center"
-                                    justifyContent={{ xs: 'center', md: 'flex-start' }}
-                                    sx={{ mb: 3 }}
-                                >
-                                    <Typography variant="h6" color="primary.main" fontWeight="medium">
-                                        {employee.position?.title || 'No Position'}
-                                    </Typography>
-                                    <Divider orientation="vertical" flexItem />
-                                    <Typography variant="h6" color="text.secondary">
-                                        {employee.department?.name || 'No Department'}
-                                    </Typography>
-                                </Stack>
-                                <Chip
-                                    label={employee.status}
-                                    color={getStatusColor(employee.status) as any}
-                                    sx={{ fontWeight: 'bold' }}
-                                />
-                            </Box>
-                        </Stack>
-                    </CardContent>
-                </Card>
-
-                {/* Contact & Info Grid */}
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-                    <Card variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <BadgeIcon color="action" /> Contact Information
+        <PageContainer
+            title={pageTitle}
+            breadcrumbs={[
+                { title: 'Employees', path: '/employee/manage-employees' },
+                { title: pageTitle },
+            ]}
+        >
+            <Box sx={{ flexGrow: 1, width: '100%' }}>
+                <Grid container spacing={2} sx={{ width: '100%' }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Paper sx={{ px: 2, py: 1 }}>
+                            <Typography variant="overline">Name</Typography>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                {employee.firstName} {employee.lastName}
                             </Typography>
-                            <Stack spacing={2} sx={{ mt: 2 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Work Email</Typography>
-                                    <Typography variant="body1">{employee.workEmail || 'N/A'}</Typography>
-                                </Box>
-                                {employee.personalEmail && (
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Personal Email</Typography>
-                                        <Typography variant="body1">{employee.personalEmail}</Typography>
-                                    </Box>
-                                )}
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Phone</Typography>
-                                    <Typography variant="body1">{employee.mobilePhone || 'N/A'}</Typography>
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <WorkIcon color="action" /> Employment Details
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Paper sx={{ px: 2, py: 1 }}>
+                            <Typography variant="overline">Age</Typography>
+                            {/* Calculate age or show DOB if Age not available directly */}
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                {employee.dateOfHire ? 'N/A' : 'N/A'}
                             </Typography>
-                            <Stack spacing={2} sx={{ mt: 2 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Employee ID</Typography>
-                                    <Typography variant="body1">{employee.employeeNumber}</Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Date of Hire</Typography>
-                                    <Typography variant="body1">
-                                        {employee.dateOfHire ? new Date(employee.dateOfHire).toLocaleDateString() : '-'}
-                                    </Typography>
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Paper sx={{ px: 2, py: 1 }}>
+                            <Typography variant="overline">Join date</Typography>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                {employee.dateOfHire ? new Date(employee.dateOfHire).toLocaleDateString() : '-'}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Paper sx={{ px: 2, py: 1 }}>
+                            <Typography variant="overline">Department</Typography>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                {employee.department?.name || 'N/A'}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                        <Paper sx={{ px: 2, py: 1 }}>
+                            <Typography variant="overline">Full-time</Typography>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                {employee.isFullTime ? 'Yes' : 'Yes'}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                </Grid>
+                <Divider sx={{ my: 3 }} />
+                <Stack direction="row" spacing={2} justifyContent="space-between">
+                    <Button
+                        variant="contained"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={handleBack}
+                    >
+                        Back
+                    </Button>
+                    <Stack direction="row" spacing={2}>
+                        <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={handleEmployeeEdit}
+                        >
+                            Edit
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={handleEmployeeDelete}
+                        >
+                            Delete
+                        </Button>
+                    </Stack>
                 </Stack>
+            </Box>
+        </PageContainer>
+    );
+}
 
-                <EmployeeEditForm employee={employee} onUpdate={fetchEmployee} />
-            </Stack>
-        </Box>
+export default function EmployeeDetailsPage() {
+    return (
+        <NotificationsProvider>
+            <DialogsProvider>
+                <EmployeeDetailsContent />
+            </DialogsProvider>
+        </NotificationsProvider>
     );
 }

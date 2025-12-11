@@ -13,6 +13,14 @@ export enum AppraisalCycleStatus {
     ARCHIVED = 'ARCHIVED',
 }
 
+export enum AppraisalAssignmentStatus {
+    NOT_STARTED = 'NOT_STARTED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    SUBMITTED = 'SUBMITTED',
+    PUBLISHED = 'PUBLISHED',
+    ACKNOWLEDGED = 'ACKNOWLEDGED',
+}
+
 export interface AppraisalCycle {
     _id: string;
     name: string;

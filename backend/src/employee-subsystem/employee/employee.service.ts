@@ -267,7 +267,7 @@ export class EmployeeService {
   ) {
     const result = await this.employeeProfileRepository.findAll(page, limit, search);
 
- 
+
     const items = await Promise.all(result.items.map(async (doc: any) => {
       // Re-use logic or manual lookup if populates failed (common in this codebase's mixed patterns)
       let positionTitle = 'N/A';
@@ -472,6 +472,33 @@ export class EmployeeService {
     // Return combined view; omit any sensitive fields if present
     const profileObj: any = employee.toObject ? employee.toObject() : employee;
     if (profileObj.password) delete profileObj.password;
+
+    // Manually populate position and department
+    if (profileObj.primaryPositionId) {
+      if (profileObj.primaryPositionId.title) {
+        profileObj.position = { title: profileObj.primaryPositionId.title };
+      } else {
+        const pos = await this.positionRepository.findById(profileObj.primaryPositionId.toString());
+        if (pos) {
+          profileObj.position = { title: pos.title, _id: pos._id };
+        }
+      }
+    }
+
+    if (profileObj.primaryDepartmentId) {
+      if (profileObj.primaryDepartmentId.name) {
+        profileObj.department = { name: profileObj.primaryDepartmentId.name };
+      } else {
+        const Department = this.employeeProfileModel.db.model('Department');
+        const dept = await Department.findById(profileObj.primaryDepartmentId)
+          .select('name')
+          .lean<{ name: string; _id: Types.ObjectId }>()
+          .exec();
+        if (dept) {
+          profileObj.department = { name: dept.name, _id: dept._id };
+        }
+      }
+    }
 
     // Fetch appraisal records for performance history (most recent first)
     const records: any[] = await this.appraisalRecordModel

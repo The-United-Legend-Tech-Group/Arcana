@@ -18,6 +18,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BadgeIcon from '@mui/icons-material/Badge';
 import PersonIcon from '@mui/icons-material/Person';
 import WorkIcon from '@mui/icons-material/Work';
+import EmployeeEditForm from './EmployeeEditForm';
 
 interface Employee {
     _id: string;
@@ -43,43 +44,43 @@ export default function EmployeeDetailsPage() {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState('');
 
-    React.useEffect(() => {
-        const fetchEmployee = async () => {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                router.push('/employee/login');
-                return;
-            }
+    const fetchEmployee = React.useCallback(async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            router.push('/employee/login');
+            return;
+        }
 
-            try {
-                const id = params.id as string;
-                if (!id) throw new Error('No ID provided');
+        try {
+            const id = params.id as string;
+            if (!id) throw new Error('No ID provided');
 
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
-                const response = await fetch(`${apiUrl}/employee/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setEmployee(data.profile || data);
-                } else {
-                    console.error('Failed to fetch employee', response.status);
-                    setError('Failed to load employee details');
+            const response = await fetch(`${apiUrl}/employee/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            } catch (error) {
-                console.error('Error fetching employee', error);
-                setError('An error occurred');
-            } finally {
-                setLoading(false);
-            }
-        };
+            });
 
-        fetchEmployee();
+            if (response.ok) {
+                const data = await response.json();
+                setEmployee(data.profile || data);
+            } else {
+                console.error('Failed to fetch employee', response.status);
+                setError('Failed to load employee details');
+            }
+        } catch (error) {
+            console.error('Error fetching employee', error);
+            setError('An error occurred');
+        } finally {
+            setLoading(false);
+        }
     }, [router, params]);
+
+    React.useEffect(() => {
+        fetchEmployee();
+    }, [fetchEmployee]);
 
     const getStatusColor = (status: string) => {
         if (!status) return 'default';
@@ -215,6 +216,8 @@ export default function EmployeeDetailsPage() {
                         </CardContent>
                     </Card>
                 </Stack>
+
+                <EmployeeEditForm employee={employee} onUpdate={fetchEmployee} />
             </Stack>
         </Box>
     );

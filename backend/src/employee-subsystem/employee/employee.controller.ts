@@ -89,7 +89,7 @@ export class EmployeeController {
 
   @Patch(':id/profile/admin')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN, SystemRole.HR_ADMIN)
+  //@Roles(SystemRole.SYSTEM_ADMIN, SystemRole.HR_ADMIN)
   @ApiOperation({ summary: 'Admin update employee profile' })
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiBody({ type: AdminUpdateEmployeeProfileDto })

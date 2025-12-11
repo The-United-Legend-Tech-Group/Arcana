@@ -3,104 +3,176 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import TablePagination from '@mui/material/TablePagination';
-import Chip from '@mui/material/Chip';
-import InputAdornment from '@mui/material/InputAdornment';
-import SearchIcon from '@mui/icons-material/Search';
 import Stack from '@mui/material/Stack';
-import Fade from '@mui/material/Fade';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import {
+    DataGrid,
+    GridActionsCellItem,
+    GridColDef,
+    GridFilterModel,
+    GridPaginationModel,
+    GridSortModel,
+    GridEventListener,
+    gridClasses,
+} from '@mui/x-data-grid';
+
+import PageContainer from '../../../../common/material-ui/crud-dashboard/components/PageContainer';
+import DialogsProvider from '../../../../common/material-ui/crud-dashboard/hooks/useDialogs/DialogsProvider';
+import NotificationsProvider from '../../../../common/material-ui/crud-dashboard/hooks/useNotifications/NotificationsProvider';
+import { useDialogs } from '../../../../common/material-ui/crud-dashboard/hooks/useDialogs/useDialogs';
+import useNotifications from '../../../../common/material-ui/crud-dashboard/hooks/useNotifications/useNotifications';
+
+const INITIAL_PAGE_SIZE = 10;
 
 interface Employee {
-    _id: string;
+    id: string; // Mapped from _id
     firstName: string;
     lastName: string;
     employeeNumber: string;
-    position: { title: string };
-    department: { name: string };
+    position: string;
+    department: string;
     status: string;
 }
 
-export default function ManageEmployeesPage() {
+function EmployeeListContent() {
     const router = useRouter();
-    const [employees, setEmployees] = React.useState<Employee[]>([]);
-    const [loading, setLoading] = React.useState(true);
-    const [page, setPage] = React.useState(0); // Material UI is 0-indexed
-    const [rowsPerPage, setRowsPerPage] = React.useState(7);
-    const [total, setTotal] = React.useState(0);
-    const [search, setSearch] = React.useState('');
-    const [debouncedSearch, setDebouncedSearch] = React.useState('');
+    const dialogs = useDialogs();
+    const notifications = useNotifications();
 
-    // Debounce search input
-    React.useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-            setPage(0); // Reset to first page on search
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [search]);
+    const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>({
+        page: 0,
+        pageSize: INITIAL_PAGE_SIZE,
+    });
+    const [filterModel, setFilterModel] = React.useState<GridFilterModel>({ items: [] });
+    const [sortModel, setSortModel] = React.useState<GridSortModel>([]);
 
-    React.useEffect(() => {
-        const fetchEmployees = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    router.push('/employee/login');
-                    return;
-                }
+    const [rowsState, setRowsState] = React.useState<{
+        rows: Employee[];
+        rowCount: number;
+    }>({
+        rows: [],
+        rowCount: 0,
+    });
 
-                const queryPage = page + 1; // Backend is 1-indexed
-                let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000'}/employee?page=${queryPage}&limit=${rowsPerPage}`;
-                if (debouncedSearch) {
-                    url += `&search=${encodeURIComponent(debouncedSearch)}`;
-                }
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState<Error | null>(null);
 
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+    const loadData = React.useCallback(async () => {
+        setError(null);
+        setIsLoading(true);
 
-                if (response.ok) {
-                    const data = await response.json();
-                    setEmployees(data.items);
-                    setTotal(data.total);
-                } else {
-                    console.error('Failed to fetch employees');
-                }
-            } catch (error) {
-                console.error('Error fetching employees:', error);
-            } finally {
-                setLoading(false);
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                router.push('/employee/login');
+                return;
             }
-        };
 
-        fetchEmployees();
-    }, [page, rowsPerPage, debouncedSearch, router]);
+            const queryPage = paginationModel.page + 1; // Backend is 1-indexed
+            let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000'}/employee?page=${queryPage}&limit=${paginationModel.pageSize}`;
 
-    const handleChangePage = (event: unknown, newPage: number) => {
-        setPage(newPage);
-    };
+            // Simple search mapping if filter is present (just taking the first filter value as search)
+            // This is a simplification; for full filter support backend changes might be needed
+            if (filterModel.items.length > 0 && filterModel.items[0].value) {
+                url += `&search=${encodeURIComponent(filterModel.items[0].value)}`;
+            }
 
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-    const handleRowClick = (id: string) => {
-        router.push(`/employee/manage-employees/${id}`);
-    };
+            if (!response.ok) {
+                throw new Error('Failed to fetch employees');
+            }
+
+            const data = await response.json();
+
+            const mappedRows: Employee[] = data.items.map((emp: any) => ({
+                id: emp._id,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                employeeNumber: emp.employeeNumber,
+                position: emp.position?.title || 'N/A',
+                department: emp.department?.name || 'N/A',
+                status: emp.status,
+            }));
+
+            setRowsState({
+                rows: mappedRows,
+                rowCount: data.total,
+            });
+
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [paginationModel, filterModel, router]);
+
+    React.useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleRefresh = React.useCallback(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleRowClick = React.useCallback<GridEventListener<'rowClick'>>(
+        ({ row }) => {
+            router.push(`/employee/manage-employees/${row.id}`);
+        },
+        [router],
+    );
+
+    const handleCreateClick = React.useCallback(() => {
+        // Assuming we want to use the onboard page or a new create page
+        router.push('/employee/onboard');
+    }, [router]);
+
+    const handleRowEdit = React.useCallback(
+        (employee: Employee) => () => {
+            router.push(`/employee/manage-employees/${employee.id}`);
+        },
+        [router],
+    );
+
+    const handleRowDelete = React.useCallback(
+        (employee: Employee) => async () => {
+            const confirmed = await dialogs.confirm(
+                `Do you wish to delete ${employee.firstName} ${employee.lastName}?`,
+                {
+                    title: `Delete employee?`,
+                    severity: 'error',
+                    okText: 'Delete',
+                    cancelText: 'Cancel',
+                },
+            );
+
+            if (confirmed) {
+                // TODO: Implement delete API call
+                notifications.show('Delete functionality not yet implemented on backend', {
+                    severity: 'info',
+                    autoHideDuration: 3000,
+                });
+                // After implementation:
+                // await deleteEmployee(employee.id);
+                // notifications.show(...);
+                // loadData();
+            }
+        },
+        [dialogs, notifications],
+    );
 
     const getStatusColor = (status: string) => {
         if (!status) return 'default';
@@ -113,102 +185,142 @@ export default function ManageEmployeesPage() {
         }
     };
 
-    return (
-        <Stack spacing={3} sx={{ height: '100%', p: 2, pb: 10 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1" fontWeight="bold">
-                    Manage Employees
-                </Typography>
-
-                <Fade in={true}>
-                    <TextField
-                        placeholder="Search by name or employee ID..."
+    const columns = React.useMemo<GridColDef[]>(
+        () => [
+            { field: 'firstName', headerName: 'First Name', width: 140 },
+            { field: 'lastName', headerName: 'Last Name', width: 140 },
+            { field: 'employeeNumber', headerName: 'Emp. ID', width: 120 },
+            { field: 'department', headerName: 'Department', width: 150 },
+            { field: 'position', headerName: 'Position', width: 200 },
+            {
+                field: 'status',
+                headerName: 'Status',
+                width: 120,
+                renderCell: (params) => (
+                    <Chip
+                        label={params.value}
                         size="small"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon fontSize="small" color="action" />
-                                </InputAdornment>
-                            ),
-                        }}
-                        sx={{ width: 300, bgcolor: 'background.paper', borderRadius: 1 }}
+                        variant="outlined"
+                        color={getStatusColor(params.value) as any}
                     />
-                </Fade>
-            </Box>
+                ),
+            },
+            {
+                field: 'actions',
+                type: 'actions',
+                flex: 1,
+                align: 'right',
+                getActions: ({ row }) => [
+                    <GridActionsCellItem
+                        key="edit-item"
+                        icon={<EditIcon />}
+                        label="Edit"
+                        onClick={handleRowEdit(row)}
+                    />,
+                    <GridActionsCellItem
+                        key="delete-item"
+                        icon={<DeleteIcon />}
+                        label="Delete"
+                        onClick={handleRowDelete(row)}
+                    />,
+                ],
+            },
+        ],
+        [handleRowEdit, handleRowDelete],
+    );
 
-            <Paper sx={{ width: '100%', mb: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
-                <TableContainer>
-                    <Table sx={{ minWidth: 650 }} aria-label="employees table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Employee Name</TableCell>
-                                <TableCell>Employee ID</TableCell>
-                                <TableCell>Department</TableCell>
-                                <TableCell>Position</TableCell>
-                                <TableCell>Status</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                                        <CircularProgress />
-                                    </TableCell>
-                                </TableRow>
-                            ) : employees.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                                        <Typography color="text.secondary">No employees found.</Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                employees.map((employee) => (
-                                    <TableRow
-                                        key={employee._id}
-                                        hover
-                                        onClick={() => handleRowClick(employee._id)}
-                                        sx={{
-                                            '&:last-child td, &:last-child th': { border: 0 },
-                                            cursor: 'pointer',
-                                            '&:hover': {
-                                                backgroundColor: 'action.hover',
-                                            },
-                                        }}
-                                    >
-                                        <TableCell component="th" scope="row">
-                                            <Typography variant="body2" fontWeight="medium">
-                                                {employee.firstName} {employee.lastName}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>{employee.employeeNumber}</TableCell>
-                                        <TableCell>{employee.department?.name || 'N/A'}</TableCell>
-                                        <TableCell>{employee.position?.title || 'N/A'}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={employee.status}
-                                                size="small"
-                                                variant="outlined"
-                                                color={getStatusColor(employee.status) as any}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 7, 10, 25]}
-                    component="div"
-                    count={total}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Paper>
-        </Stack>
+    const initialState = React.useMemo(
+        () => ({
+            pagination: { paginationModel: { pageSize: INITIAL_PAGE_SIZE } },
+        }),
+        [],
+    );
+
+    const pageTitle = 'Manage Employees';
+
+    return (
+        <PageContainer
+            title={pageTitle}
+            breadcrumbs={[{ title: pageTitle }]}
+            actions={
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <Tooltip title="Reload data" placement="right" enterDelay={1000}>
+                        <div>
+                            <IconButton size="small" aria-label="refresh" onClick={handleRefresh}>
+                                <RefreshIcon />
+                            </IconButton>
+                        </div>
+                    </Tooltip>
+                    <Button
+                        variant="contained"
+                        onClick={handleCreateClick}
+                        startIcon={<AddIcon />}
+                    >
+                        Create Employee
+                    </Button>
+                </Stack>
+            }
+        >
+            <Box sx={{ flex: 1, width: '100%' }}>
+                {error ? (
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Alert severity="error">{error.message}</Alert>
+                    </Box>
+                ) : (
+                    <DataGrid
+                        rows={rowsState.rows}
+                        rowCount={rowsState.rowCount}
+                        columns={columns}
+                        pagination
+                        sortingMode="server"
+                        filterMode="server"
+                        paginationMode="server"
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={setPaginationModel}
+                        sortModel={sortModel}
+                        onSortModelChange={setSortModel}
+                        filterModel={filterModel}
+                        onFilterModelChange={setFilterModel}
+                        disableRowSelectionOnClick
+                        onRowClick={handleRowClick}
+                        loading={isLoading}
+                        initialState={initialState}
+                        pageSizeOptions={[5, 10, 25]}
+                        sx={{
+                            [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
+                                outline: 'transparent',
+                            },
+                            [`& .${gridClasses.columnHeader}:focus-within, & .${gridClasses.cell}:focus-within`]: {
+                                outline: 'none',
+                            },
+                            [`& .${gridClasses.row}:hover`]: {
+                                cursor: 'pointer',
+                            },
+                        }}
+                        slotProps={{
+                            loadingOverlay: {
+                                variant: 'circular-progress',
+                                noRowsVariant: 'circular-progress',
+                            },
+                            baseIconButton: {
+                                size: 'small',
+                            },
+                        }}
+                    />
+                )}
+            </Box>
+        </PageContainer>
+    );
+}
+
+export default function ManageEmployeesPage() {
+    return (
+        <NotificationsProvider>
+            <DialogsProvider>
+                <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>}>
+                    <EmployeeListContent />
+                </React.Suspense>
+            </DialogsProvider>
+        </NotificationsProvider>
     );
 }

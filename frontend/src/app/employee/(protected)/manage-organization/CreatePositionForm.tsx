@@ -40,7 +40,7 @@ export default function CreatePositionForm({ departmentId, departmentName, depar
         title: '',
         description: '',
         departmentId: departmentId || '',
-        isActive: true
+        isActive: false
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -194,16 +194,7 @@ export default function CreatePositionForm({ departmentId, departmentName, depar
                     />
                 </Box>
 
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={formData.isActive}
-                            onChange={handleChange}
-                            name="isActive"
-                        />
-                    }
-                    label="Active"
-                />
+
 
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                     <Button onClick={onCancel} disabled={loading}>

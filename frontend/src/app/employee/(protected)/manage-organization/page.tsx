@@ -25,8 +25,10 @@ import DepartmentDetails from './DepartmentDetails';
 import PositionDetails from './PositionDetails';
 import CreatePositionForm from './CreatePositionForm';
 import CreateDepartmentForm from './CreateDepartmentForm';
+import AssignEmployeeForm from './AssignEmployeeForm';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
+import PersonIcon from '@mui/icons-material/Person';
 
 interface Department {
     _id: string;
@@ -66,6 +68,7 @@ export default function ManageOrganizationPage() {
     const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null);
     const [isCreatingPosition, setIsCreatingPosition] = React.useState(false);
     const [isCreatingDepartment, setIsCreatingDepartment] = React.useState(false);
+    const [isAssigningEmployee, setIsAssigningEmployee] = React.useState(false);
     const [order, setOrder] = React.useState<'asc' | 'desc'>('desc');
     const [orderBy, setOrderBy] = React.useState<keyof Department>('createdAt');
 
@@ -184,6 +187,7 @@ export default function ManageOrganizationPage() {
         setSelectedDepartment(dept);
         setIsCreatingPosition(false);
         setIsCreatingDepartment(false);
+        setIsAssigningEmployee(false);
     };
 
     const handleAddPositionClick = (e: React.MouseEvent, dept: Department) => {
@@ -191,6 +195,7 @@ export default function ManageOrganizationPage() {
         setSelectedDepartment(dept);
         setIsCreatingPosition(true);
         setIsCreatingDepartment(false);
+        setIsAssigningEmployee(false);
     };
 
     const handleCreatePositionSuccess = () => {
@@ -205,10 +210,25 @@ export default function ManageOrganizationPage() {
         fetchData();
     };
 
+    const handleAssignEmployeeClick = (e: React.MouseEvent, pos: Position) => {
+        e.stopPropagation();
+        setSelectedPosition(pos);
+        setIsAssigningEmployee(true);
+        setIsCreatingPosition(false);
+        setIsCreatingDepartment(false);
+    };
+
+    const handleAssignEmployeeSuccess = () => {
+        setIsAssigningEmployee(false);
+        setSuccess('Employee assigned successfully');
+        fetchData();
+    };
+
     const handlePositionRowClick = (pos: Position) => {
         setSelectedPosition(pos);
         setIsCreatingPosition(false); // Switch out of creation mode
         setIsCreatingDepartment(false);
+        setIsAssigningEmployee(false);
     };
 
     const fetchData = async () => {
@@ -369,6 +389,7 @@ export default function ManageOrganizationPage() {
                             setIsCreatingDepartment(true);
                             setSelectedDepartment(null);
                             setIsCreatingPosition(false);
+                            setIsAssigningEmployee(false);
                         }}
                         sx={{ ml: 2 }}
                     >
@@ -547,16 +568,17 @@ export default function ManageOrganizationPage() {
                                             Created At
                                         </TableSortLabel>
                                     </TableCell>
+                                    <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {loading && positions.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">Loading...</TableCell>
+                                        <TableCell colSpan={6} align="center">Loading...</TableCell>
                                     </TableRow>
                                 ) : filteredPositions.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">No positions found.</TableCell>
+                                        <TableCell colSpan={6} align="center">No positions found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     filteredPositions
@@ -594,13 +616,23 @@ export default function ManageOrganizationPage() {
                                                         />
                                                     </TableCell>
                                                     <TableCell>{new Date(pos.createdAt).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            size="small"
+                                                            startIcon={<PersonIcon />}
+                                                            onClick={(e) => handleAssignEmployeeClick(e, pos)}
+                                                            variant="outlined"
+                                                        >
+                                                            Assign Employee
+                                                        </Button>
+                                                    </TableCell>
                                                 </TableRow>
                                             );
                                         })
                                 )}
                                 {emptyPositionRows > 0 && (
                                     <TableRow style={{ height: 53 * emptyPositionRows }}>
-                                        <TableCell colSpan={5} />
+                                        <TableCell colSpan={6} />
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -617,10 +649,20 @@ export default function ManageOrganizationPage() {
                     />
                 </Paper>
 
-                <PositionDetails
-                    position={selectedPosition}
-                    onUpdate={handleUpdatePosition}
-                />
+                {isAssigningEmployee && selectedPosition ? (
+                    <AssignEmployeeForm
+                        positionId={selectedPosition._id}
+                        positionCode={selectedPosition.code}
+                        positionTitle={selectedPosition.title}
+                        onSuccess={handleAssignEmployeeSuccess}
+                        onCancel={() => setIsAssigningEmployee(false)}
+                    />
+                ) : (
+                    <PositionDetails
+                        position={selectedPosition}
+                        onUpdate={handleUpdatePosition}
+                    />
+                )}
             </Box>
         </Stack>
     );

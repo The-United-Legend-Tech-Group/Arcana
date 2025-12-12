@@ -35,14 +35,12 @@ export class Notification {
   @Prop()
   relatedModule: string; //'Performance', 'Leaves'
 
-  @Prop({ default: false })
-  isRead: boolean;
-
-  @Prop()
-  readAt: Date;
+  @Prop({ type: [mongoose.Schema.Types.ObjectId], default: [] })
+  readBy: Types.ObjectId[];
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 // Index
-NotificationSchema.index({ recipientId: 1, isRead: 1 });
+NotificationSchema.index({ recipientId: 1 });
+NotificationSchema.index({ readBy: 1 });

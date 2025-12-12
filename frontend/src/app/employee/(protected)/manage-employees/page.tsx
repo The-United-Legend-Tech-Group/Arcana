@@ -14,6 +14,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
+import { debounce } from '@mui/material/utils';
 import {
     DataGrid,
     GridActionsCellItem,
@@ -54,6 +58,7 @@ function EmployeeListContent() {
     });
     const [filterModel, setFilterModel] = React.useState<GridFilterModel>({ items: [] });
     const [sortModel, setSortModel] = React.useState<GridSortModel>([]);
+    const [searchQuery, setSearchQuery] = React.useState('');
 
     const [rowsState, setRowsState] = React.useState<{
         rows: Employee[];
@@ -80,10 +85,8 @@ function EmployeeListContent() {
             const queryPage = paginationModel.page + 1; // Backend is 1-indexed
             let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000'}/employee?page=${queryPage}&limit=${paginationModel.pageSize}`;
 
-            // Simple search mapping if filter is present (just taking the first filter value as search)
-            // This is a simplification; for full filter support backend changes might be needed
-            if (filterModel.items.length > 0 && filterModel.items[0].value) {
-                url += `&search=${encodeURIComponent(filterModel.items[0].value)}`;
+            if (searchQuery) {
+                url += `&search=${encodeURIComponent(searchQuery)}`;
             }
 
             const response = await fetch(url, {
@@ -118,11 +121,20 @@ function EmployeeListContent() {
         } finally {
             setIsLoading(false);
         }
-    }, [paginationModel, filterModel, router]);
+    }, [paginationModel, searchQuery, router]);
 
     React.useEffect(() => {
         loadData();
     }, [loadData]);
+
+    const handleSearchChange = React.useMemo(
+        () =>
+            debounce((event: React.ChangeEvent<HTMLInputElement>) => {
+                setSearchQuery(event.target.value);
+                setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }, 500),
+        [],
+    );
 
     const handleRefresh = React.useCallback(() => {
         loadData();
@@ -243,7 +255,20 @@ function EmployeeListContent() {
             title={pageTitle}
             breadcrumbs={[]}
             actions={
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                    <TextField
+                        size="small"
+                        placeholder="Search employees..."
+                        onChange={handleSearchChange}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{ width: 300, bgcolor: 'background.paper' }}
+                    />
                     <Tooltip title="Reload data" placement="right" enterDelay={1000}>
                         <div>
                             <IconButton size="small" aria-label="refresh" onClick={handleRefresh}>

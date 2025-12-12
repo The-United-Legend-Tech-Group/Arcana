@@ -282,26 +282,7 @@ export default function OrganizationHierarchy() {
         fetchData();
     }, []);
 
-    // Effect to scroll to the current position node
-    React.useEffect(() => {
-        if (!loading && currentPositionId && hierarchy.length > 0) {
-            // Small timeout to ensure DOM is rendered
-            const timer = setTimeout(() => {
-                const element = document.getElementById(`node-${currentPositionId}`);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                    // Optional: Add a highlight effect class temporarily
-                    element.style.transition = 'box-shadow 0.5s ease';
-                    element.style.boxShadow = '0 0 0 4px rgba(25, 118, 210, 0.3)'; // primary.main with opacity
 
-                    setTimeout(() => {
-                        element.style.boxShadow = '';
-                    }, 2000);
-                }
-            }, 500);
-            return () => clearTimeout(timer);
-        }
-    }, [loading, currentPositionId, hierarchy]);
 
     if (loading) {
         return (

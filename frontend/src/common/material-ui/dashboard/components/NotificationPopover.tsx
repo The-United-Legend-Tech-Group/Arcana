@@ -20,6 +20,7 @@ import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import MenuButton from './MenuButton';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface Notification {
     _id: string;
@@ -122,6 +123,25 @@ export default function NotificationPopover() {
             }
         } catch (error) {
             console.error('Error marking all as read', error);
+        }
+    };
+
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const handleViewAll = () => {
+        handleClose(); // Close the popover
+        if (!pathname) return;
+
+        let basePath = '';
+        if (pathname.includes('/employee')) {
+            basePath = '/employee';
+        } else if (pathname.includes('/candidate')) {
+            basePath = '/candidate';
+        }
+
+        if (basePath) {
+            router.push(`${basePath}/notifications`);
         }
     };
 
@@ -258,7 +278,12 @@ export default function NotificationPopover() {
                         )}
                     </Box>
                     <Box sx={{ p: 1, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ cursor: 'pointer', '&:hover': { color: 'text.primary' } }}>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            onClick={handleViewAll}
+                            sx={{ cursor: 'pointer', '&:hover': { color: 'text.primary' } }}
+                        >
                             View all notifications
                         </Typography>
                     </Box>

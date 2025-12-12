@@ -16,8 +16,14 @@ export class CreateNotificationDto {
   @ApiProperty({ type: [String], description: 'Array of recipient ObjectIds' })
   @IsArray()
   @IsMongoId({ each: true })
-  @IsNotEmpty()
-  recipientId: string[];
+  @IsOptional()
+  recipientId?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Array of Position ObjectIds' })
+  @IsArray()
+  @IsMongoId({ each: true })
+  @IsOptional()
+  positionIds?: string[];
 
   @ApiProperty({
     enum: ['Alert', 'Info', 'Success', 'Warning'],

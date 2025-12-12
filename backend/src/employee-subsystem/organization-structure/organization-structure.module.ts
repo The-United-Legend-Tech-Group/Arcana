@@ -19,8 +19,12 @@ import { PositionRepository } from './repository/position.repository';
 import { DepartmentRepository } from './repository/department.repository';
 import { PositionAssignmentRepository } from './repository/position-assignment.repository';
 
+import { forwardRef } from '@nestjs/common';
+import { EmployeeModule } from '../employee/employee.module';
+
 @Module({
   imports: [
+    forwardRef(() => EmployeeModule),
     MongooseModule.forFeature([
       { name: Department.name, schema: DepartmentSchema },
       { name: Position.name, schema: PositionSchema },

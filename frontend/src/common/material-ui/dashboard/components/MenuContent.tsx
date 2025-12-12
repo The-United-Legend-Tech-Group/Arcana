@@ -11,6 +11,7 @@ import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import SendTwoToneIcon from '@mui/icons-material/SendTwoTone';
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ApartmentRoundedIcon from "@mui/icons-material/ApartmentRounded";
@@ -41,8 +42,9 @@ const mainListItems = [
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
   },
-  { text: 'Manage Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
+  { text: 'Manage Requests', icon: <AssignmentRoundedIcon />, path: '/employee/requests/my-requests' },
   { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
+  { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification' },
 ];
 
 const secondaryListItems = [
@@ -70,9 +72,10 @@ export default function MenuContent() {
     if (text === 'Calendar' && pathname === '/employee/calendar') return true;
     if (text === 'Submit Request' && pathname === '/employee/submit-request') return true;
     if (text === 'Manage Organization' && pathname === '/employee/manage-organization') return true;
-    if (text === 'Manage Requests' && pathname === '/employee/manage-requests') return true;
-    if (text === 'Manage Employees' && pathname.startsWith('/employee/manage-employees')) return true;
-    if (text === 'Time Management' && pathname === '/employee/time-mangemeant') return true;
+    if (text === 'Manage Requests') return pathname === '/employee/manage-requests';
+    if (text === 'Manage Employees') return pathname.startsWith('/employee/manage-employees');
+    if (text === 'Compose Notification') return pathname === '/employee/compose-notification';
+    if (text === 'Time Management') return pathname === '/employee/time-mangemeant';
     return false;
   };
 
@@ -92,6 +95,7 @@ export default function MenuContent() {
     if (text === 'Manage Organization') router.push('/employee/manage-organization');
     if (text === 'Manage Requests') router.push('/employee/manage-requests');
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
+    if (text === 'Compose Notification') router.push('/employee/compose-notification');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
   };
 

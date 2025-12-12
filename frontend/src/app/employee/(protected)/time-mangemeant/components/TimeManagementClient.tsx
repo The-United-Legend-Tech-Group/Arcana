@@ -678,7 +678,6 @@ export default function TimeManagementClient({
             <ExceptionsSection
               section={exceptionsSection}
               holidays={holidays}
-              payrollQueue={payrollQueue}
               loading={loading}
             />
           )}

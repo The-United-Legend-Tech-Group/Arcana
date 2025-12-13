@@ -207,12 +207,13 @@ export default function StructureRequestPage() {
                                         fetchEmployees(newInputValue);
                                     }}
                                     filterOptions={(x) => x} // Disable client-side filtering since we do server-side
+                                    forcePopupIcon={false}
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Search by name or ID" />}
                                 />
                             </Box>
                         )}
 
-                        {requestType !== 'NEW_DEPARTMENT' && (
+                        {requestType !== 'NEW_DEPARTMENT' && requestType !== 'CLOSE_POSITION' && (
                             <Box>
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Target Department</Typography>
                                 <Autocomplete
@@ -220,12 +221,13 @@ export default function StructureRequestPage() {
                                     getOptionLabel={(option) => option.name}
                                     value={selectedDepartment}
                                     onChange={(_, newValue) => setSelectedDepartment(newValue)}
+                                    forcePopupIcon={false}
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Select Department" />}
                                 />
                             </Box>
                         )}
 
-                        {requestType !== 'NEW_POSITION' && (
+                        {requestType !== 'NEW_POSITION' && requestType !== 'NEW_DEPARTMENT' && requestType !== 'UPDATE_DEPARTMENT' && (
                             <Box>
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Target Position</Typography>
                                 <Autocomplete
@@ -233,6 +235,7 @@ export default function StructureRequestPage() {
                                     getOptionLabel={(option) => `${option.title} (${option.code})`}
                                     value={selectedPosition}
                                     onChange={(_, newValue) => setSelectedPosition(newValue)}
+                                    forcePopupIcon={false}
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Select Position" />}
                                 />
                             </Box>

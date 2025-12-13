@@ -95,7 +95,7 @@ export class OrganizationStructureService {
 
     // Create structure approval record
     try {
-      const approverIdToUse = approverEmployeeId
+      const approverIdToUse = (approverEmployeeId && Types.ObjectId.isValid(approverEmployeeId))
         ? new Types.ObjectId(approverEmployeeId)
         : updated.submittedByEmployeeId;
 
@@ -133,7 +133,7 @@ export class OrganizationStructureService {
         action: ChangeLogAction.UPDATED,
         entityType: 'StructureChangeRequest',
         entityId: updated._id,
-        performedByEmployeeId: approverEmployeeId
+        performedByEmployeeId: (approverEmployeeId && Types.ObjectId.isValid(approverEmployeeId))
           ? new Types.ObjectId(approverEmployeeId)
           : (updated.submittedByEmployeeId as any),
         summary: 'Change request approved',
@@ -179,6 +179,10 @@ export class OrganizationStructureService {
       };
       console.log('[OrganizationStructure] applyChangeRequest - executing assignPosition');
       await this.assignPosition(assignmentDto);
+    } else if (request.requestType === 'CLOSE_POSITION' && request.targetPositionId) {
+      // Close position request - deactivate the position
+      console.log('[OrganizationStructure] applyChangeRequest - executing deactivatePosition for', request.targetPositionId.toString());
+      await this.deactivatePosition(request.targetPositionId.toString());
     }
   }
 
@@ -204,7 +208,7 @@ export class OrganizationStructureService {
         action: ChangeLogAction.UPDATED,
         entityType: 'StructureChangeRequest',
         entityId: updated._id,
-        performedByEmployeeId: approverEmployeeId
+        performedByEmployeeId: (approverEmployeeId && Types.ObjectId.isValid(approverEmployeeId))
           ? new Types.ObjectId(approverEmployeeId)
           : (updated.submittedByEmployeeId as any),
         summary: 'Change request rejected',
@@ -267,43 +271,6 @@ export class OrganizationStructureService {
     }
     return saved;
   }
-  private async collectRecipientIdsForPosition(
-    positionId: any,
-    recipientIds: Set<string>,
-  ) {
-    if (!positionId) return;
-    const pos = await this.positionRepository.findById(positionId as any);
-    const supervisorPosId =
-      pos?.reportsToPositionId &&
-      pos.reportsToPositionId.toString &&
-      pos.reportsToPositionId.toString();
-    if (!supervisorPosId) return;
-    const managers = await this.employeeModel
-      .find({ primaryPositionId: supervisorPosId })
-      .select('_id')
-      .lean()
-      .exec();
-    for (const m of managers) recipientIds.add(m._id.toString());
-  }
-
-  private async collectRecipientIdsForDepartment(
-    departmentId: any,
-    recipientIds: Set<string>,
-  ) {
-    if (!departmentId) return;
-    const dept = await this.departmentRepository.findById(departmentId as any);
-    const headPosId =
-      dept?.headPositionId &&
-      dept.headPositionId.toString &&
-      dept.headPositionId.toString();
-    if (!headPosId) return;
-    const heads = await this.employeeModel
-      .find({ primaryPositionId: headPosId })
-      .select('_id')
-      .lean()
-      .exec();
-    for (const h of heads) recipientIds.add(h._id.toString());
-  }
 
   private async notifyStakeholders(
     request: StructureChangeRequestDocument,
@@ -311,35 +278,108 @@ export class OrganizationStructureService {
   ) {
     const recipientIds = new Set<string>();
 
-    // collect recipients from position and department (helpers reduce nesting)
-    await this.collectRecipientIdsForPosition(
-      request.targetPositionId,
-      recipientIds,
-    );
-    await this.collectRecipientIdsForDepartment(
-      request.targetDepartmentId,
-      recipientIds,
-    );
+    // Collect names for human-readable messages
+    let positionName: string | null = null;
+    let departmentName: string | null = null;
+    let requesterName: string | null = null;
 
-    // include submitter/requester
-    if (request.submittedByEmployeeId)
+    // Get position info and notify the supervisor (manager of that position)
+    if (request.targetPositionId) {
+      const pos = await this.positionRepository.findById(request.targetPositionId as any);
+      if (pos) {
+        positionName = pos.title || null;
+        // Get the supervisor (manager) of this position
+        const supervisorPosId =
+          pos.reportsToPositionId &&
+          pos.reportsToPositionId.toString &&
+          pos.reportsToPositionId.toString();
+        if (supervisorPosId) {
+          const managers = await this.employeeModel
+            .find({ primaryPositionId: supervisorPosId })
+            .select('_id')
+            .lean()
+            .exec();
+          for (const m of managers) recipientIds.add(m._id.toString());
+        }
+      }
+    }
+
+    // Get department info and notify the department head
+    if (request.targetDepartmentId) {
+      const dept = await this.departmentRepository.findById(request.targetDepartmentId as any);
+      if (dept) {
+        departmentName = dept.name || null;
+        // Get the department head
+        const headPosId =
+          dept.headPositionId &&
+          dept.headPositionId.toString &&
+          dept.headPositionId.toString();
+        if (headPosId) {
+          const heads = await this.employeeModel
+            .find({ primaryPositionId: headPosId })
+            .select('_id')
+            .lean()
+            .exec();
+          for (const h of heads) recipientIds.add(h._id.toString());
+        }
+      }
+    }
+
+    // Get affected employee name (the person the request is about)
+    if (request.requestedByEmployeeId) {
+      const affectedEmployee = await this.employeeModel
+        .findById(request.requestedByEmployeeId)
+        .select('firstName lastName')
+        .lean()
+        .exec();
+      if (affectedEmployee) {
+        requesterName = `${affectedEmployee.firstName || ''} ${affectedEmployee.lastName || ''}`.trim() || null;
+      }
+    }
+
+    // Always notify the person who submitted the request
+    if (request.submittedByEmployeeId) {
       recipientIds.add(request.submittedByEmployeeId.toString());
-    if (request.requestedByEmployeeId)
-      recipientIds.add(request.requestedByEmployeeId.toString());
+    }
+
+    // For 'approved'/'rejected' action: also notify the affected employee so they know the outcome
+    if (action === 'approved' || action === 'rejected') {
+      // Notify the person the request was made for (if different from submitter)
+      if (request.requestedByEmployeeId) {
+        recipientIds.add(request.requestedByEmployeeId.toString());
+      }
+    }
 
     const recipients = Array.from(recipientIds);
     if (!recipients.length) return;
 
+    // Map request type to human-readable format
+    const requestTypeLabels: Record<string, string> = {
+      'NEW_DEPARTMENT': 'New Department',
+      'UPDATE_DEPARTMENT': 'Update Department',
+      'NEW_POSITION': 'New Position',
+      'UPDATE_POSITION': 'Position Assignment Change',
+      'CLOSE_POSITION': 'Close Position',
+    };
+    const requestTypeLabel = requestTypeLabels[request.requestType] || request.requestType;
+
+    // Build context string with names only (no IDs)
+    const contextParts: string[] = [];
+    if (requesterName) contextParts.push(`Employee: ${requesterName}`);
+    if (departmentName) contextParts.push(`Department: ${departmentName}`);
+    if (positionName) contextParts.push(`Position: ${positionName}`);
+    const contextString = contextParts.join('. ');
+
     const titles = {
-      submitted: `Structure Change Request Submitted: ${request.requestNumber}`,
-      approved: `Structure Change Request Approved: ${request.requestNumber}`,
-      rejected: `Structure Change Request Rejected: ${request.requestNumber}`,
+      submitted: `Structure Change Request Submitted: ${requestTypeLabel}`,
+      approved: `Structure Change Request Approved: ${requestTypeLabel}`,
+      rejected: `Structure Change Request Rejected: ${requestTypeLabel}`,
     } as const;
 
     const messages = {
-      submitted: `A structure change request (${request.requestNumber}) has been submitted. Details: ${request.details || request.reason || ''}`,
-      approved: `A structure change request (${request.requestNumber}) has been approved.`,
-      rejected: `A structure change request (${request.requestNumber}) has been rejected. ${request.details || request.reason || ''}`,
+      submitted: `A ${requestTypeLabel.toLowerCase()} request has been submitted. ${contextString}`,
+      approved: `A ${requestTypeLabel.toLowerCase()} request has been approved. ${contextString}`,
+      rejected: `A ${requestTypeLabel.toLowerCase()} request has been rejected. ${contextString}`,
     } as const;
 
     const title = titles[action];

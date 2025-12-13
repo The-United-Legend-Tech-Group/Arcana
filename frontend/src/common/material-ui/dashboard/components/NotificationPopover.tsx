@@ -174,7 +174,7 @@ export default function NotificationPopover() {
                 PaperProps={{
                     sx: {
                         mt: 1.5,
-                        width: 360,
+                        width: 420,
                         overflow: 'visible',
                         filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                         borderRadius: 3, // More rounded popover

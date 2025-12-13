@@ -145,7 +145,7 @@ export default function NotificationsPage() {
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, md: 4 } }}>
+        <Box sx={{ width: '100%', p: { xs: 2, md: 4 } }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between" mb={4}>
                 <Box>
                     <Typography variant="h4" fontWeight={700} gutterBottom>

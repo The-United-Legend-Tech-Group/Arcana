@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import Skeleton from '@mui/material/Skeleton';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import EditIcon from '@mui/icons-material/Edit';
@@ -35,7 +36,45 @@ import NotificationsProvider from '../../../../common/material-ui/crud-dashboard
 import { useDialogs } from '../../../../common/material-ui/crud-dashboard/hooks/useDialogs/useDialogs';
 import useNotifications from '../../../../common/material-ui/crud-dashboard/hooks/useNotifications/useNotifications';
 
-const INITIAL_PAGE_SIZE = 10;
+const INITIAL_PAGE_SIZE = 8;
+
+// Skeleton component for table loading state
+function TableSkeleton() {
+    return (
+        <Box sx={{ width: '100%', p: 2 }}>
+            {/* Header row skeleton */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Skeleton variant="text" width={140} height={32} />
+                <Skeleton variant="text" width={140} height={32} />
+                <Skeleton variant="text" width={120} height={32} />
+                <Skeleton variant="text" width={150} height={32} />
+                <Skeleton variant="text" width={200} height={32} />
+                <Skeleton variant="text" width={120} height={32} />
+                <Box sx={{ flex: 1 }} />
+            </Box>
+            {/* Data rows skeleton */}
+            {Array.from({ length: 5 }).map((_, index) => (
+                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 1.5, alignItems: 'center' }}>
+                    <Skeleton variant="text" width={140} height={24} />
+                    <Skeleton variant="text" width={140} height={24} />
+                    <Skeleton variant="text" width={120} height={24} />
+                    <Skeleton variant="text" width={150} height={24} />
+                    <Skeleton variant="text" width={200} height={24} />
+                    <Skeleton variant="rounded" width={80} height={24} />
+                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                        <Skeleton variant="circular" width={28} height={28} />
+                        <Skeleton variant="circular" width={28} height={28} />
+                    </Box>
+                </Box>
+            ))}
+            {/* Pagination skeleton */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
+                <Skeleton variant="text" width={100} height={32} />
+                <Skeleton variant="rounded" width={200} height={32} />
+            </Box>
+        </Box>
+    );
+}
 
 interface Employee {
     id: string; // Mapped from _id
@@ -51,6 +90,10 @@ function EmployeeListContent() {
     const router = useRouter();
     const dialogs = useDialogs();
     const notifications = useNotifications();
+
+    // Track if component has mounted to prevent SSR state update issues
+    const isMounted = React.useRef(false);
+    const [isInitialLoad, setIsInitialLoad] = React.useState(true);
 
     const [paginationModel, setPaginationModel] = React.useState<GridPaginationModel>({
         page: 0,
@@ -68,10 +111,21 @@ function EmployeeListContent() {
         rowCount: 0,
     });
 
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<Error | null>(null);
 
+    // Mark component as mounted
+    React.useEffect(() => {
+        isMounted.current = true;
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
+
     const loadData = React.useCallback(async () => {
+        // Guard against state updates on unmounted component
+        if (!isMounted.current) return;
+
         setError(null);
         setIsLoading(true);
 
@@ -111,20 +165,36 @@ function EmployeeListContent() {
                 status: emp.status,
             }));
 
+            // Guard against state updates on unmounted component
+            if (!isMounted.current) return;
+
             setRowsState({
                 rows: mappedRows,
                 rowCount: data.total,
             });
 
         } catch (err) {
+            if (!isMounted.current) return;
             setError(err as Error);
         } finally {
-            setIsLoading(false);
+            if (isMounted.current) {
+                setIsLoading(false);
+                setIsInitialLoad(false);
+            }
         }
     }, [paginationModel, searchQuery, router]);
 
+    // Load data only after component has mounted
     React.useEffect(() => {
-        loadData();
+        if (isMounted.current) {
+            loadData();
+        } else {
+            // Schedule the load for after mount
+            const timeoutId = setTimeout(() => {
+                loadData();
+            }, 0);
+            return () => clearTimeout(timeoutId);
+        }
     }, [loadData]);
 
     const handleSearchChange = React.useMemo(
@@ -287,7 +357,9 @@ function EmployeeListContent() {
             }
         >
             <Box sx={{ flex: 1, width: '100%' }}>
-                {error ? (
+                {isInitialLoad ? (
+                    <TableSkeleton />
+                ) : error ? (
                     <Box sx={{ flexGrow: 1 }}>
                         <Alert severity="error">{error.message}</Alert>
                     </Box>
@@ -310,7 +382,7 @@ function EmployeeListContent() {
                         onRowClick={handleRowClick}
                         loading={isLoading}
                         initialState={initialState}
-                        pageSizeOptions={[5, 10, 25]}
+                        pageSizeOptions={[5, 8, 10, 25]}
                         sx={{
                             [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
                                 outline: 'transparent',

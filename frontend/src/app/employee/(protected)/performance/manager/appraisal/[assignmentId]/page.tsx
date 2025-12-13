@@ -39,10 +39,33 @@ export default function AppraisalFormPage() {
     const [saving, setSaving] = useState(false);
 
     // Form state
-    const [ratings, setRatings] = useState<Record<string, { value: number, comments: string }>>({});
+    const [ratings, setRatings] = useState<Record<string, { 
+        value: number, 
+        comments: string,
+        examples: string,
+        recommendations: string 
+    }>>({});
     const [summary, setSummary] = useState('');
     const [strengths, setStrengths] = useState('');
     const [improvements, setImprovements] = useState('');
+
+    // Helper to parse comments
+    const parseComments = (fullText: string) => {
+        const parts = { comments: '', examples: '', recommendations: '' };
+        if (!fullText) return parts;
+
+        const examplesSplit = fullText.split('\n\n**Examples:**\n');
+        parts.comments = examplesSplit[0];
+
+        if (examplesSplit.length > 1) {
+            const recSplit = examplesSplit[1].split('\n\n**Development Recommendations:**\n');
+            parts.examples = recSplit[0];
+            if (recSplit.length > 1) {
+                parts.recommendations = recSplit[1];
+            }
+        }
+        return parts;
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -95,9 +118,13 @@ export default function AppraisalFormPage() {
                         setRecord(recordData);
                         
                         // Initialize form with existing data
-                        const initialRatings: Record<string, { value: number, comments: string }> = {};
+                        const initialRatings: Record<string, { value: number, comments: string, examples: string, recommendations: string }> = {};
                         recordData.ratings.forEach(r => {
-                            initialRatings[r.key] = { value: r.ratingValue, comments: r.comments || '' };
+                            const parsed = parseComments(r.comments || '');
+                            initialRatings[r.key] = { 
+                                value: r.ratingValue, 
+                                ...parsed
+                            };
                         });
                         setRatings(initialRatings);
                         setSummary(recordData.managerSummary || '');
@@ -106,9 +133,9 @@ export default function AppraisalFormPage() {
                     }
                 } else {
                     // Initialize empty ratings
-                    const initialRatings: Record<string, { value: number, comments: string }> = {};
+                    const initialRatings: Record<string, { value: number, comments: string, examples: string, recommendations: string }> = {};
                     templateData.criteria.forEach(c => {
-                        initialRatings[c.key] = { value: 0, comments: '' };
+                        initialRatings[c.key] = { value: 0, comments: '', examples: '', recommendations: '' };
                     });
                     setRatings(initialRatings);
                 }
@@ -135,10 +162,10 @@ export default function AppraisalFormPage() {
         }));
     };
 
-    const handleCommentChange = (key: string, comments: string) => {
+    const handleFieldChange = (key: string, field: 'comments' | 'examples' | 'recommendations', value: string) => {
         setRatings(prev => ({
             ...prev,
-            [key]: { ...prev[key], comments }
+            [key]: { ...prev[key], [field]: value }
         }));
     };
 
@@ -148,11 +175,17 @@ export default function AppraisalFormPage() {
         setError(null);
 
         try {
-            const ratingEntries = Object.entries(ratings).map(([key, data]) => ({
-                key,
-                ratingValue: data.value,
-                comments: data.comments
-            }));
+            const ratingEntries = Object.entries(ratings).map(([key, data]) => {
+                let combinedComments = data.comments;
+                if (data.examples) combinedComments += `\n\n**Examples:**\n${data.examples}`;
+                if (data.recommendations) combinedComments += `\n\n**Development Recommendations:**\n${data.recommendations}`;
+                
+                return {
+                    key,
+                    ratingValue: data.value,
+                    comments: combinedComments
+                };
+            });
 
             if (record) {
                 // Update
@@ -234,16 +267,37 @@ export default function AppraisalFormPage() {
                                 />
                             </Box>
                             
-                            <TextField
-                                label="Comments"
-                                multiline
-                                rows={2}
-                                fullWidth
-                                variant="outlined"
-                                value={ratings[criterion.key]?.comments || ''}
-                                onChange={(e) => handleCommentChange(criterion.key, e.target.value)}
-                                sx={{ mt: 2 }}
-                            />
+                            <Stack spacing={2} sx={{ mt: 2 }}>
+                                <TextField
+                                    label="Comments"
+                                    multiline
+                                    rows={1}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={ratings[criterion.key]?.comments || ''}
+                                    onChange={(e) => handleFieldChange(criterion.key, 'comments', e.target.value)}
+                                />
+                                <TextField
+                                    label="Examples"
+                                    multiline
+                                    rows={1}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={ratings[criterion.key]?.examples || ''}
+                                    onChange={(e) => handleFieldChange(criterion.key, 'examples', e.target.value)}
+                                    placeholder="Provide specific examples..."
+                                />
+                                <TextField
+                                    label="Development Recommendations"
+                                    multiline
+                                    rows={1}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={ratings[criterion.key]?.recommendations || ''}
+                                    onChange={(e) => handleFieldChange(criterion.key, 'recommendations', e.target.value)}
+                                    placeholder="Suggest actions for improvement..."
+                                />
+                            </Stack>
                         </CardContent>
                     </Card>
                 ))}

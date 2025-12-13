@@ -258,7 +258,7 @@ export default function AppraisalFormPage() {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={3}
+                                rows={1}
                                 label="Comments / Examples"
                                 value={ratings[criterion.key]?.comments || ''}
                                 onChange={(e) => handleCommentChange(criterion.key, e.target.value)}
@@ -278,7 +278,7 @@ export default function AppraisalFormPage() {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={4}
+                                rows={1}
                                 label="Manager Summary"
                                 value={managerSummary}
                                 onChange={(e) => setManagerSummary(e.target.value)}
@@ -288,7 +288,7 @@ export default function AppraisalFormPage() {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={4}
+                                rows={1}
                                 label="Strengths"
                                 value={strengths}
                                 onChange={(e) => setStrengths(e.target.value)}
@@ -298,7 +298,7 @@ export default function AppraisalFormPage() {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={4}
+                                rows={1}
                                 label="Areas for Improvement"
                                 value={improvementAreas}
                                 onChange={(e) => setImprovementAreas(e.target.value)}

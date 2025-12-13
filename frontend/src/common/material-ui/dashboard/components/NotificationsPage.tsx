@@ -22,6 +22,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CheckIcon from '@mui/icons-material/Check';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Pagination from '@mui/material/Pagination';
+import Skeleton from '@mui/material/Skeleton';
 
 interface Notification {
     _id: string;
@@ -49,12 +50,16 @@ const getNotificationIcon = (type: string) => {
 
 export default function NotificationsPage() {
     const theme = useTheme();
+    const [loading, setLoading] = React.useState(true);
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
     const [filter, setFilter] = React.useState<'all' | 'unread'>('all');
 
     const fetchNotifications = async () => {
         const token = localStorage.getItem('access_token');
-        if (!token) return;
+        if (!token) {
+            setLoading(false);
+            return;
+        }
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
         try {
@@ -67,6 +72,8 @@ export default function NotificationsPage() {
             }
         } catch (error) {
             console.error('Error fetching notifications', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -155,7 +162,7 @@ export default function NotificationsPage() {
                         Stay updated with important alerts and messages
                     </Typography>
                 </Box>
-                {unreadCount > 0 && (
+                {unreadCount > 0 && !loading && (
                     <Button
                         variant="outlined"
                         startIcon={<CheckIcon />}
@@ -185,7 +192,29 @@ export default function NotificationsPage() {
                     />
                 </Box>
 
-                {paginatedNotifications.length === 0 ? (
+                {loading ? (
+                    <List disablePadding>
+                        {[...Array(3)].map((_, index) => (
+                            <React.Fragment key={index}>
+                                <ListItem sx={{ py: 2, px: 3, borderRadius: 2, mx: 1, my: 0.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
+                                        <Skeleton variant="circular" width={24} height={24} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={<Skeleton variant="text" width="60%" height={28} sx={{ mb: 0.5 }} />}
+                                        secondary={
+                                            <Stack spacing={0.5}>
+                                                <Skeleton variant="text" width="90%" height={20} />
+                                                <Skeleton variant="text" width="40%" height={16} />
+                                            </Stack>
+                                        }
+                                        secondaryTypographyProps={{ component: 'div' }}
+                                    />
+                                </ListItem>
+                            </React.Fragment>
+                        ))}
+                    </List>
+                ) : paginatedNotifications.length === 0 ? (
                     <Box sx={{ p: 8, textAlign: 'center' }}>
                         <NotificationsRoundedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
                         <Typography variant="h6" color="text.secondary">
@@ -200,7 +229,7 @@ export default function NotificationsPage() {
                         <List disablePadding>
                             {paginatedNotifications.map((notification, index) => (
                                 <React.Fragment key={notification._id}>
-                                    {index > 0 && <Divider component="li" />}
+                                    {/* Divider removed for rounded card style */}
                                     <ListItem
                                         alignItems="flex-start"
                                         secondaryAction={
@@ -223,6 +252,9 @@ export default function NotificationsPage() {
                                             },
                                             py: 2,
                                             px: 3,
+                                            borderRadius: 2,
+                                            mx: 1, // Add some margin horizontally so it doesn't touch the edges if we round it
+                                            my: 0.5, // Add some margin vertically to separate them slightly
                                         }}
                                     >
                                         <ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>

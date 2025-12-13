@@ -265,6 +265,7 @@ export default function StructureRequestPage() {
                                     }}
                                     filterOptions={(x) => x} // Disable client-side filtering since we do server-side
                                     forcePopupIcon={false}
+                                    id="employee-search-autocomplete"
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Search by name or ID" />}
                                 />
                             </Box>
@@ -279,6 +280,7 @@ export default function StructureRequestPage() {
                                     value={selectedDepartment}
                                     onChange={(_, newValue) => setSelectedDepartment(newValue)}
                                     forcePopupIcon={false}
+                                    id="target-department-autocomplete"
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Select Department" />}
                                 />
                             </Box>
@@ -293,6 +295,7 @@ export default function StructureRequestPage() {
                                     value={selectedPosition}
                                     onChange={(_, newValue) => setSelectedPosition(newValue)}
                                     forcePopupIcon={false}
+                                    id="target-position-autocomplete"
                                     renderInput={(params) => <TextField {...params} size="small" placeholder="Select Position" />}
                                 />
                             </Box>
@@ -308,6 +311,7 @@ export default function StructureRequestPage() {
                                 fullWidth
                                 size="small"
                                 placeholder="Enter details..."
+                                id="request-details"
                             />
                         </Box>
 
@@ -321,6 +325,7 @@ export default function StructureRequestPage() {
                                 fullWidth
                                 size="small"
                                 placeholder="Enter reason..."
+                                id="request-reason"
                             />
                         </Box>
 

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
-    CircularProgress,
+    Skeleton,
     Alert,
     Chip,
     ToggleButton,
@@ -136,13 +136,7 @@ export default function MyRequestsPage() {
         },
     ];
 
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+
 
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
@@ -200,43 +194,60 @@ export default function MyRequestsPage() {
                 My Submitted Requests
             </Typography>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {requests.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 6 }}>
-                    <Typography variant="h6" color="text.secondary">
-                        No requests submitted yet
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Submit a structure change request to see it here
-                    </Typography>
+            {loading ? (
+                <Box sx={{ width: '100%', mt: 2 }}>
+                    <Skeleton variant="rectangular" height={52} sx={{ mb: 2, borderRadius: 1 }} />
+                    {[...Array(5)].map((_, index) => (
+                        <Skeleton
+                            key={index}
+                            variant="rectangular"
+                            height={52}
+                            sx={{ mb: 1, borderRadius: 1 }}
+                            animation="wave"
+                        />
+                    ))}
                 </Box>
             ) : (
-                <Box sx={{ height: 500, width: '100%' }}>
-                    <DataGrid
-                        rows={requests}
-                        columns={columns}
-                        getRowId={(row) => row._id}
-                        disableRowSelectionOnClick
-                        pageSizeOptions={[10, 25, 50]}
-                        initialState={{
-                            pagination: { paginationModel: { pageSize: 10 } },
-                        }}
-                        sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 3,
-                            bgcolor: 'background.paper',
-                            '& .MuiDataGrid-cell': {
-                                alignContent: 'center',
-                            },
-                        }}
-                    />
-                </Box>
+                <>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
+                    {requests.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 6 }}>
+                            <Typography variant="h6" color="text.secondary">
+                                No requests submitted yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                Submit a structure change request to see it here
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box sx={{ height: 500, width: '100%' }}>
+                            <DataGrid
+                                rows={requests}
+                                columns={columns}
+                                getRowId={(row) => row._id}
+                                disableRowSelectionOnClick
+                                pageSizeOptions={[10, 25, 50]}
+                                initialState={{
+                                    pagination: { paginationModel: { pageSize: 10 } },
+                                }}
+                                sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 3,
+                                    bgcolor: 'background.paper',
+                                    '& .MuiDataGrid-cell': {
+                                        alignContent: 'center',
+                                    },
+                                }}
+                            />
+                        </Box>
+                    )}
+                </>
             )}
         </Box>
     );

@@ -41,9 +41,9 @@ export class NotificationService {
   }
 
   async findByRecipientId(recipientId: string) {
-    const notifications = await this.notificationRepository.find({
+    const notifications = await this.notificationRepository.findLatest({
       $or: [{ recipientId: recipientId }, { deliveryType: 'BROADCAST' }],
-    });
+    }, 100);
 
     return notifications.map(n => {
       const obj = n.toObject ? n.toObject() : n;

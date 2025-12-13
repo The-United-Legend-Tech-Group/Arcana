@@ -16,7 +16,7 @@ export class AppraisalAssignmentRepository extends BaseRepository<AppraisalAssig
         return this.model.find(filter)
             .populate('employeeProfileId', 'firstName lastName email position')
             .populate('templateId', 'name')
-            .populate('cycleId', 'name')
+            .populate('cycleId', 'name endDate managerDueDate')
             .exec();
     }
 

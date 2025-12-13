@@ -66,6 +66,38 @@ export default function ManagerAssignmentsPage() {
         }
     };
 
+    const handlePublish = async (assignment: AppraisalAssignment) => {
+        if (!assignment.latestAppraisalId) {
+            alert('No appraisal record found to publish.');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to publish this appraisal? It will become visible to the employee.')) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${API_URL}/performance/records/${assignment.latestAppraisalId}/publish`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to publish appraisal');
+            }
+
+            // Refresh list
+            loadAssignments();
+            alert('Appraisal published successfully');
+        } catch (error) {
+            console.error(error);
+            alert('Error publishing appraisal');
+        }
+    };
+
     const columns: GridColDef[] = [
         { 
             field: 'employeeProfileId', 
@@ -97,24 +129,51 @@ export default function ManagerAssignmentsPage() {
             field: 'dueDate', 
             headerName: 'Due Date', 
             width: 150,
-            valueFormatter: (params: any) => {
-                if (!params) return '-';
-                return new Date(params).toLocaleDateString();
+            valueGetter: (value: any, row: any) => {
+                if (value) return value;
+                if (row.cycleId && typeof row.cycleId === 'object') {
+                    return row.cycleId.managerDueDate || row.cycleId.endDate;
+                }
+                return null;
+            },
+            valueFormatter: (value: any) => {
+                if (!value) return '-';
+                return new Date(value).toLocaleDateString();
             }
         },
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 150,
-            renderCell: (params: GridRenderCellParams) => (
-                <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => router.push(`/employee/performance/appraisal/${params.row._id}`)}
-                >
-                    Evaluate
-                </Button>
-            ),
+            width: 250,
+            renderCell: (params: GridRenderCellParams) => {
+                const status = params.row.status;
+                const isPublished = status === 'PUBLISHED' || status === 'ACKNOWLEDGED';
+                const isSubmitted = status === 'SUBMITTED';
+
+                return (
+                    <Box display="flex" gap={1} sx={{ mt: 1 }}>
+                        {!isPublished && (
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => router.push(`/employee/performance/appraisal/${params.row._id}`)}
+                            >
+                                Evaluate
+                            </Button>
+                        )}
+                        {isSubmitted && (
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                size="small"
+                                onClick={() => handlePublish(params.row)}
+                            >
+                                Publish
+                            </Button>
+                        )}
+                    </Box>
+                );
+            },
         },
     ];
 

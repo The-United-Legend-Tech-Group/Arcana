@@ -59,4 +59,15 @@ export class AppraisalRecordController {
     ): Promise<any[]> {
         return this.appraisalRecordService.getFinalizedRecordsForEmployee(employeeProfileId);
     }
+
+    @Post(':id/publish')
+    @ApiOperation({ summary: 'Publish an appraisal record (HR action)' })
+    @ApiResponse({
+        status: 200,
+        description: 'The published appraisal record',
+        type: AppraisalRecord,
+    })
+    async publishRecord(@Param('id') id: string): Promise<AppraisalRecord> {
+        return this.appraisalRecordService.publishRecord(id);
+    }
 }

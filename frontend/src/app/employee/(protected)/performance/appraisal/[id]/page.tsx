@@ -154,6 +154,14 @@ export default function AppraisalFormPage() {
                 comments: data.comments
             }));
 
+            // Helper to extract ID from populated fields
+            const getId = (field: any): string => {
+                if (!field) return '';
+                if (typeof field === 'string') return field;
+                if (typeof field === 'object' && '_id' in field) return field._id;
+                return String(field);
+            };
+
             if (record) {
                 // Update existing record
                 const updateDto: UpdateAppraisalRecordDto = {
@@ -174,10 +182,10 @@ export default function AppraisalFormPage() {
                 // Create new record
                 const createDto: CreateAppraisalRecordDto = {
                     assignmentId: assignment._id,
-                    cycleId: assignment.cycleId,
-                    templateId: assignment.templateId,
-                    employeeProfileId: assignment.employeeProfileId,
-                    managerProfileId: assignment.managerProfileId,
+                    cycleId: getId(assignment.cycleId),
+                    templateId: getId(assignment.templateId),
+                    employeeProfileId: getId(assignment.employeeProfileId),
+                    managerProfileId: getId(assignment.managerProfileId),
                     ratings: ratingsList,
                     managerSummary,
                     strengths,

@@ -249,4 +249,31 @@ export class AppraisalRecordService {
 
         return created as AppraisalRecordDocument;
     }
+
+    async publishRecord(id: string): Promise<AppraisalRecordDocument> {
+        const record = await this.appraisalRecordRepository.findOne({ _id: id });
+        if (!record) {
+            throw new NotFoundException(`Appraisal record with ID ${id} not found`);
+        }
+
+        const updatedRecord = await this.appraisalRecordRepository.update(
+            { _id: id },
+            {
+                status: AppraisalRecordStatus.HR_PUBLISHED,
+                hrPublishedAt: new Date(),
+            },
+        );
+
+        // Update assignment status
+        await this.appraisalAssignmentRepository.update(
+            { _id: record.assignmentId },
+            {
+                status: AppraisalAssignmentStatus.PUBLISHED,
+                publishedAt: new Date(),
+            }
+        );
+
+        this.logger.log(`Appraisal record ${id} published by HR.`);
+        return updatedRecord as AppraisalRecordDocument;
+    }
 }

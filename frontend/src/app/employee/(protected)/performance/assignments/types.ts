@@ -1,8 +1,15 @@
 import { AppraisalAssignmentStatus } from '../cycles/types';
 
+export interface AppraisalCycleShort {
+    _id: string;
+    name: string;
+    endDate?: string;
+    managerDueDate?: string;
+}
+
 export interface AppraisalAssignment {
     _id: string;
-    cycleId: string;
+    cycleId: string | AppraisalCycleShort;
     templateId: string;
     employeeProfileId: string;
     managerProfileId: string;

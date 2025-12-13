@@ -70,6 +70,11 @@ const mainListItems = [
     path: "/employee/performance/manager-assignments",
   },
   {
+    text: "My Performance Records",
+    icon: <AssessmentRoundedIcon />,
+    path: "/employee/performance/my-records",
+  },
+  {
     text: "Time Management",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/time-mangemeant",
@@ -118,6 +123,7 @@ export default function MenuContent() {
     if (text === 'Appraisal Monitoring' && pathname === '/employee/performance/monitoring') return true;
     if (text === 'Manager Appraisal Dashboard' && pathname === '/employee/performance/manager') return true;
     if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
+    if (text === 'My Performance Records' && pathname === '/employee/performance/my-records') return true;
     return false;
   };
 
@@ -145,6 +151,7 @@ export default function MenuContent() {
     if (text === 'Appraisal Monitoring') router.push('/employee/performance/monitoring');
     if (text === 'Manager Appraisal Dashboard') router.push('/employee/performance/manager');
     if (text === 'My Assigned Appraisals') router.push('/employee/performance/manager-assignments');
+    if (text === 'My Performance Records') router.push('/employee/performance/my-records');
   };
 
   return (

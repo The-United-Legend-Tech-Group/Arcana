@@ -59,17 +59,14 @@ export class OrganizationStructureService {
     return this.positionRepository.find({ isActive: false });
   }
 
+  async listChangeRequests(): Promise<StructureChangeRequest[]> {
+    return this.changeRequestModel.find().sort({ createdAt: -1 }).exec();
+  }
+
   async listPendingChangeRequests(): Promise<StructureChangeRequest[]> {
     return this.changeRequestModel
-      .find({
-        status: {
-          $in: [
-            StructureRequestStatus.SUBMITTED,
-            StructureRequestStatus.UNDER_REVIEW,
-          ],
-        },
-      })
-      .sort({ createdAt: -1 })
+      .find({ status: StructureRequestStatus.SUBMITTED })
+      .sort({ createdAt: 1 })
       .exec();
   }
 

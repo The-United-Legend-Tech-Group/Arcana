@@ -45,7 +45,7 @@ const mainListItems = [
   { text: 'Manage Requests', icon: <AssignmentRoundedIcon />, path: '/employee/requests/my-requests' },
   { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
   { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification' },
-  { text: 'Submit Request', icon: <AssignmentRoundedIcon />, path: '/employee/structure-request' },
+  { text: 'Manage Structure Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests' },
 ];
 
 const secondaryListItems = [
@@ -71,12 +71,11 @@ export default function MenuContent() {
     if (text === 'Analytics' && pathname === '/employee/analytics') return true;
     if (text === 'Settings' && pathname === '/employee/settings') return true;
     if (text === 'Calendar' && pathname === '/employee/calendar') return true;
-    if (text === 'Submit Request' && pathname === '/employee/submit-request') return true;
     if (text === 'Manage Organization' && pathname === '/employee/manage-organization') return true;
     if (text === 'Manage Requests') return pathname === '/employee/manage-requests';
     if (text === 'Manage Employees') return pathname.startsWith('/employee/manage-employees');
     if (text === 'Compose Notification') return pathname === '/employee/compose-notification';
-    if (text === 'Submit Request') return pathname === '/employee/structure-request';
+    if (text === 'Manage Structure Changes') return pathname === '/employee/manage-structure-requests';
     if (text === 'Time Management') return pathname === '/employee/time-mangemeant';
     return false;
   };
@@ -93,7 +92,7 @@ export default function MenuContent() {
     if (text === 'Analytics') router.push('/employee/analytics');
     if (text === 'Settings') router.push('/employee/settings');
     if (text === 'Calendar') router.push('/employee/calendar');
-    if (text === 'Submit Request') router.push('/employee/structure-request');
+    if (text === 'Manage Structure Changes') router.push('/employee/manage-structure-requests');
     if (text === 'Manage Organization') router.push('/employee/manage-organization'); // Assuming this was already there or handled generally
     if (text === 'Manage Requests') router.push('/employee/manage-requests');
     if (text === 'Manage Employees') router.push('/employee/manage-employees');

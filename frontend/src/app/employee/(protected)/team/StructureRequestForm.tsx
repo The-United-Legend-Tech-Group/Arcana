@@ -7,7 +7,6 @@ import {
     TextField,
     Button,
     FormControl,
-    InputLabel,
     Select,
     MenuItem,
     Stack,
@@ -16,12 +15,8 @@ import {
     Paper,
     Alert
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import IconButton from '@mui/material/IconButton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-export default function StructureRequestPage() {
-    const router = useRouter();
+export default function StructureRequestForm() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -55,7 +50,7 @@ export default function StructureRequestPage() {
                 if (deptRes.ok) setDepartments(await deptRes.json());
                 if (posRes.ok) setPositions(await posRes.json());
 
-                // Initial employee load (optional, maybe first 20?)
+                // Initial employee load
                 fetchEmployees('');
 
             } catch (err) {
@@ -69,14 +64,12 @@ export default function StructureRequestPage() {
         const token = localStorage.getItem('access_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
         try {
-            // Assuming /employee endpoint supports ?search= query param based on user Request
             const query = search ? `?search=${encodeURIComponent(search)}` : '';
             const res = await fetch(`${apiUrl}/employee${query}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
-                // Backend returns { items: [...], total: ... }
                 setEmployees(Array.isArray(data) ? data : (data.items || data.data || []));
             }
         } catch (err) {
@@ -153,25 +146,10 @@ export default function StructureRequestPage() {
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" gutterBottom>
-                    Submit Structure Change Request
-                </Typography>
-                <IconButton
-                    onClick={() => router.push('/employee/team')}
-                    sx={{
-                        bgcolor: 'background.paper',
-                        boxShadow: 1,
-                        '&:hover': {
-                            bgcolor: 'action.hover',
-                        }
-                    }}
-                    aria-label="back to team"
-                >
-                    <ArrowBackIcon />
-                </IconButton>
-            </Box>
+        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+            <Typography variant="h5" gutterBottom fontWeight="bold">
+                Submit Structure Change Request
+            </Typography>
             <Paper sx={{ p: 4, mt: 3 }}>
                 {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -181,7 +159,6 @@ export default function StructureRequestPage() {
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>Request Type</Typography>
                             <FormControl fullWidth size="small">
-                                {/* Removed InputLabel to match "normal text above" style requested */}
                                 <Select
                                     value={requestType}
                                     onChange={(e) => setRequestType(e.target.value)}
@@ -206,7 +183,7 @@ export default function StructureRequestPage() {
                                 onInputChange={(_, newInputValue) => {
                                     fetchEmployees(newInputValue);
                                 }}
-                                filterOptions={(x) => x} // Disable client-side filtering since we do server-side
+                                filterOptions={(x) => x}
                                 renderInput={(params) => <TextField {...params} size="small" placeholder="Search by name or ID" />}
                             />
                         </Box>

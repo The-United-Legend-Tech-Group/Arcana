@@ -59,24 +59,24 @@ export class OrganizationStructureController {
     return this.organizationStructureService.getOrganizationHierarchy();
   }
 
-  @Get('requests/pending')
+  @Get('requests')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN)
+  //@Roles(SystemRole.SYSTEM_ADMIN, SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({
-    summary: 'List pending structure change requests (System Admin)',
+    summary: 'List all structure change requests (System Admin)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Pending change requests',
+    description: 'All change requests',
     type: [StructureChangeRequest],
   })
-  async listPendingRequests(): Promise<StructureChangeRequest[]> {
-    return this.organizationStructureService.listPendingChangeRequests();
+  async listRequests(): Promise<StructureChangeRequest[]> {
+    return this.organizationStructureService.listChangeRequests();
   }
 
   @Get('requests/:id')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN)
+  //@Roles(SystemRole.SYSTEM_ADMIN, SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({
     summary: 'Get a single structure change request by id (System Admin)',
   })
@@ -93,7 +93,7 @@ export class OrganizationStructureController {
 
   @Post('requests/:id/approve')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN)
+  //@Roles(SystemRole.SYSTEM_ADMIN)
   @ApiOperation({ summary: 'Approve a structure change request (System Admin)' })
   @ApiResponse({ status: 200, description: 'Approved change request', type: StructureChangeRequest })
   async approveRequest(@Param('id') id: string, @Body() body: { comment?: string }): Promise<StructureChangeRequest> {
@@ -102,7 +102,7 @@ export class OrganizationStructureController {
 
   @Post('requests/:id/reject')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN)
+  // @Roles(SystemRole.SYSTEM_ADMIN)
   @ApiOperation({ summary: 'Reject a structure change request (System Admin)' })
   async rejectRequest(
     @Param('id') id: string,

@@ -30,11 +30,11 @@ const mainListItems = [
     path: "/employee/calendar",
   },
   { text: "Team", icon: <PeopleRoundedIcon />, path: "/employee/team" },
-  {
-    text: "Analytics",
-    icon: <AnalyticsRoundedIcon />,
-    path: "/employee/analytics",
-  },
+  // {
+  //   text: "Analytics",
+  //   icon: <AnalyticsRoundedIcon />, //Broken performance
+  //   path: "/employee/analytics",
+  // },
   {
     text: "Performance Dashboard",
     icon: <DashboardRoundedIcon />,

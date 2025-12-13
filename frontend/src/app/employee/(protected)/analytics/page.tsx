@@ -105,9 +105,20 @@ export default function AnalyticsPage() {
     // Report Data
     const [overtimeRecords, setOvertimeRecords] = React.useState<OvertimeRecord[]>([]);
     const [exceptionRecords, setExceptionRecords] = React.useState<ExceptionRecord[]>([]);
-    const [loadingReports, setLoadingReports] = React.useState(false);
+    const [loadingOvertime, setLoadingOvertime] = React.useState(false);
+    const [loadingException, setLoadingException] = React.useState(false);
+    const [hasLoadedOvertime, setHasLoadedOvertime] = React.useState(false);
+    const [hasLoadedException, setHasLoadedException] = React.useState(false);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+
+    // Track mounted state
+    const isMounted = React.useRef(true);
+    React.useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
 
     const fetchSummary = React.useCallback(async () => {
         const token = localStorage.getItem('access_token');
@@ -118,64 +129,104 @@ export default function AnalyticsPage() {
             const res = await fetch(`${apiUrl}/analytics/compliance-summary?month=${month}&year=${year}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                const data = await res.json();
-                setSummary(data);
-            } else {
-                console.error('Failed to fetch summary');
+            if (isMounted.current) {
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isMounted.current) setSummary(data);
+                } else {
+                    console.error('Failed to fetch summary');
+                }
             }
         } catch (e) {
             console.error(e);
         } finally {
-            setLoadingSummary(false);
+            if (isMounted.current) setLoadingSummary(false);
         }
     }, [month, year, apiUrl]);
 
-    const fetchReports = React.useCallback(async () => {
+    const fetchOvertimeReport = React.useCallback(async () => {
         const token = localStorage.getItem('access_token');
         if (!token) return;
 
-        setLoadingReports(true);
+        setLoadingOvertime(true);
         try {
-            // Fetch Overtime
             const otRes = await fetch(`${apiUrl}/analytics/overtime-report?month=${month}&year=${year}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (otRes.ok) {
-                const otData = await otRes.json();
-                const records = otData.records || [];
-                const recordsWithIds = records.map((record: OvertimeRecord, index: number) => ({
-                    ...record,
-                    id: `${record.employeeId}-${record.date}-${index}`
-                }));
-                setOvertimeRecords(recordsWithIds);
+            if (isMounted.current) {
+                if (otRes.ok) {
+                    const otData = await otRes.json();
+                    const records = otData.records || [];
+                    const recordsWithIds = records.map((record: OvertimeRecord, index: number) => ({
+                        ...record,
+                        id: record.attendanceId || `${record.employeeId}-${record.date}-${index}`
+                    }));
+                    if (isMounted.current) {
+                        setOvertimeRecords(recordsWithIds);
+                        setHasLoadedOvertime(true);
+                    }
+                }
             }
-
-            // Fetch Exceptions
-            const exRes = await fetch(`${apiUrl}/analytics/exception-report?month=${month}&year=${year}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (exRes.ok) {
-                const exData = await exRes.json();
-                const records = exData.records || [];
-                const recordsWithIds = records.map((record: ExceptionRecord, index: number) => ({
-                    ...record,
-                    id: `${record.employeeId}-${record.date}-${record.exceptionType}-${index}`
-                }));
-                setExceptionRecords(recordsWithIds);
-            }
-
         } catch (e) {
             console.error(e);
         } finally {
-            setLoadingReports(false);
+            if (isMounted.current) setLoadingOvertime(false);
         }
     }, [month, year, apiUrl]);
 
+    const fetchExceptionReport = React.useCallback(async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        setLoadingException(true);
+        try {
+            const exRes = await fetch(`${apiUrl}/analytics/exception-report?month=${month}&year=${year}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (isMounted.current) {
+                if (exRes.ok) {
+                    const exData = await exRes.json();
+                    const records = exData.records || [];
+                    const recordsWithIds = records.map((record: ExceptionRecord, index: number) => ({
+                        ...record,
+                        id: `${record.employeeId}-${record.date}-${record.exceptionType}-${index}`
+                    }));
+                    if (isMounted.current) {
+                        setExceptionRecords(recordsWithIds);
+                        setHasLoadedException(true);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (isMounted.current) setLoadingException(false);
+        }
+    }, [month, year, apiUrl]);
+
+    // Cleanup and reset loaded flags when month/year changes
+    React.useEffect(() => {
+        setHasLoadedOvertime(false);
+        setHasLoadedException(false);
+        setOvertimeRecords([]);
+        setExceptionRecords([]);
+    }, [month, year]);
+
+    // Fetch summary on mount and when filters change
     React.useEffect(() => {
         fetchSummary();
-        fetchReports();
-    }, [fetchSummary, fetchReports]);
+    }, [fetchSummary]);
+
+    // Lazy load reports when tabs are accessed
+    React.useEffect(() => {
+        if (tabValue === 0 && !hasLoadedOvertime && !loadingOvertime) {
+            fetchOvertimeReport();
+        } else if (tabValue === 1 && !hasLoadedException && !loadingException) {
+            fetchExceptionReport();
+        }
+    }, [tabValue, hasLoadedOvertime, hasLoadedException, loadingOvertime, loadingException, fetchOvertimeReport, fetchExceptionReport]);
+
+    const getOvertimeRowId = React.useCallback((row: OvertimeRecord) => row.attendanceId, []);
 
     const handleDownload = async (type: 'overtime' | 'exception', format: 'CSV' | 'EXCEL') => {
         const token = localStorage.getItem('access_token');
@@ -207,7 +258,7 @@ export default function AnalyticsPage() {
     };
 
     // Columns for DataGrids
-    const overtimeColumns: GridColDef[] = [
+    const overtimeColumns: GridColDef[] = React.useMemo(() => [
         { field: 'employeeName', headerName: 'Employee', flex: 1, minWidth: 150 },
         { field: 'department', headerName: 'Department', flex: 1, minWidth: 150 },
         {
@@ -241,9 +292,9 @@ export default function AnalyticsPage() {
             width: 100,
             type: 'boolean'
         },
-    ];
+    ], []);
 
-    const exceptionColumns: GridColDef[] = [
+    const exceptionColumns: GridColDef[] = React.useMemo(() => [
         { field: 'employeeName', headerName: 'Employee', flex: 1, minWidth: 150 },
         { field: 'department', headerName: 'Department', flex: 1, minWidth: 150 },
         {
@@ -272,9 +323,9 @@ export default function AnalyticsPage() {
             width: 150,
             type: 'boolean'
         },
-    ];
+    ], []);
 
-    const mockTrendData = [0, 0, 0, 0, 0, 0, 0]; // Placeholder
+    const mockTrendData = React.useMemo(() => [0, 0, 0, 0, 0, 0, 0], []);
 
     return (
         <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' }, p: 3 }}>
@@ -394,8 +445,8 @@ export default function AnalyticsPage() {
                         <DataGrid
                             rows={overtimeRecords}
                             columns={overtimeColumns}
-                            getRowId={(row) => row.attendanceId}
-                            loading={loadingReports}
+                            getRowId={getOvertimeRowId}
+                            loading={loadingOvertime}
                             slots={{ toolbar: GridToolbar }}
                             slotProps={{
                                 toolbar: {
@@ -412,7 +463,7 @@ export default function AnalyticsPage() {
                         <DataGrid
                             rows={exceptionRecords}
                             columns={exceptionColumns}
-                            loading={loadingReports}
+                            loading={loadingException}
                             slots={{ toolbar: GridToolbar }}
                             slotProps={{
                                 toolbar: {

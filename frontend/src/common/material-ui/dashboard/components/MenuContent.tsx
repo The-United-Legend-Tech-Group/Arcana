@@ -17,6 +17,7 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ApartmentRoundedIcon from "@mui/icons-material/ApartmentRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import { usePathname, useRouter } from "next/navigation";
 
 const mainListItems = [
@@ -31,6 +32,11 @@ const mainListItems = [
     text: "Analytics",
     icon: <AnalyticsRoundedIcon />,
     path: "/employee/analytics",
+  },
+  {
+    text: "Performance Dashboard",
+    icon: <DashboardRoundedIcon />,
+    path: "/employee/performance/dashboard",
   },
   {
     text: "Performance Templates",
@@ -99,6 +105,7 @@ export default function MenuContent() {
     if (text === 'Manage Requests' && pathname === '/employee/manage-requests') return true;
     if (text === 'Manage Employees' && pathname.startsWith('/employee/manage-employees')) return true;
     if (text === 'Time Management' && pathname === '/employee/time-mangemeant') return true;
+    if (text === 'Performance Dashboard' && pathname === '/employee/performance/dashboard') return true;
     if (text === 'Performance Templates' && pathname === '/employee/performance/templates') return true;
     if (text === 'Appraisal Cycles' && pathname === '/employee/performance/cycles') return true;
     if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
@@ -124,6 +131,7 @@ export default function MenuContent() {
     if (text === 'Manage Requests') router.push('/employee/manage-requests');
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
+    if (text === 'Performance Dashboard') router.push('/employee/performance/dashboard');
     if (text === 'Performance Templates') router.push('/employee/performance/templates');
     if (text === 'Appraisal Cycles') router.push('/employee/performance/cycles');
     if (text === 'Appraisal Assignments') router.push('/employee/performance/assignments');

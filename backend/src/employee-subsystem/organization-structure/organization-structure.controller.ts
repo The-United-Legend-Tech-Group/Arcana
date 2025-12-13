@@ -21,6 +21,7 @@ import { CreatePositionAssignmentDto } from './dto/create-position-assignment.dt
 import { Position } from './models/position.schema';
 import { Department } from './models/department.schema';
 import { PositionAssignment } from './models/position-assignment.schema';
+import { StructureChangeLog } from './models/structure-change-log.schema';
 
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
@@ -297,4 +298,18 @@ export class OrganizationStructureController {
   ): Promise<any> {
     return this.organizationStructureService.updateDepartment(id, dto as any);
   }
+
+  @Get('change-logs')
+  @UseGuards(AuthGuard, authorizationGuard)
+  //@Roles(SystemRole.SYSTEM_ADMIN)
+  @ApiOperation({ summary: 'Get structure change logs (System Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of structure change logs',
+    type: [StructureChangeLog],
+  })
+  async getChangeLogs(): Promise<StructureChangeLog[]> {
+    return this.organizationStructureService.getChangeLogs();
+  }
 }
+

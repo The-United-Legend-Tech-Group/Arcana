@@ -19,7 +19,10 @@ import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import MenuItem from '@mui/material/MenuItem';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import RequestDetails from './RequestDetails';
+import StructureChangeLogsTable from './StructureChangeLogsTable';
 
 interface StructureChangeRequest {
     _id: string;
@@ -48,6 +51,7 @@ export default function ManageStructureRequestsPage() {
 
     const [statusFilter, setStatusFilter] = React.useState<'ALL' | 'SUBMITTED' | 'APPROVED' | 'REJECTED'>('SUBMITTED');
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
+    const [tabValue, setTabValue] = React.useState(0);
 
     const [mounted, setMounted] = React.useState(false);
 
@@ -184,144 +188,160 @@ export default function ManageStructureRequestsPage() {
 
     return (
         <Stack spacing={3} sx={{ height: 'calc(100vh - 100px)', p: 2, pb: 2 }}>
-            <Typography variant="h4" component="h1" fontWeight="bold">
-                Manage Structure Changes
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h4" component="h1" fontWeight="bold">
+                    Manage Structure Changes
+                </Typography>
+            </Box>
+
+            <Tabs value={tabValue} onChange={(e, val) => setTabValue(val)} aria-label="structure request tabs">
+                <Tab label="Active Requests" />
+                <Tab label="Past Change Logs" />
+            </Tabs>
 
             {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
             {success && <Alert severity="success" onClose={() => setSuccess(null)}>{success}</Alert>}
 
-            <Box sx={{ display: 'flex', gap: 3, height: '100%' }}>
-                {/* Left Panel: List */}
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <TextField
-                            placeholder="Search requests..."
-                            size="small"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon fontSize="small" color="action" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 1 }}
-                        />
-                        <TextField
-                            select
-                            size="small"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
-                            sx={{ minWidth: 150, ml: 2, bgcolor: 'background.paper', borderRadius: 1 }}
-                            InputProps={{
-                                sx: { height: '100%' }
-                            }}
-                        >
-                            <MenuItem value="ALL">All Status</MenuItem>
-                            <MenuItem value="SUBMITTED">Submitted</MenuItem>
-                            <MenuItem value="APPROVED">Approved</MenuItem>
-                            <MenuItem value="REJECTED">Rejected</MenuItem>
-                        </TextField>
+            {tabValue === 0 && (
+                <Box sx={{ display: 'flex', gap: 3, height: '100%', overflow: 'hidden' }}>
+                    {/* Left Panel: List */}
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <TextField
+                                placeholder="Search requests..."
+                                size="small"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon fontSize="small" color="action" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 1 }}
+                            />
+                            <TextField
+                                select
+                                size="small"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as any)}
+                                sx={{ minWidth: 150, ml: 2, bgcolor: 'background.paper', borderRadius: 1 }}
+                                InputProps={{
+                                    sx: { height: '100%' }
+                                }}
+                            >
+                                <MenuItem value="ALL">All Status</MenuItem>
+                                <MenuItem value="SUBMITTED">Submitted</MenuItem>
+                                <MenuItem value="APPROVED">Approved</MenuItem>
+                                <MenuItem value="REJECTED">Rejected</MenuItem>
+                            </TextField>
+                        </Box>
+
+                        <Paper sx={{ width: '100%', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} elevation={0} variant="outlined">
+                            <TableContainer sx={{ flex: 1 }}>
+                                <Table stickyHeader aria-label="requests table">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Request #</TableCell>
+                                            <TableCell>Type</TableCell>
+                                            <TableCell sortDirection={sortOrder} sx={{ width: '150px' }}>
+                                                <TableSortLabel
+                                                    active={true}
+                                                    direction={sortOrder}
+                                                    onClick={handleSortRequest}
+                                                >
+                                                    Date
+                                                </TableSortLabel>
+                                            </TableCell>
+                                            <TableCell sx={{ width: '130px' }}>Status</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {loading && requests.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} align="center">Loading...</TableCell>
+                                            </TableRow>
+                                        ) : filteredRequests.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} align="center">No requests found.</TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredRequests
+                                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                                .map((req) => {
+                                                    const isSelected = selectedRequest?._id === req._id;
+                                                    return (
+                                                        <TableRow
+                                                            key={req._id}
+                                                            hover
+                                                            onClick={() => setSelectedRequest(req)}
+                                                            selected={isSelected}
+                                                            sx={{ cursor: 'pointer' }}
+                                                        >
+                                                            <TableCell sx={{ maxWidth: 150 }}>
+                                                                <Typography variant="body2" fontWeight="medium">
+                                                                    {req.requestNumber}
+                                                                </Typography>
+                                                            </TableCell>
+                                                            <TableCell sx={{ maxWidth: 200 }}>
+                                                                <Typography variant="body2" noWrap>
+                                                                    {req.requestType}
+                                                                </Typography>
+                                                            </TableCell>
+                                                            <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                                                {new Date(req.createdAt).toLocaleDateString()}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Chip
+                                                                    label={req.status}
+                                                                    size="small"
+                                                                    color={req.status === 'APPROVED' ? 'success' : req.status === 'REJECTED' ? 'error' : 'warning'}
+                                                                    variant="outlined"
+                                                                    sx={{ pointerEvents: 'none' }}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })
+                                        )}
+                                        {emptyRows > 0 && (
+                                            <TableRow style={{ height: 53 * emptyRows }}>
+                                                <TableCell colSpan={4} />
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <TablePagination
+                                rowsPerPageOptions={[5, 10, 25]}
+                                component="div"
+                                count={filteredRequests.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                            />
+                        </Paper>
                     </Box>
 
-                    <Paper sx={{ width: '100%', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} elevation={0} variant="outlined">
-                        <TableContainer sx={{ flex: 1 }}>
-                            <Table stickyHeader aria-label="requests table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Request #</TableCell>
-                                        <TableCell>Type</TableCell>
-                                        <TableCell sortDirection={sortOrder} sx={{ width: '150px' }}>
-                                            <TableSortLabel
-                                                active={true}
-                                                direction={sortOrder}
-                                                onClick={handleSortRequest}
-                                            >
-                                                Date
-                                            </TableSortLabel>
-                                        </TableCell>
-                                        <TableCell sx={{ width: '130px' }}>Status</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {loading && requests.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center">Loading...</TableCell>
-                                        </TableRow>
-                                    ) : filteredRequests.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center">No requests found.</TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        filteredRequests
-                                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                            .map((req) => {
-                                                const isSelected = selectedRequest?._id === req._id;
-                                                return (
-                                                    <TableRow
-                                                        key={req._id}
-                                                        hover
-                                                        onClick={() => setSelectedRequest(req)}
-                                                        selected={isSelected}
-                                                        sx={{ cursor: 'pointer' }}
-                                                    >
-                                                        <TableCell sx={{ maxWidth: 150 }}>
-                                                            <Typography variant="body2" fontWeight="medium">
-                                                                {req.requestNumber}
-                                                            </Typography>
-                                                        </TableCell>
-                                                        <TableCell sx={{ maxWidth: 200 }}>
-                                                            <Typography variant="body2" noWrap>
-                                                                {req.requestType}
-                                                            </Typography>
-                                                        </TableCell>
-                                                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                                                            {new Date(req.createdAt).toLocaleDateString()}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Chip
-                                                                label={req.status}
-                                                                size="small"
-                                                                color={req.status === 'APPROVED' ? 'success' : req.status === 'REJECTED' ? 'error' : 'warning'}
-                                                                variant="outlined"
-                                                                sx={{ pointerEvents: 'none' }}
-                                                            />
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })
-                                    )}
-                                    {emptyRows > 0 && (
-                                        <TableRow style={{ height: 53 * emptyRows }}>
-                                            <TableCell colSpan={4} />
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <TablePagination
-                            rowsPerPageOptions={[5, 10, 25]}
-                            component="div"
-                            count={filteredRequests.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
+                    {/* Right Panel: Details */}
+                    <Box sx={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+                        <RequestDetails
+                            request={selectedRequest}
+                            onApprove={handleApprove}
+                            onReject={handleReject}
                         />
-                    </Paper>
+                    </Box>
                 </Box>
+            )}
 
-                {/* Right Panel: Details */}
-                <Box sx={{ flex: 1, height: '100%', overflow: 'hidden' }}>
-                    <RequestDetails
-                        request={selectedRequest}
-                        onApprove={handleApprove}
-                        onReject={handleReject}
-                    />
+            {tabValue === 1 && (
+                <Box sx={{ height: '100%', overflow: 'hidden' }}>
+                    <StructureChangeLogsTable />
                 </Box>
-            </Box>
+            )}
         </Stack>
     );
 }
+

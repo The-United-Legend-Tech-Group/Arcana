@@ -858,4 +858,16 @@ export class OrganizationStructureService {
 
     return savedAssignment;
   }
+
+  /**
+   * Get structure change logs
+   */
+  async getChangeLogs(): Promise<StructureChangeLog[]> {
+    return this.changeLogModel
+      .find()
+      .populate('performedByEmployeeId', 'firstName lastName')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
 }
+

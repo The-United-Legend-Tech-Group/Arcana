@@ -1,0 +1,184 @@
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+
+interface EmployeeProfile {
+    _id: string;
+    firstName: string;
+    lastName: string;
+}
+
+interface StructureChangeLog {
+    _id: string;
+    action: string;
+    entityType: string;
+    summary?: string;
+    performedByEmployeeId?: EmployeeProfile;
+    createdAt: string;
+    afterSnapshot?: any;
+}
+
+export default function StructureChangeLogsTable() {
+    const [logs, setLogs] = React.useState<StructureChangeLog[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [error, setError] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        fetchLogs();
+    }, []);
+
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+
+            const response = await fetch(`${apiUrl}/organization-structure/change-logs`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch change logs');
+
+            const data = await response.json();
+            setLogs(data);
+        } catch (err) {
+            console.error('Error fetching logs:', err);
+            setError('Failed to fetch change logs');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - logs.length) : 0;
+
+    return (
+        <Paper sx={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }} elevation={0} variant="outlined">
+            {error && <Alert severity="error" sx={{ m: 1 }}>{error}</Alert>}
+
+            <TableContainer sx={{ flex: 1 }}>
+                <Table stickyHeader aria-label="change logs table">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Action</TableCell>
+                            <TableCell>Request Type</TableCell>
+                            <TableCell>Summary</TableCell>
+                            <TableCell>Performed By</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center">Loading...</TableCell>
+                            </TableRow>
+                        ) : logs.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center">No change logs found.</TableCell>
+                            </TableRow>
+                        ) : (
+                            logs
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((log) => (
+                                    <TableRow key={log._id} hover>
+                                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                            {new Date(log.createdAt).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={log.action}
+                                                size="small"
+                                                color={log.action === 'CREATED' ? 'success' : log.action === 'DELETED' ? 'error' : 'info'}
+                                                variant="outlined"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            {log.afterSnapshot?.requestType ?
+                                                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                    {log.afterSnapshot.requestType.replace(/_/g, ' ')}
+                                                </Typography>
+                                                : log.entityType}
+                                        </TableCell>
+                                        <TableCell>
+                                            {(() => {
+                                                const lowerSummary = (log.summary || '').toLowerCase();
+                                                if (lowerSummary.includes('approved')) {
+                                                    const cleanSummary = log.summary?.replace(/change request/i, '').replace(/approved/i, '').trim();
+                                                    return (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            {cleanSummary && <Typography variant="body2" sx={{ mr: 1 }}>{cleanSummary}</Typography>}
+                                                            <Chip
+                                                                label="APPROVED"
+                                                                size="small"
+                                                                color="success"
+                                                                variant="outlined"
+                                                                sx={{ height: 20, fontSize: '0.70rem', width: 85, fontWeight: 'bold' }}
+                                                            />
+                                                        </Box>
+                                                    );
+                                                } else if (lowerSummary.includes('rejected')) {
+                                                    const cleanSummary = log.summary?.replace(/change request/i, '').replace(/rejected/i, '').trim();
+                                                    return (
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            {cleanSummary && <Typography variant="body2" sx={{ mr: 1 }}>{cleanSummary}</Typography>}
+                                                            <Chip
+                                                                label="REJECTED"
+                                                                size="small"
+                                                                color="error"
+                                                                variant="outlined"
+                                                                sx={{ height: 20, fontSize: '0.70rem', width: 85, fontWeight: 'bold' }}
+                                                            />
+                                                        </Box>
+                                                    );
+                                                }
+                                                return log.summary;
+                                            })()}
+                                        </TableCell>
+                                        <TableCell>
+                                            {log.performedByEmployeeId ?
+                                                `${log.performedByEmployeeId.firstName} ${log.performedByEmployeeId.lastName}` :
+                                                'System'}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                        )}
+                        {emptyRows > 0 && (
+                            <TableRow style={{ height: 53 * emptyRows }}>
+                                <TableCell colSpan={5} />
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <TablePagination
+                rowsPerPageOptions={[10, 25, 50]}
+                component="div"
+                count={logs.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+        </Paper>
+    );
+}

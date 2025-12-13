@@ -48,6 +48,11 @@ const mainListItems = [
     path: "/employee/performance/assignments",
   },
   {
+    text: "My Assigned Appraisals",
+    icon: <AssignmentRoundedIcon />,
+    path: "/employee/performance/manager-assignments",
+  },
+  {
     text: "Time Management",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/time-mangemeant",
@@ -92,6 +97,7 @@ export default function MenuContent() {
     if (text === 'Performance Templates' && pathname === '/employee/performance/templates') return true;
     if (text === 'Appraisal Cycles' && pathname === '/employee/performance/cycles') return true;
     if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
+    if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
     return false;
   };
 
@@ -115,6 +121,7 @@ export default function MenuContent() {
     if (text === 'Performance Templates') router.push('/employee/performance/templates');
     if (text === 'Appraisal Cycles') router.push('/employee/performance/cycles');
     if (text === 'Appraisal Assignments') router.push('/employee/performance/assignments');
+    if (text === 'My Assigned Appraisals') router.push('/employee/performance/manager-assignments');
   };
 
   return (

@@ -416,6 +416,60 @@ export class OrganizationStructureService {
   }
 
   /**
+   * Return the user's hierarchy subtree rooted at their primary position.
+   * Returns in the same format as getOrganizationHierarchy (array of root nodes).
+   * Available to all authenticated employees, not role-limited.
+   */
+  async getUserHierarchy(employeeId: string): Promise<any[]> {
+    const employee = await this.employeeModel
+      .findById(employeeId)
+      .lean()
+      .exec();
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const userPositionId =
+      employee.primaryPositionId &&
+      employee.primaryPositionId.toString &&
+      employee.primaryPositionId.toString();
+
+    if (!userPositionId) {
+      // User has no position assigned, return empty array
+      return [];
+    }
+
+    const positions = await this.positionRepository.findAllActiveLean();
+
+    const map = new Map<string, any>();
+    positions.forEach((p: any) => {
+      const id = p._id?.toString() || p.id || '';
+      map.set(id, { ...p, id, children: [] });
+    });
+
+    // Build parent-child relationships
+    positions.forEach((p: any) => {
+      const id = (p._id && p._id.toString && p._id.toString()) || p.id || '';
+      const reportsTo =
+        p.reportsToPositionId &&
+        p.reportsToPositionId.toString &&
+        p.reportsToPositionId.toString();
+      if (reportsTo && map.has(reportsTo)) {
+        map.get(reportsTo).children.push(map.get(id));
+      }
+    });
+
+    const root = map.get(userPositionId);
+    if (!root) {
+      // User's position is not in active positions
+      return [];
+    }
+
+    // Return the user's position as the root of the subtree
+    return [root];
+  }
+
+  /**
    * Deactivate a position (mark as inactive).
    */
   async deactivatePosition(id: string): Promise<Position> {

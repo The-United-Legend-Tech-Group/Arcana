@@ -59,6 +59,18 @@ export class OrganizationStructureController {
     return this.organizationStructureService.getOrganizationHierarchy();
   }
 
+  @Get('hierarchy/user/:employeeId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get user hierarchy subtree rooted at their position' })
+  @ApiResponse({
+    status: 200,
+    description: 'User hierarchy subtree',
+    type: [Object],
+  })
+  async getUserHierarchy(@Param('employeeId') employeeId: string): Promise<any[]> {
+    return this.organizationStructureService.getUserHierarchy(employeeId);
+  }
+
   @Get('requests')
   @UseGuards(AuthGuard, authorizationGuard)
   //@Roles(SystemRole.SYSTEM_ADMIN, SystemRole.DEPARTMENT_HEAD)
@@ -133,7 +145,7 @@ export class OrganizationStructureController {
 
   @Get('managers/:managerId/team')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_HEAD)
+  //@Roles(SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({
     summary: "Get a manager's team structure and reporting lines (Managers)",
   })

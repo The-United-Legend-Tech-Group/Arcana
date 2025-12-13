@@ -56,6 +56,7 @@ interface OvertimeRecord {
 }
 
 interface ExceptionRecord {
+    id?: string;
     employeeId: string;
     employeeName: string;
     department: string;
@@ -142,7 +143,12 @@ export default function AnalyticsPage() {
             });
             if (otRes.ok) {
                 const otData = await otRes.json();
-                setOvertimeRecords(otData.records || []);
+                const records = otData.records || [];
+                const recordsWithIds = records.map((record: OvertimeRecord, index: number) => ({
+                    ...record,
+                    id: `${record.employeeId}-${record.date}-${index}`
+                }));
+                setOvertimeRecords(recordsWithIds);
             }
 
             // Fetch Exceptions
@@ -151,7 +157,12 @@ export default function AnalyticsPage() {
             });
             if (exRes.ok) {
                 const exData = await exRes.json();
-                setExceptionRecords(exData.records || []);
+                const records = exData.records || [];
+                const recordsWithIds = records.map((record: ExceptionRecord, index: number) => ({
+                    ...record,
+                    id: `${record.employeeId}-${record.date}-${record.exceptionType}-${index}`
+                }));
+                setExceptionRecords(recordsWithIds);
             }
 
         } catch (e) {
@@ -401,7 +412,6 @@ export default function AnalyticsPage() {
                         <DataGrid
                             rows={exceptionRecords}
                             columns={exceptionColumns}
-                            getRowId={(row) => `${row.employeeId}-${row.date}-${row.exceptionType}`}
                             loading={loadingReports}
                             slots={{ toolbar: GridToolbar }}
                             slotProps={{

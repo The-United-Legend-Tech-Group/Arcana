@@ -9,6 +9,7 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import SendTwoToneIcon from '@mui/icons-material/SendTwoTone';
@@ -17,6 +18,8 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ApartmentRoundedIcon from "@mui/icons-material/ApartmentRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { usePathname, useRouter } from "next/navigation";
 
 const mainListItems = [
@@ -31,6 +34,46 @@ const mainListItems = [
     text: "Analytics",
     icon: <AnalyticsRoundedIcon />,
     path: "/employee/analytics",
+  },
+  {
+    text: "Performance Dashboard",
+    icon: <DashboardRoundedIcon />,
+    path: "/employee/performance/dashboard",
+  },
+  {
+    text: "Performance Templates",
+    icon: <AssessmentRoundedIcon />,
+    path: "/employee/performance/templates",
+  },
+  {
+    text: "Appraisal Cycles",
+    icon: <AccessTimeRoundedIcon />,
+    path: "/employee/performance/cycles",
+  },
+  {
+    text: "Appraisal Assignments",
+    icon: <AssignmentRoundedIcon />,
+    path: "/employee/performance/assignments",
+  },
+  {
+    text: "Appraisal Monitoring",
+    icon: <VisibilityRoundedIcon />,
+    path: "/employee/performance/monitoring",
+  },
+  {
+    text: "Manager Appraisal Dashboard",
+    icon: <AssignmentRoundedIcon />,
+    path: "/employee/performance/manager",
+  },
+  {
+    text: "My Assigned Appraisals",
+    icon: <AssignmentRoundedIcon />,
+    path: "/employee/performance/manager-assignments",
+  },
+  {
+    text: "My Performance Records",
+    icon: <AssessmentRoundedIcon />,
+    path: "/employee/performance/my-records",
   },
   {
     text: "Time Management",
@@ -77,6 +120,14 @@ export default function MenuContent() {
     if (text === 'Compose Notification') return pathname === '/employee/compose-notification';
     if (text === 'Manage Structure Changes') return pathname === '/employee/manage-structure-requests';
     if (text === 'Time Management') return pathname === '/employee/time-mangemeant';
+    if (text === 'Performance Dashboard' && pathname === '/employee/performance/dashboard') return true;
+    if (text === 'Performance Templates' && pathname === '/employee/performance/templates') return true;
+    if (text === 'Appraisal Cycles' && pathname === '/employee/performance/cycles') return true;
+    if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
+    if (text === 'Appraisal Monitoring' && pathname === '/employee/performance/monitoring') return true;
+    if (text === 'Manager Appraisal Dashboard' && pathname === '/employee/performance/manager') return true;
+    if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
+    if (text === 'My Performance Records' && pathname === '/employee/performance/my-records') return true;
     return false;
   };
 
@@ -98,6 +149,14 @@ export default function MenuContent() {
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
     if (text === 'Compose Notification') router.push('/employee/compose-notification');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
+    if (text === 'Performance Dashboard') router.push('/employee/performance/dashboard');
+    if (text === 'Performance Templates') router.push('/employee/performance/templates');
+    if (text === 'Appraisal Cycles') router.push('/employee/performance/cycles');
+    if (text === 'Appraisal Assignments') router.push('/employee/performance/assignments');
+    if (text === 'Appraisal Monitoring') router.push('/employee/performance/monitoring');
+    if (text === 'Manager Appraisal Dashboard') router.push('/employee/performance/manager');
+    if (text === 'My Assigned Appraisals') router.push('/employee/performance/manager-assignments');
+    if (text === 'My Performance Records') router.push('/employee/performance/my-records');
   };
 
   return (

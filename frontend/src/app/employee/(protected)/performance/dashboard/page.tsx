@@ -7,9 +7,9 @@ import {
   CardContent,
   Stack,
   Typography,
-  CircularProgress,
   Alert,
   Container,
+  Skeleton,
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 
@@ -41,14 +41,14 @@ export default function PerformanceDashboard() {
         console.log('Fetching stats from:', `${apiUrl}/performance/dashboard/stats`);
         // No Authorization header needed as the endpoint is public
         const response = await fetch(`${apiUrl}/performance/dashboard/stats`, {
-            credentials: 'include'
+          credentials: 'include'
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch dashboard stats: ${response.status} ${response.statusText} - ${errorText}`);
         }
-        
+
         const data = await response.json();
         setStats(data);
       } catch (err) {
@@ -64,9 +64,50 @@ export default function PerformanceDashboard() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          <Skeleton width={300} />
+        </Typography>
+
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} mb={4}>
+          <Box flex={1}>
+            <Card>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>
+                  <Skeleton width="60%" />
+                </Typography>
+                <Typography variant="h3">
+                  <Skeleton width="40%" />
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+          <Box flex={1}>
+            <Card>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>
+                  <Skeleton width="60%" />
+                </Typography>
+                <Typography variant="h3">
+                  <Skeleton width="40%" />
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        </Stack>
+
+        <Typography variant="h5" gutterBottom>
+          <Skeleton width={200} />
+        </Typography>
+        <Box sx={{ height: 500, width: '100%' }}>
+          <Stack spacing={1}>
+            <Skeleton variant="rectangular" height={52} />
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height={52} />
+            ))}
+          </Stack>
+        </Box>
+      </Container>
     );
   }
 
@@ -90,10 +131,10 @@ export default function PerformanceDashboard() {
       type: 'number',
       width: 150,
       valueFormatter: (value: any) => {
-         if (value == null) {
-            return '';
-          }
-          return `${Number(value).toFixed(1)}%`;
+        if (value == null) {
+          return '';
+        }
+        return `${Number(value).toFixed(1)}%`;
       },
     },
   ];

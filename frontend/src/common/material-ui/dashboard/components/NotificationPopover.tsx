@@ -178,6 +178,8 @@ export default function NotificationPopover() {
                         overflow: 'visible',
                         filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                         borderRadius: 3, // More rounded popover
+                        border: '1px solid',
+                        borderColor: 'divider',
                         '&:before': {
                             content: '""',
                             display: 'block',
@@ -189,6 +191,9 @@ export default function NotificationPopover() {
                             bgcolor: 'background.paper',
                             transform: 'translateY(-50%) rotate(45deg)',
                             zIndex: 0,
+                            borderTop: '1px solid',
+                            borderLeft: '1px solid',
+                            borderColor: 'divider',
                         },
                     },
                 }}

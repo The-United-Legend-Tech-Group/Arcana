@@ -12,10 +12,12 @@ import {
     Stack,
     CircularProgress,
     Alert,
+    Snackbar,
     Chip,
     FormControl,
     InputLabel,
     Select,
+    Skeleton,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import { AppraisalCycle } from '../cycles/types';
@@ -30,7 +32,11 @@ export default function AppraisalMonitoringPage() {
     const [selectedCycleId, setSelectedCycleId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [sendingReminders, setSendingReminders] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -67,7 +73,7 @@ export default function AppraisalMonitoringPage() {
             }
         } catch (error) {
             console.error('Error fetching cycles:', error);
-            setMessage({ type: 'error', text: 'Failed to load appraisal cycles' });
+            setSnackbar({ open: true, message: 'Failed to load appraisal cycles', severity: 'error' });
         }
     };
 
@@ -88,7 +94,7 @@ export default function AppraisalMonitoringPage() {
             }
         } catch (error) {
             console.error('Error fetching progress:', error);
-            setMessage({ type: 'error', text: 'Failed to load appraisal progress' });
+            setSnackbar({ open: true, message: 'Failed to load appraisal progress', severity: 'error' });
         } finally {
             setLoading(false);
         }
@@ -96,7 +102,7 @@ export default function AppraisalMonitoringPage() {
 
     const handleSendReminders = async () => {
         if (!selectedCycleId) return;
-        
+
         setSendingReminders(true);
         try {
             const token = localStorage.getItem('access_token');
@@ -114,40 +120,40 @@ export default function AppraisalMonitoringPage() {
             });
 
             if (response.ok) {
-                setMessage({ type: 'success', text: 'Reminders sent successfully' });
+                setSnackbar({ open: true, message: 'Reminders sent successfully', severity: 'success' });
             } else {
                 throw new Error('Failed to send reminders');
             }
         } catch (error) {
             console.error('Error sending reminders:', error);
-            setMessage({ type: 'error', text: 'Failed to send reminders' });
+            setSnackbar({ open: true, message: 'Failed to send reminders', severity: 'error' });
         } finally {
             setSendingReminders(false);
         }
     };
 
     const columns: GridColDef[] = [
-        { 
-            field: 'employeeName', 
-            headerName: 'Employee', 
+        {
+            field: 'employeeName',
+            headerName: 'Employee',
             width: 200,
             valueGetter: (value: any, row: any) => {
                 const emp = row.employeeProfileId as EmployeeProfileShort;
                 return emp ? `${emp.firstName} ${emp.lastName}` : 'Unknown';
             }
         },
-        { 
-            field: 'managerName', 
-            headerName: 'Manager', 
+        {
+            field: 'managerName',
+            headerName: 'Manager',
             width: 200,
             valueGetter: (value: any, row: any) => {
                 const mgr = row.managerProfileId as EmployeeProfileShort;
                 return mgr ? `${mgr.firstName} ${mgr.lastName}` : 'Unknown';
             }
         },
-        { 
-            field: 'status', 
-            headerName: 'Status', 
+        {
+            field: 'status',
+            headerName: 'Status',
             width: 150,
             renderCell: (params) => {
                 let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' = 'default';
@@ -161,9 +167,9 @@ export default function AppraisalMonitoringPage() {
                 return <Chip label={params.value?.replace('_', ' ')} color={color} size="small" />;
             }
         },
-        { 
-            field: 'dueDate', 
-            headerName: 'Due Date', 
+        {
+            field: 'dueDate',
+            headerName: 'Due Date',
             width: 150,
             valueFormatter: (value: any) => {
                 return value ? new Date(value).toLocaleDateString() : '-';
@@ -180,7 +186,32 @@ export default function AppraisalMonitoringPage() {
     ];
 
     if (!mounted) {
-        return <CircularProgress />;
+        return (
+            <Container maxWidth="xl">
+                <Stack spacing={3} sx={{ mt: 3, mb: 3 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h4"><Skeleton width={350} /></Typography>
+                        <Skeleton variant="rectangular" width={180} height={36} />
+                    </Box>
+                    <Paper sx={{ p: 2 }}>
+                        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                            <Box sx={{ minWidth: 250 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}><Skeleton width={100} /></Typography>
+                                <Skeleton variant="rectangular" height={40} />
+                            </Box>
+                        </Stack>
+                        <Box sx={{ width: '100%' }}>
+                            <Stack spacing={1}>
+                                <Skeleton variant="rectangular" height={52} />
+                                {[...Array(6)].map((_, i) => (
+                                    <Skeleton key={i} variant="rectangular" height={52} />
+                                ))}
+                            </Stack>
+                        </Box>
+                    </Paper>
+                </Stack>
+            </Container>
+        );
     }
 
     return (
@@ -188,9 +219,9 @@ export default function AppraisalMonitoringPage() {
             <Stack spacing={3} sx={{ mt: 3, mb: 3 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h4">Appraisal Progress Monitoring</Typography>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
+                    <Button
+                        variant="contained"
+                        color="primary"
                         startIcon={sendingReminders ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
                         onClick={handleSendReminders}
                         disabled={!selectedCycleId || sendingReminders || assignments.length === 0}
@@ -199,19 +230,16 @@ export default function AppraisalMonitoringPage() {
                     </Button>
                 </Box>
 
-                {message && (
-                    <Alert severity={message.type} onClose={() => setMessage(null)}>
-                        {message.text}
-                    </Alert>
-                )}
 
                 <Paper sx={{ p: 2 }}>
                     <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                        <FormControl sx={{ minWidth: 250 }}>
-                            <InputLabel>Appraisal Cycle</InputLabel>
-                            <Select
+                        <Box sx={{ minWidth: 250 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>Appraisal Cycle</Typography>
+                            <TextField
+                                select
+                                fullWidth
+                                hiddenLabel
                                 value={selectedCycleId}
-                                label="Appraisal Cycle"
                                 onChange={(e) => setSelectedCycleId(e.target.value)}
                             >
                                 {cycles.map((cycle) => (
@@ -219,11 +247,11 @@ export default function AppraisalMonitoringPage() {
                                         {cycle.name} ({cycle.status})
                                     </MenuItem>
                                 ))}
-                            </Select>
-                        </FormControl>
+                            </TextField>
+                        </Box>
                     </Stack>
 
-                    <Box sx={{ height: 600, width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                         <DataGrid
                             rows={assignments}
                             columns={columns}
@@ -237,14 +265,24 @@ export default function AppraisalMonitoringPage() {
                             }}
                             initialState={{
                                 pagination: {
-                                    paginationModel: { pageSize: 10, page: 0 },
+                                    paginationModel: { pageSize: 6, page: 0 },
                                 },
                             }}
-                            pageSizeOptions={[10, 25, 50, 100]}
+                            pageSizeOptions={[6, 10, 25, 50, 100]}
                         />
                     </Box>
                 </Paper>
             </Stack>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 }

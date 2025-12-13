@@ -180,7 +180,7 @@ export default function PerformanceDashboard() {
       <Typography variant="h5" gutterBottom>
         Department Breakdown
       </Typography>
-      <Box sx={{ height: 500, width: '100%' }}>
+      <Box sx={{ width: '100%' }}>
         <DataGrid
           rows={rows}
           columns={columns}

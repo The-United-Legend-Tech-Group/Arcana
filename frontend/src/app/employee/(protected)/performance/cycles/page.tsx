@@ -25,6 +25,7 @@ import {
     Skeleton,
     Snackbar,
     Alert,
+    TablePagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -54,6 +55,9 @@ export default function AppraisalCyclesPage() {
         message: '',
         severity: 'success',
     });
+
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(6);
 
     useEffect(() => {
         loadCycles();
@@ -198,6 +202,15 @@ export default function AppraisalCyclesPage() {
         }
     };
 
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -233,7 +246,7 @@ export default function AppraisalCyclesPage() {
                     </TableHead>
                     <TableBody>
                         {loading ? (
-                            [...Array(5)].map((_, index) => (
+                            [...Array(rowsPerPage)].map((_, index) => (
                                 <TableRow key={index}>
                                     <TableCell><Skeleton animation="wave" /></TableCell>
                                     <TableCell><Skeleton animation="wave" /></TableCell>
@@ -245,7 +258,10 @@ export default function AppraisalCyclesPage() {
                             ))
                         ) : (
                             <>
-                                {cycles.map((cycle) => (
+                                {(rowsPerPage > 0
+                                    ? cycles.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    : cycles
+                                ).map((cycle) => (
                                     <TableRow key={cycle._id}>
                                         <TableCell>{cycle.name}</TableCell>
                                         <TableCell>{cycle.cycleType}</TableCell>
@@ -279,6 +295,15 @@ export default function AppraisalCyclesPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <TablePagination
+                rowsPerPageOptions={[6, 10, 25]}
+                component="div"
+                count={cycles.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+            />
 
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle>{editingCycle ? 'Edit Appraisal Cycle' : 'Create Appraisal Cycle'}</DialogTitle>

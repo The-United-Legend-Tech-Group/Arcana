@@ -51,10 +51,10 @@ const mainListItems = [
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
   },
-  { text: 'Manage Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
+  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
   { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
   { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification' },
-  { text: 'Manage Structure Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests' },
+  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests' },
 ];
 
 const performanceSubItems = [

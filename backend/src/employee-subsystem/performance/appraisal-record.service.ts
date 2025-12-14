@@ -232,6 +232,44 @@ export class AppraisalRecordService {
         return populatedRecords;
     }
 
+    /**
+     * Get the latest published appraisal score for an employee.
+     * Returns the most recent HR_PUBLISHED record's score and rating label.
+     */
+    async getLatestScoreForEmployee(employeeProfileId: string): Promise<{ totalScore: number | null; ratingLabel: string | null; cycleName: string | null }> {
+        // Find the most recent HR_PUBLISHED record for this employee
+        const records = await this.appraisalRecordRepository.find({
+            employeeProfileId,
+            status: AppraisalRecordStatus.HR_PUBLISHED,
+        });
+
+        if (!records || records.length === 0) {
+            return { totalScore: null, ratingLabel: null, cycleName: null };
+        }
+
+        // Sort by hrPublishedAt descending to get the most recent
+        const sorted = records.sort((a, b) => {
+            const dateA = a.hrPublishedAt ? new Date(a.hrPublishedAt).getTime() : 0;
+            const dateB = b.hrPublishedAt ? new Date(b.hrPublishedAt).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        const latestRecord = sorted[0];
+        const template = await this.appraisalTemplateRepository.findOne({ _id: latestRecord.templateId });
+        const cycle = await this.appraisalCycleRepository.findOne({ _id: latestRecord.cycleId });
+
+        let ratingLabel = latestRecord.overallRatingLabel || null;
+        if (!ratingLabel && template && latestRecord.totalScore !== undefined) {
+            ratingLabel = this.calculateRatingLabel(latestRecord.totalScore, template.ratingScale);
+        }
+
+        return {
+            totalScore: latestRecord.totalScore ?? null,
+            ratingLabel,
+            cycleName: cycle ? cycle.name : null,
+        };
+    }
+
     private calculateRatingLabel(score: number, ratingScale: any): string {
         if (!ratingScale.labels || ratingScale.labels.length === 0) {
             return score.toFixed(2);

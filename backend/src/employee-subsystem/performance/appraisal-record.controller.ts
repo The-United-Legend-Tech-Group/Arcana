@@ -60,6 +60,18 @@ export class AppraisalRecordController {
         return this.appraisalRecordService.getFinalizedRecordsForEmployee(employeeProfileId);
     }
 
+    @Get('employee/:employeeProfileId/latest-score')
+    @ApiOperation({ summary: 'Get latest appraisal score for an employee' })
+    @ApiResponse({
+        status: 200,
+        description: 'Latest appraisal score and rating label',
+    })
+    async getLatestScoreForEmployee(
+        @Param('employeeProfileId') employeeProfileId: string,
+    ): Promise<{ totalScore: number | null; ratingLabel: string | null; cycleName: string | null }> {
+        return this.appraisalRecordService.getLatestScoreForEmployee(employeeProfileId);
+    }
+
     @Post(':id/publish')
     @ApiOperation({ summary: 'Publish an appraisal record (HR action)' })
     @ApiResponse({

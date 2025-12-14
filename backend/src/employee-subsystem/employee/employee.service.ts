@@ -45,6 +45,18 @@ export class EmployeeService {
   async onboard(
     createEmployeeDto: CreateEmployeeDto,
   ): Promise<EmployeeProfile> {
+    // Check email uniqueness
+    const dto = createEmployeeDto as any;
+    const emailExists = await this.employeeProfileRepository.checkEmailExists(
+      dto.personalEmail,
+      dto.workEmail,
+    );
+    if (emailExists) {
+      throw new ConflictException(
+        `Email ${emailExists.email} is already in use (${emailExists.field})`,
+      );
+    }
+
     try {
       const createdEmployee = new this.employeeProfileModel(createEmployeeDto);
       return await createdEmployee.save();

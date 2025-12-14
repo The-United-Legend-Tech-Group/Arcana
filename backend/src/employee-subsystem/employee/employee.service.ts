@@ -405,6 +405,12 @@ export class EmployeeService {
     return req;
   }
 
+  async getEmployeeProfileChangeRequests(employeeId: string) {
+    return this.employeeProfileChangeRequestRepository.find({
+      employeeProfileId: new Types.ObjectId(employeeId),
+    });
+  }
+
   async approveProfileChangeRequest(requestId: string) {
     const req: any = await this.employeeProfileChangeRequestRepository.findOne({
       requestId,

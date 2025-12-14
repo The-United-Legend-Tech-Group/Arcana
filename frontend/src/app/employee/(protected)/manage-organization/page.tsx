@@ -105,6 +105,16 @@ export default function ManageOrganizationPage() {
 
     const [mounted, setMounted] = React.useState(false);
 
+    const detailsRef = React.useRef<HTMLDivElement>(null);
+
+    const scrollToDetails = () => {
+        setTimeout(() => {
+            if (detailsRef.current) {
+                detailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    };
+
     React.useEffect(() => {
         setMounted(true);
     }, []);
@@ -211,6 +221,7 @@ export default function ManageOrganizationPage() {
         setIsCreatingPosition(false);
         setIsCreatingDepartment(false);
         setIsAssigningEmployee(false);
+        scrollToDetails();
     };
 
     const handleAddPositionClick = (e: React.MouseEvent, dept: Department) => {
@@ -252,6 +263,7 @@ export default function ManageOrganizationPage() {
         setIsCreatingPosition(false); // Switch out of creation mode
         setIsCreatingDepartment(false);
         setIsAssigningEmployee(false);
+        scrollToDetails();
     };
 
     const fetchData = async () => {
@@ -578,26 +590,28 @@ export default function ManageOrganizationPage() {
                         />
                     </Paper>
 
-                    {isCreatingDepartment ? (
-                        <CreateDepartmentForm
-                            positions={positions}
-                            onSuccess={handleCreateDepartmentSuccess}
-                            onCancel={() => setIsCreatingDepartment(false)}
-                        />
-                    ) : isCreatingPosition && selectedDepartment ? (
-                        <CreatePositionForm
-                            departmentId={selectedDepartment._id}
-                            departmentName={selectedDepartment.name}
-                            onSuccess={handleCreatePositionSuccess}
-                            onCancel={() => setIsCreatingPosition(false)}
-                        />
-                    ) : (
-                        <DepartmentDetails
-                            department={selectedDepartment}
-                            positions={positions}
-                            onUpdate={handleUpdateDepartment}
-                        />
-                    )}
+                    <div ref={detailsRef}>
+                        {isCreatingDepartment ? (
+                            <CreateDepartmentForm
+                                positions={positions}
+                                onSuccess={handleCreateDepartmentSuccess}
+                                onCancel={() => setIsCreatingDepartment(false)}
+                            />
+                        ) : isCreatingPosition && selectedDepartment ? (
+                            <CreatePositionForm
+                                departmentId={selectedDepartment._id}
+                                departmentName={selectedDepartment.name}
+                                onSuccess={handleCreatePositionSuccess}
+                                onCancel={() => setIsCreatingPosition(false)}
+                            />
+                        ) : (
+                            <DepartmentDetails
+                                department={selectedDepartment}
+                                positions={positions}
+                                onUpdate={handleUpdateDepartment}
+                            />
+                        )}
+                    </div>
                 </Box>
             )}
 
@@ -745,20 +759,22 @@ export default function ManageOrganizationPage() {
                         />
                     </Paper>
 
-                    {isAssigningEmployee && selectedPosition ? (
-                        <AssignEmployeeForm
-                            positionId={selectedPosition._id}
-                            positionCode={selectedPosition.code}
-                            positionTitle={selectedPosition.title}
-                            onSuccess={handleAssignEmployeeSuccess}
-                            onCancel={() => setIsAssigningEmployee(false)}
-                        />
-                    ) : (
-                        <PositionDetails
-                            position={selectedPosition}
-                            onUpdate={handleUpdatePosition}
-                        />
-                    )}
+                    <div ref={detailsRef}>
+                        {isAssigningEmployee && selectedPosition ? (
+                            <AssignEmployeeForm
+                                positionId={selectedPosition._id}
+                                positionCode={selectedPosition.code}
+                                positionTitle={selectedPosition.title}
+                                onSuccess={handleAssignEmployeeSuccess}
+                                onCancel={() => setIsAssigningEmployee(false)}
+                            />
+                        ) : (
+                            <PositionDetails
+                                position={selectedPosition}
+                                onUpdate={handleUpdatePosition}
+                            />
+                        )}
+                    </div>
                 </Box>
             )}
 

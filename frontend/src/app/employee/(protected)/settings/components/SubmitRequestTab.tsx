@@ -144,22 +144,28 @@ export default function SubmitRequestTab({ employeeId }: SubmitRequestTabProps) 
                             {successMessage && <Alert severity="success">{successMessage}</Alert>}
                             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-                            <TextField
-                                required
-                                fullWidth
-                                placeholder="Request Description"
-                                value={requestDescription}
-                                onChange={(e) => setRequestDescription(e.target.value)}
-                            />
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Request Description *</Typography>
+                                <TextField
+                                    required
+                                    fullWidth
+                                    placeholder="Enter description"
+                                    value={requestDescription}
+                                    onChange={(e) => setRequestDescription(e.target.value)}
+                                />
+                            </Box>
 
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={1}
-                                placeholder="Reason"
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                            />
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Reason</Typography>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={1}
+                                    placeholder="Enter reason"
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                />
+                            </Box>
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                                 <FormControlLabel
@@ -175,27 +181,30 @@ export default function SubmitRequestTab({ employeeId }: SubmitRequestTabProps) 
                             {isNameChange && (
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 12, sm: 4 }}>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>First Name *</Typography>
                                         <TextField
                                             required={isNameChange}
                                             fullWidth
-                                            label="First Name"
+                                            placeholder="First Name"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 4 }}>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Middle Name</Typography>
                                         <TextField
                                             fullWidth
-                                            label="Middle Name"
+                                            placeholder="Middle Name"
                                             value={middleName}
                                             onChange={(e) => setMiddleName(e.target.value)}
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 4 }}>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Last Name *</Typography>
                                         <TextField
                                             required={isNameChange}
                                             fullWidth
-                                            label="Last Name"
+                                            placeholder="Last Name"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
                                         />
@@ -204,23 +213,28 @@ export default function SubmitRequestTab({ employeeId }: SubmitRequestTabProps) 
                             )}
 
                             {isMaritalStatusChange && (
-                                <FormControl fullWidth required={isMaritalStatusChange}>
-                                    <Select
-                                        value={maritalStatus}
-                                        displayEmpty
-                                        onChange={(e) => setMaritalStatus(e.target.value)}
-                                        renderValue={(selected) => {
-                                            if (selected.length === 0) return <em>New Marital Status</em>;
-                                            return selected;
-                                        }}
-                                    >
-                                        <MenuItem disabled value=""><em>New Marital Status</em></MenuItem>
-                                        <MenuItem value="SINGLE">Single</MenuItem>
-                                        <MenuItem value="MARRIED">Married</MenuItem>
-                                        <MenuItem value="DIVORCED">Divorced</MenuItem>
-                                        <MenuItem value="WIDOWED">Widowed</MenuItem>
-                                    </Select>
-                                </FormControl>
+                                <Box>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>New Marital Status *</Typography>
+                                    <FormControl fullWidth required={isMaritalStatusChange}>
+                                        <Select
+                                            value={maritalStatus}
+                                            displayEmpty
+                                            onChange={(e) => setMaritalStatus(e.target.value)}
+                                            renderValue={(selected) => {
+                                                if (selected.length === 0) return <Typography color="text.secondary">Select Status</Typography>;
+                                                return selected;
+                                            }}
+                                        >
+                                            <MenuItem disabled value="">
+                                                <em>Select Status</em>
+                                            </MenuItem>
+                                            <MenuItem value="SINGLE">Single</MenuItem>
+                                            <MenuItem value="MARRIED">Married</MenuItem>
+                                            <MenuItem value="DIVORCED">Divorced</MenuItem>
+                                            <MenuItem value="WIDOWED">Widowed</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Box>
                             )}
 
                             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

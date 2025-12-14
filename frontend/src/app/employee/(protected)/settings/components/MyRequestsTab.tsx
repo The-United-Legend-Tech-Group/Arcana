@@ -41,7 +41,7 @@ export default function MyRequestsTab({ employeeId }: MyRequestsTabProps) {
 
     const columns: GridColDef[] = [
         // { field: 'requestId', headerName: 'Request ID', width: 220 }, // Removed per previous request
-        { field: 'requestDescription', headerName: 'Description', width: 250 },
+        { field: 'requestDescription', headerName: 'Description', flex: 1, minWidth: 200 },
         {
             field: 'status',
             headerName: 'Status',
@@ -65,8 +65,7 @@ export default function MyRequestsTab({ employeeId }: MyRequestsTabProps) {
                 return new Date(params).toLocaleDateString();
             }
         },
-        { field: 'reason', headerName: 'Reason', width: 200 },
-        { field: 'processingNote', headerName: 'Admin Note', width: 200 },
+        { field: 'reason', headerName: 'Reason', flex: 1, minWidth: 200 },
     ];
 
     return (

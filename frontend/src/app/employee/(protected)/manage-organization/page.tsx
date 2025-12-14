@@ -230,6 +230,7 @@ export default function ManageOrganizationPage() {
         setIsCreatingPosition(true);
         setIsCreatingDepartment(false);
         setIsAssigningEmployee(false);
+        scrollToDetails();
     };
 
     const handleCreatePositionSuccess = () => {
@@ -250,6 +251,7 @@ export default function ManageOrganizationPage() {
         setIsAssigningEmployee(true);
         setIsCreatingPosition(false);
         setIsCreatingDepartment(false);
+        scrollToDetails();
     };
 
     const handleAssignEmployeeSuccess = () => {
@@ -484,6 +486,7 @@ export default function ManageOrganizationPage() {
                                 setSelectedDepartment(null);
                                 setIsCreatingPosition(false);
                                 setIsAssigningEmployee(false);
+                                scrollToDetails();
                             }}
                             sx={{ ml: 2 }}
                         >

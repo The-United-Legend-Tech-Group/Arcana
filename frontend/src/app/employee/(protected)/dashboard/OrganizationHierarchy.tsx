@@ -228,6 +228,7 @@ export default function OrganizationHierarchy() {
     const [error, setError] = React.useState<string | null>(null);
     const [currentPositionId, setCurrentPositionId] = React.useState<string | null>(null);
     const [currentEmployeeId, setCurrentEmployeeId] = React.useState<string | null>(null);
+    const [userInfoLoaded, setUserInfoLoaded] = React.useState(false);
     const [scale, setScale] = React.useState(1);
     const [showMyHierarchy, setShowMyHierarchy] = React.useState(true);
 
@@ -266,6 +267,8 @@ export default function OrganizationHierarchy() {
                 }
             } catch (e) {
                 console.warn('Failed to fetch user info', e);
+            } finally {
+                setUserInfoLoaded(true);
             }
         };
 
@@ -274,6 +277,11 @@ export default function OrganizationHierarchy() {
 
     // Fetch hierarchy data based on toggle state
     React.useEffect(() => {
+        // Wait for user info to load when in My Hierarchy mode
+        if (showMyHierarchy && !userInfoLoaded) {
+            return;
+        }
+
         const fetchHierarchy = async () => {
             // Only show loading on initial load, not on toggle (preserves scroll position)
             if (hierarchy.length === 0) {
@@ -319,7 +327,7 @@ export default function OrganizationHierarchy() {
         };
 
         fetchHierarchy();
-    }, [showMyHierarchy, currentEmployeeId]);
+    }, [showMyHierarchy, currentEmployeeId, userInfoLoaded]);
 
     // Effect to calculate and update scale
     React.useLayoutEffect(() => {
@@ -398,6 +406,35 @@ export default function OrganizationHierarchy() {
     }
 
     if (!hierarchy || hierarchy.length === 0) {
+        // Show specific message when My Hierarchy is empty
+        if (showMyHierarchy) {
+            return (
+                <Card
+                    elevation={0}
+                    sx={{
+                        mt: 4,
+                        width: '100%',
+                        height: 'calc(100vh - 200px)',
+                        minHeight: 500,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.paper',
+                    }}
+                >
+                    <Typography variant="h6" color="text.secondary" sx={{ textAlign: 'center' }}>
+                        You are not in a Department yet
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                        Contact your HR administrator to be assigned to a department.
+                    </Typography>
+                </Card>
+            );
+        }
         return (
             <Alert severity="info" sx={{ mt: 2 }}>No organization structure found.</Alert>
         );

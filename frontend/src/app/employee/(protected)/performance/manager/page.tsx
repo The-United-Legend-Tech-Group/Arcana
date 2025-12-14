@@ -20,23 +20,42 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { AppraisalAssignment, AppraisalAssignmentStatus } from '@/types/performance';
+import { decryptData } from '@/common/utils/encryption';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
 export default function ManagerAssignmentsPage() {
-    const [managerId, setManagerId] = useState('');
     const [assignments, setAssignments] = useState<AppraisalAssignment[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
+    useEffect(() => {
+        fetchAssignments();
+    }, []);
+
     const fetchAssignments = async () => {
-        if (!managerId) {
-            setError('Please enter a Manager ID');
-            return;
-        }
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`http://localhost:50000/performance/assignments?managerId=${managerId}`);
+            const token = localStorage.getItem('access_token');
+            const encryptedEmployeeId = localStorage.getItem('employeeId');
+
+            if (!token || !encryptedEmployeeId) {
+                throw new Error('Authentication details missing');
+            }
+
+            const managerId = await decryptData(encryptedEmployeeId, token);
+            if (!managerId) {
+                throw new Error('Failed to decrypt manager ID');
+            }
+
+            const response = await fetch(`${API_URL}/performance/assignments?managerId=${managerId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            
             if (!response.ok) {
                 throw new Error('Failed to fetch assignments');
             }
@@ -50,7 +69,7 @@ export default function ManagerAssignmentsPage() {
     };
 
     const handleStartAppraisal = (assignmentId: string) => {
-        router.push(`/employee/performance/manager/appraisal/${assignmentId}?managerId=${managerId}`);
+        router.push(`/employee/performance/appraisal/${assignmentId}`);
     };
 
     return (
@@ -59,28 +78,19 @@ export default function ManagerAssignmentsPage() {
                 Manager Appraisal Dashboard
             </Typography>
             
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField 
-                        label="Manager ID" 
-                        variant="outlined" 
-                        value={managerId} 
-                        onChange={(e) => setManagerId(e.target.value)}
-                        size="small"
-                        sx={{ width: 300 }}
-                    />
-                    <Button 
-                        variant="contained" 
-                        onClick={fetchAssignments}
-                        disabled={loading}
-                    >
-                        {loading ? <CircularProgress size={24} /> : 'Fetch Assignments'}
-                    </Button>
+            {loading && (
+                <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress />
                 </Box>
-                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-            </Paper>
+            )}
 
-            {assignments.length > 0 && (
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+            {!loading && assignments.length === 0 && !error && (
+                <Alert severity="info">No assignments found.</Alert>
+            )}
+
+            {!loading && assignments.length > 0 && (
                 <TableContainer component={Paper}>
                     <Table>
                         <TableHead>

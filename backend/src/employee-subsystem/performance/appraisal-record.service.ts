@@ -68,6 +68,17 @@ export class AppraisalRecordService {
         let totalScore = 0;
 
         for (const ratingDto of updateDto.ratings) {
+            if (ratingDto.key === 'GOALS') {
+                validatedRatings.push({
+                    key: 'GOALS',
+                    title: 'Goals',
+                    ratingValue: 0,
+                    comments: ratingDto.comments,
+                    weightedScore: 0,
+                });
+                continue;
+            }
+
             const criterion = template.criteria.find((c) => c.key === ratingDto.key);
             if (!criterion) {
                 throw new BadRequestException(
@@ -237,6 +248,17 @@ export class AppraisalRecordService {
         let totalScore = 0;
 
         for (const ratingDto of createDto.ratings) {
+            if (ratingDto.key === 'GOALS') {
+                validatedRatings.push({
+                    key: 'GOALS',
+                    title: 'Goals',
+                    ratingValue: 0,
+                    comments: ratingDto.comments,
+                    weightedScore: 0,
+                });
+                continue;
+            }
+
             const criterion = template.criteria.find((c) => c.key === ratingDto.key);
             if (!criterion) {
                 throw new BadRequestException(

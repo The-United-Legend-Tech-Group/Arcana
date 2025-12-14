@@ -41,6 +41,7 @@ export default function AppraisalFormPage() {
     const [managerSummary, setManagerSummary] = useState('');
     const [strengths, setStrengths] = useState('');
     const [improvementAreas, setImprovementAreas] = useState('');
+    const [goals, setGoals] = useState('');
 
     useEffect(() => {
         loadData();
@@ -99,7 +100,11 @@ export default function AppraisalFormPage() {
                 // Populate form
                 const initialRatings: Record<string, { value: number; comments: string }> = {};
                 recordData.ratings.forEach(r => {
-                    initialRatings[r.key] = { value: r.ratingValue, comments: r.comments || '' };
+                    if (r.key === 'GOALS') {
+                        setGoals(r.comments || '');
+                    } else {
+                        initialRatings[r.key] = { value: r.ratingValue, comments: r.comments || '' };
+                    }
                 });
                 setRatings(initialRatings);
                 setManagerSummary(recordData.managerSummary || '');
@@ -153,6 +158,14 @@ export default function AppraisalFormPage() {
                 ratingValue: data.value,
                 comments: data.comments
             }));
+
+            if (goals) {
+                ratingsList.push({
+                    key: 'GOALS',
+                    ratingValue: 0,
+                    comments: goals
+                });
+            }
 
             // Helper to extract ID from populated fields
             const getId = (field: any): string => {
@@ -310,6 +323,17 @@ export default function AppraisalFormPage() {
                                 label="Areas for Improvement"
                                 value={improvementAreas}
                                 onChange={(e) => setImprovementAreas(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid size={12}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={1}
+                                label="Goals for Next Period"
+                                value={goals}
+                                onChange={(e) => setGoals(e.target.value)}
+                                placeholder="Enter goals for the upcoming period..."
                             />
                         </Grid>
                     </Grid>

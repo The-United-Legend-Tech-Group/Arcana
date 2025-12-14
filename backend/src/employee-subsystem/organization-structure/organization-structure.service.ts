@@ -855,5 +855,12 @@ export class OrganizationStructureService {
   async getChangeLogs(): Promise<StructureChangeLog[]> {
     return this.structureChangeLogRepository.findAllWithPerformer();
   }
+
+  /**
+   * Get structure approvals with details
+   */
+  async getApprovals(): Promise<any[]> {
+    return this.structureApprovalRepository.findAllWithDetails();
+  }
 }
 

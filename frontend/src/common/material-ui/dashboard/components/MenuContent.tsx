@@ -180,14 +180,14 @@ export default function MenuContent() {
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
               selected={isSelected(item.text)}
-              onClick={() => handleNavigation(item.text)}
+              onClick={() => handleNavigation(item.text, item.path)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
         ))}
-        
+
         {/* Performance Dropdown */}
         <ListItem disablePadding sx={{ display: "block" }}>
           <ListItemButton
@@ -201,7 +201,7 @@ export default function MenuContent() {
             {performanceOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </ListItemButton>
         </ListItem>
-        
+
         <Collapse in={performanceOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {performanceSubItems.map((item, index) => (
@@ -219,7 +219,7 @@ export default function MenuContent() {
           </List>
         </Collapse>
       </List>
-      
+
       <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>

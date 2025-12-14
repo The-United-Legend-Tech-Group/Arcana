@@ -72,6 +72,14 @@ export default function StructureChangeLogsTable() {
 
     const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - logs.length) : 0;
 
+    const formatRequestType = (type?: string) => {
+        if (!type) return '-';
+        return type
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }} elevation={0} variant="outlined">
             {error && <Alert severity="error" sx={{ m: 1 }}>{error}</Alert>}
@@ -115,7 +123,7 @@ export default function StructureChangeLogsTable() {
                                         <TableCell>
                                             {log.afterSnapshot?.requestType ?
                                                 <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                                    {log.afterSnapshot.requestType.replace(/_/g, ' ')}
+                                                    {formatRequestType(log.afterSnapshot.requestType)}
                                                 </Typography>
                                                 : log.entityType}
                                         </TableCell>

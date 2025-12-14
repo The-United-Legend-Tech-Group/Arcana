@@ -323,5 +323,17 @@ export class OrganizationStructureController {
   async getChangeLogs(): Promise<StructureChangeLog[]> {
     return this.organizationStructureService.getChangeLogs();
   }
+
+  @Get('approvals')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @ApiOperation({ summary: 'Get structure approvals (System Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of structure approvals with details',
+    type: [Object],
+  })
+  async getApprovals(): Promise<any[]> {
+    return this.organizationStructureService.getApprovals();
+  }
 }
 

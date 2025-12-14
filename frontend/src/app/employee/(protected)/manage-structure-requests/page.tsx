@@ -23,6 +23,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import RequestDetails from './RequestDetails';
 import StructureChangeLogsTable from './StructureChangeLogsTable';
+import StructureApprovalsTable from './StructureApprovalsTable';
 
 interface StructureChangeRequest {
     _id: string;
@@ -182,6 +183,14 @@ export default function ManageStructureRequestsPage() {
 
     const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredRequests.length) : 0;
 
+    const formatRequestType = (type?: string) => {
+        if (!type) return '-';
+        return type
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
+
     if (!mounted) {
         return null;
     }
@@ -197,6 +206,7 @@ export default function ManageStructureRequestsPage() {
             <Tabs value={tabValue} onChange={(e, val) => setTabValue(val)} aria-label="structure request tabs">
                 <Tab label="Active Requests" />
                 <Tab label="Past Change Logs" />
+                <Tab label="Approvals" />
             </Tabs>
 
             {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
@@ -286,7 +296,7 @@ export default function ManageStructureRequestsPage() {
                                                             </TableCell>
                                                             <TableCell sx={{ maxWidth: 200 }}>
                                                                 <Typography variant="body2" noWrap>
-                                                                    {req.requestType}
+                                                                    {formatRequestType(req.requestType)}
                                                                 </Typography>
                                                             </TableCell>
                                                             <TableCell sx={{ whiteSpace: 'nowrap' }}>
@@ -339,6 +349,12 @@ export default function ManageStructureRequestsPage() {
             {tabValue === 1 && (
                 <Box sx={{ height: '100%', overflow: 'hidden' }}>
                     <StructureChangeLogsTable />
+                </Box>
+            )}
+
+            {tabValue === 2 && (
+                <Box sx={{ height: '100%', overflow: 'hidden' }}>
+                    <StructureApprovalsTable />
                 </Box>
             )}
         </Stack>

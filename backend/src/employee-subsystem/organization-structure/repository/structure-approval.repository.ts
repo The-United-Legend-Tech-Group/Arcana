@@ -15,4 +15,13 @@ export class StructureApprovalRepository extends BaseRepository<StructureApprova
     ) {
         super(structureApprovalModel);
     }
+
+    async findAllWithDetails(): Promise<StructureApproval[]> {
+        return this.model
+            .find()
+            .populate('approverEmployeeId', 'firstName lastName employeeNumber')
+            .populate('changeRequestId', 'requestNumber requestType status')
+            .sort({ createdAt: -1 })
+            .exec() as unknown as StructureApproval[];
+    }
 }

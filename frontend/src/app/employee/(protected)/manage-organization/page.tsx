@@ -656,7 +656,7 @@ export default function ManageOrganizationPage() {
                                     <TableRow>
                                         <TableCell>Code</TableCell>
                                         <TableCell>Title</TableCell>
-                                        <TableCell>Department ID</TableCell>
+                                        <TableCell>Department</TableCell>
                                         <TableCell>Status</TableCell>
                                         <TableCell sortDirection={positionOrderBy === 'createdAt' ? positionOrder : false}>
                                             <TableSortLabel
@@ -705,7 +705,9 @@ export default function ManageOrganizationPage() {
                                                             {pos.code}
                                                         </TableCell>
                                                         <TableCell>{pos.title}</TableCell>
-                                                        <TableCell>{pos.departmentId}</TableCell>
+                                                        <TableCell>
+                                                            {departments.find(d => d._id === pos.departmentId)?.name || 'Unknown'}
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Chip
                                                                 label={pos.isActive ? 'Active' : 'Inactive'}
@@ -775,6 +777,8 @@ export default function ManageOrganizationPage() {
                             <PositionDetails
                                 position={selectedPosition}
                                 onUpdate={handleUpdatePosition}
+                                departments={departments}
+                                positions={positions}
                             />
                         )}
                     </div>

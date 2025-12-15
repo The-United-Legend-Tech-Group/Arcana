@@ -106,18 +106,18 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                 <Box
                     component="main"
                     sx={(theme) => ({
+                        display: 'flex',
+                        flexDirection: 'column',
                         flexGrow: 1,
                         backgroundColor: theme.vars
                             ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
                             : alpha(theme.palette.background.default, 1),
-                        overflow: 'auto',
+                        overflow: 'hidden',
                         height: '100vh',
                     })}
                 >
                     <Box
                         sx={{
-                            position: 'sticky',
-                            top: 0,
                             zIndex: 1100,
                             width: '100%',
                             bgcolor: 'black',
@@ -125,6 +125,7 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                             py: 1,
                             mt: { xs: 8, md: 0 },
                             mb: 2,
+                            flexShrink: 0,
                         }}
                     >
                         {/* Header is universal for this layout */}
@@ -137,7 +138,8 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                             alignItems: 'center',
                             mx: 3,
                             pb: 5,
-                            height: '100%',
+                            flexGrow: 1,
+                            overflow: 'auto',
                         }}
                     >
                         {/* Page Content */}

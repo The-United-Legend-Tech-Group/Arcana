@@ -145,7 +145,7 @@ export default function PerformanceDashboard() {
   })) || [];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 4, overflow: 'hidden' }}>
       <Typography variant="h4" gutterBottom>
         Performance Dashboard
       </Typography>
@@ -180,14 +180,14 @@ export default function PerformanceDashboard() {
       <Typography variant="h5" gutterBottom>
         Department Breakdown
       </Typography>
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ width: '100%', height: 370 }}>
         <DataGrid
           rows={rows}
           columns={columns}
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize: 10,
+                pageSize: 5,
               },
             },
           }}

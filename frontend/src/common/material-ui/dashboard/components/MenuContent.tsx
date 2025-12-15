@@ -59,7 +59,7 @@ const mainListItems = [
 
 const performanceSubItems = [
   {
-    text: "Performance Dashboard",
+    text: "Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/performance/dashboard",
   },
@@ -84,7 +84,7 @@ const performanceSubItems = [
     path: "/employee/performance/monitoring",
   },
   {
-    text: "Manager Appraisal Dashboard",
+    text: "Manager Appraisal",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/manager",
   },
@@ -94,7 +94,7 @@ const performanceSubItems = [
     path: "/employee/performance/manager-assignments",
   },
   {
-    text: "My Performance Records",
+    text: "My Performance",
     icon: <AssessmentRoundedIcon />,
     path: "/employee/performance/my-records",
   },
@@ -131,19 +131,19 @@ export default function MenuContent() {
     if (text === 'Settings' && pathname === '/employee/settings') return true;
     if (text === 'Calendar' && pathname === '/employee/calendar') return true;
     if (text === 'Manage Organization' && pathname === '/employee/manage-organization') return true;
-    if (text === 'Manage Requests') return pathname === '/employee/manage-requests';
+    if (text === 'Employee Requests') return pathname === '/employee/manage-requests';
     if (text === 'Manage Employees') return pathname.startsWith('/employee/manage-employees');
     if (text === 'Compose Notification') return pathname === '/employee/compose-notification';
-    if (text === 'Manage Structure Changes') return pathname === '/employee/manage-structure-requests';
+    if (text === 'Organization Changes') return pathname === '/employee/manage-structure-requests';
     if (text === 'Time Management') return pathname === '/employee/time-mangemeant';
-    if (text === 'Performance Dashboard' && pathname === '/employee/performance/dashboard') return true;
+    if (text === 'Dashboard' && pathname === '/employee/performance/dashboard') return true;
     if (text === 'Performance Templates' && pathname === '/employee/performance/templates') return true;
     if (text === 'Appraisal Cycles' && pathname === '/employee/performance/cycles') return true;
     if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
     if (text === 'Appraisal Monitoring' && pathname === '/employee/performance/monitoring') return true;
-    if (text === 'Manager Appraisal Dashboard' && pathname === '/employee/performance/manager') return true;
+    if (text === 'Manager Appraisal' && pathname === '/employee/performance/manager') return true;
     if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
-    if (text === 'My Performance Records' && pathname === '/employee/performance/my-records') return true;
+    if (text === 'My Performance' && pathname === '/employee/performance/my-records') return true;
     if (text === 'Disputes' && pathname === '/employee/performance/disputes') return true;
     return false;
   };
@@ -165,9 +165,9 @@ export default function MenuContent() {
     if (text === 'Analytics') router.push('/employee/analytics');
     if (text === 'Settings') router.push('/employee/settings');
     if (text === 'Calendar') router.push('/employee/calendar');
-    if (text === 'Manage Structure Changes') router.push('/employee/manage-structure-requests');
+    if (text === 'Organization Changes') router.push('/employee/manage-structure-requests');
     if (text === 'Manage Organization') router.push('/employee/manage-organization'); // Assuming this was already there or handled generally
-    if (text === 'Manage Requests') router.push('/employee/manage-requests');
+    if (text === 'Employee Requests') router.push('/employee/manage-requests');
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
     if (text === 'Compose Notification') router.push('/employee/compose-notification');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
@@ -207,7 +207,6 @@ export default function MenuContent() {
             {performanceSubItems.map((item, index) => (
               <ListItem key={index} disablePadding sx={{ display: "block" }}>
                 <ListItemButton
-                  sx={{ pl: 4 }}
                   selected={isSelected(item.text)}
                   onClick={() => handleNavigation(item.text, item.path)}
                 >

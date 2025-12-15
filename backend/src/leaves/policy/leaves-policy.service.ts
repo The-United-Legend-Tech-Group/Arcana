@@ -108,18 +108,11 @@ export class LeavesPolicyService {
     leaveTypeId: string,
     settings: ConfigureSettingsDto,
   ): Promise<void> {
-    const policy = await this.leavePolicyRepository.update(
-      { leaveTypeId },
-      { ...settings },
-    );
-
-    if (!policy) {
-      throw new NotFoundException('Failed to create or update leave policy');
-    }
+    await this.leavePolicyRepository.updateByLeaveTypeId(leaveTypeId, settings);
   }
-
+  // REQ-003: Get Leave Settings
   async getLeaveSettings(leaveTypeId: string): Promise<LeavePolicy> {
-    const policy = await this.leavePolicyRepository.findOne({ leaveTypeId });
+    const policy = await this.leavePolicyRepository.findByLeaveTypeId(leaveTypeId);
     if (!policy) throw new NotFoundException('Leave settings not found');
     return policy;
   }
@@ -340,18 +333,16 @@ export class LeavesPolicyService {
   // REQ-007: Set Eligibility Rules
 
   async setEligibilityRules(dto: SetEligibilityRulesDto) {
-    const updated = await this.leavePolicyRepository.update(
-      { leaveTypeId: dto.leaveTypeId },
+    await this.leavePolicyRepository.updateByLeaveTypeId(
+      dto.leaveTypeId,
       {
         eligibility: {
           minTenureMonths: dto.minTenureMonths ?? null,
           positionsAllowed: dto.positionsAllowed ?? [],
           contractTypesAllowed: dto.contractTypesAllowed ?? [],
-        },
-      },
+        }
+      }
     );
-
-    return updated;
   }
 
   // REQ-008 — Assign Personalized Entitlements
@@ -432,10 +423,10 @@ export class LeavesPolicyService {
     if (!leavePolicy) throw new NotFoundException('Leave policy not found');
 
     if (dto.maxDurationDays) {
-      leaveType.maxDurationDays = dto.maxDurationDays;
+      await this.leaveTypeRepository.updateById(leaveTypeId, { maxDurationDays: dto.maxDurationDays });
     }
     if (dto.minNoticeDays) {
-      leavePolicy.minNoticeDays = dto.minNoticeDays;
+      await this.leavePolicyRepository.updateByLeaveTypeId(leaveTypeId, { minNoticeDays: dto.minNoticeDays });
     }
     const approvalWorkflow = dto.approvalFlowRoles;
 

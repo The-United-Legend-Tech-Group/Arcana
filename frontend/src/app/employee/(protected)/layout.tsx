@@ -114,19 +114,32 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                         height: '100vh',
                     })}
                 >
+                    <Box
+                        sx={{
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 1100,
+                            width: '100%',
+                            bgcolor: 'black',
+                            px: 3,
+                            py: 1,
+                            mt: { xs: 8, md: 0 },
+                            mb: 2,
+                        }}
+                    >
+                        {/* Header is universal for this layout */}
+                        <Header notificationPath="/employee/notifications" />
+                    </Box>
+
                     <Stack
                         spacing={2}
                         sx={{
                             alignItems: 'center',
                             mx: 3,
                             pb: 5,
-                            mt: { xs: 8, md: 0 },
                             height: '100%',
                         }}
                     >
-                        {/* Header is universal for this layout */}
-                        <Header notificationPath="/employee/notifications" />
-
                         {/* Page Content */}
                         <Box sx={{ width: '100%', height: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
                             {children}

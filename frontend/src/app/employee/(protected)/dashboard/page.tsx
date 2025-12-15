@@ -180,6 +180,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                 size="medium"
                                                 variant="filled"
                                                 sx={{
+                                                    height: 30,
                                                     fontWeight: 'bold',
                                                     border: 'none',
                                                     ...(employee?.status === 'ON_LEAVE' && {
@@ -197,6 +198,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                         size="medium"
                                                         variant="outlined"
                                                         sx={{
+                                                            height: 30,
                                                             fontWeight: 'bold',
                                                         }}
                                                     />

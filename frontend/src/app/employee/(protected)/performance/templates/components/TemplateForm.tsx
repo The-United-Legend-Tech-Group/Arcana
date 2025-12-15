@@ -398,9 +398,14 @@ export default function TemplateForm({
                                     </Box>
 
                                     <Box sx={{ ml: 'auto' }}>
-                                        <IconButton color="error" onClick={() => handleRemoveCriterion(index)}>
-                                            <DeleteIcon />
-                                        </IconButton>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<DeleteIcon />}
+                                            onClick={() => handleRemoveCriterion(index)}
+                                        >
+                                            Delete Criterion
+                                        </Button>
                                     </Box>
                                 </Stack>
                             </Stack>

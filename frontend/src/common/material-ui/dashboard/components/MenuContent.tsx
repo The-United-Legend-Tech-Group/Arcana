@@ -26,6 +26,7 @@ import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { usePathname, useRouter } from "next/navigation";
 
 const mainListItems = [
@@ -99,6 +100,11 @@ const performanceSubItems = [
     path: "/employee/performance/my-records",
   },
   {
+    text: "Manage Disputes",
+    icon: <GavelRoundedIcon />,
+    path: "/employee/performance/manage-disputes",
+  },
+  {
     text: "Disputes",
     icon: <ReportProblemRoundedIcon />,
     path: "/employee/performance/disputes",
@@ -144,6 +150,7 @@ export default function MenuContent() {
     if (text === 'Manager Appraisal' && pathname === '/employee/performance/manager') return true;
     if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
     if (text === 'My Performance' && pathname === '/employee/performance/my-records') return true;
+    if (text === 'Manage Disputes' && pathname === '/employee/performance/manage-disputes') return true;
     if (text === 'Disputes' && pathname === '/employee/performance/disputes') return true;
     return false;
   };

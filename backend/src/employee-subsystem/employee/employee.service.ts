@@ -89,23 +89,30 @@ export class EmployeeService {
 
     // upsert assignment
     const existing = await this.employeeSystemRoleRepository.findOne({
-      employeeProfileId: employeeId,
+      employeeProfileId: new Types.ObjectId(employeeId),
     });
-    const payload = {
-      employeeProfileId: employeeId,
-      roles,
-      permissions,
-      isActive: true,
-    } as any;
 
     if (existing) {
-      return this.employeeSystemRoleRepository.update(
-        { _id: existing._id },
-        { $set: payload },
+      // Update existing record using updateById with $set operator
+      return await this.employeeSystemRoleRepository.updateById(
+        existing._id.toString(),
+        {
+          $set: {
+            roles,
+            permissions,
+            isActive: true,
+          }
+        } as any,
       );
     }
 
-    return this.employeeSystemRoleRepository.create(payload);
+    // Create new record
+    return await this.employeeSystemRoleRepository.create({
+      employeeProfileId: new Types.ObjectId(employeeId),
+      roles,
+      permissions,
+      isActive: true,
+    });
   }
 
   async updateContactInfo(
@@ -420,7 +427,7 @@ export class EmployeeService {
 
     // Update related system roles isActive flag
     await this.employeeSystemRoleRepository.update(
-      { employeeProfileId: id },
+      { employeeProfileId: new Types.ObjectId(id) },
       { $set: { isActive } },
     );
 
@@ -530,7 +537,7 @@ export class EmployeeService {
     }
 
     const systemRole = await this.employeeSystemRoleRepository.findOne({
-      employeeProfileId: employeeId,
+      employeeProfileId: new Types.ObjectId(employeeId),
     } as any);
 
     // Return combined view; omit any sensitive fields if present

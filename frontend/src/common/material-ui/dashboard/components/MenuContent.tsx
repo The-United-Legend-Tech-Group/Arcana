@@ -46,6 +46,7 @@ const mainListItems = [
     text: "Manage Organization",
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
+    roles: ["department employee"]
   },
   { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
   { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },

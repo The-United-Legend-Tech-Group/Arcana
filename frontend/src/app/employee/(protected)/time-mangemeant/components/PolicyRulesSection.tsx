@@ -66,6 +66,7 @@ type ShiftFormState = {
   endTime: string;
   active: boolean;
   graceInMinutes: number;
+  graceOutMinutes: number;
 };
 
 type HolidayFormState = {
@@ -191,13 +192,13 @@ type PolicyInsight = {
   chips?: Array<{
     label: string;
     color?:
-    | "default"
-    | "primary"
-    | "secondary"
-    | "success"
-    | "warning"
-    | "info"
-    | "error";
+      | "default"
+      | "primary"
+      | "secondary"
+      | "success"
+      | "warning"
+      | "info"
+      | "error";
   }>;
 };
 
@@ -382,7 +383,7 @@ function PolicyInsightCard({
                 bgcolor: (theme) => {
                   const palette =
                     (theme.palette as Record<string, any>)[
-                    insight.avatarColor
+                      insight.avatarColor
                     ] ?? theme.palette.primary;
                   const mainColor =
                     typeof palette === "object" && palette?.main
@@ -393,7 +394,7 @@ function PolicyInsightCard({
                 color: (theme) => {
                   const palette =
                     (theme.palette as Record<string, any>)[
-                    insight.avatarColor
+                      insight.avatarColor
                     ] ?? theme.palette.primary;
                   return (
                     (typeof palette === "object" && palette?.main) ||
@@ -419,7 +420,8 @@ function PolicyInsightCard({
           <Stack spacing={1.5}>
             {insight.toggles.map((toggle) => {
               const toggleDisabled =
-                !onToggle || (!toggle.action && toggle.action?.kind !== "info");
+                !onToggle ||
+                (!toggle.action && (toggle.action as any)?.kind !== "info");
               const hasAction = toggle.action && toggle.action.kind !== "info";
 
               return (
@@ -608,7 +610,8 @@ export default function PolicyRulesSection({
     null
   );
 
-  const [scheduleRuleModalOpen, setScheduleRuleModalOpen] = React.useState(false);
+  const [scheduleRuleModalOpen, setScheduleRuleModalOpen] =
+    React.useState(false);
 
   const selectedShift = React.useMemo(
     () => activeShifts.find((s) => s._id === selectedShiftId) ?? null,
@@ -622,8 +625,9 @@ export default function PolicyRulesSection({
 
     return {
       duration: formatDuration(computeShiftDurationMinutes(selectedShift)),
-      schedule: `${selectedShift.startTime ?? "—"} → ${selectedShift.endTime ?? "—"
-        }`,
+      schedule: `${selectedShift.startTime ?? "—"} → ${
+        selectedShift.endTime ?? "—"
+      }`,
       punchPolicy: selectedShift.punchPolicy ?? "Not configured",
       requiresApproval: Boolean(selectedShift.requiresApprovalForOvertime),
       graceIn: selectedShift.graceInMinutes ?? 0,
@@ -751,9 +755,9 @@ export default function PolicyRulesSection({
           },
           dominantPunchPolicy
             ? {
-              label: `Primary punch policy: ${dominantPunchPolicy}`,
-              color: "info",
-            }
+                label: `Primary punch policy: ${dominantPunchPolicy}`,
+                color: "info",
+              }
             : undefined,
         ].filter(Boolean) as PolicyInsight["chips"],
       },
@@ -770,12 +774,13 @@ export default function PolicyRulesSection({
             label: "Grace periods enforced",
             enabled: gracePolicyEnforced,
             hint: gracePolicyEnforced
-              ? `${activeShifts.filter(
-                (s) =>
-                  (s.graceInMinutes ?? 0) > 0 ||
-                  (s.graceOutMinutes ?? 0) > 0
-              ).length
-              } shifts with grace windows`
+              ? `${
+                  activeShifts.filter(
+                    (s) =>
+                      (s.graceInMinutes ?? 0) > 0 ||
+                      (s.graceOutMinutes ?? 0) > 0
+                  ).length
+                } shifts with grace windows`
               : "Configure grace via shift templates",
             action: {
               kind: "shift",
@@ -827,39 +832,40 @@ export default function PolicyRulesSection({
           },
           {
             label: "Shifts with grace",
-            value: `${activeShifts.filter(
-              (s) =>
-                (s.graceInMinutes ?? 0) > 0 || (s.graceOutMinutes ?? 0) > 0
-            ).length
-              }/${activeShifts.length}`,
+            value: `${
+              activeShifts.filter(
+                (s) =>
+                  (s.graceInMinutes ?? 0) > 0 || (s.graceOutMinutes ?? 0) > 0
+              ).length
+            }/${activeShifts.length}`,
           },
         ],
         chips: [
           graceAverages.maxIn > 0
             ? {
-              label: `Check-in grace up to ${formatMinutes(
-                graceAverages.maxIn
-              )}`,
-              color: "success",
-            }
+                label: `Check-in grace up to ${formatMinutes(
+                  graceAverages.maxIn
+                )}`,
+                color: "success",
+              }
             : undefined,
           graceAverages.maxOut > 0
             ? {
-              label: `Checkout grace up to ${formatMinutes(
-                graceAverages.maxOut
-              )}`,
-              color: "success",
-            }
+                label: `Checkout grace up to ${formatMinutes(
+                  graceAverages.maxOut
+                )}`,
+                color: "success",
+              }
             : undefined,
           strictPunchPolicy
             ? {
-              label: "FIRST_LAST policy active",
-              color: "info",
-            }
+                label: "FIRST_LAST policy active",
+                color: "info",
+              }
             : {
-              label: "Flexible punch tracking",
-              color: "default",
-            },
+                label: "Flexible punch tracking",
+                color: "default",
+              },
         ].filter(Boolean) as PolicyInsight["chips"],
       },
       {
@@ -911,11 +917,11 @@ export default function PolicyRulesSection({
         ],
         chips: weekendRules.length
           ? [
-            {
-              label: weekendRules[0].name,
-              color: weekendRules[0].active === false ? "default" : "success",
-            },
-          ]
+              {
+                label: weekendRules[0].name,
+                color: weekendRules[0].active === false ? "default" : "success",
+              },
+            ]
           : undefined,
       },
     ];
@@ -1049,12 +1055,12 @@ export default function PolicyRulesSection({
                               activeShifts.length === 0
                                 ? 0
                                 : Math.min(
-                                  100,
-                                  Math.round(
-                                    (approvalRequired / activeShifts.length) *
-                                    100
+                                    100,
+                                    Math.round(
+                                      (approvalRequired / activeShifts.length) *
+                                        100
+                                    )
                                   )
-                                )
                             }
                             sx={{ mt: 1.5, height: 6, borderRadius: 3 }}
                           />
@@ -1150,14 +1156,18 @@ export default function PolicyRulesSection({
               <Card variant="outlined" sx={{ height: "100%" }}>
                 <CardContent>
                   <Stack spacing={2.5}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="flex-start"
+                    >
                       <Box>
                         <Typography variant="subtitle1" fontWeight="bold">
                           Schedule rules
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Pulled from `/time/schedule-rules` to describe rotation
-                          patterns.
+                          Pulled from `/time/schedule-rules` to describe
+                          rotation patterns.
                         </Typography>
                       </Box>
                       <Button

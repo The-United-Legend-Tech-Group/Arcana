@@ -434,10 +434,10 @@ export default function TimeManagementClient({
           ),
           managerId
             ? secureFetch<CorrectionRequest[]>(
-              `/time/corrections/pending/${managerId}`,
-              [],
-              fetchOptions
-            )
+                `/time/corrections/pending/${managerId}`,
+                [],
+                fetchOptions
+              )
             : Promise.resolve([]),
           secureFetch<CorrectionRequest[]>(
             `/time/corrections/approved/payroll`,
@@ -716,7 +716,11 @@ export default function TimeManagementClient({
               key={tab.id}
               value={tab.id}
               label={tab.title}
-              icon={tab.icon ?? undefined}
+              icon={
+                typeof tab.icon === "string" || React.isValidElement(tab.icon)
+                  ? tab.icon
+                  : undefined
+              }
               iconPosition="start"
             />
           ))}

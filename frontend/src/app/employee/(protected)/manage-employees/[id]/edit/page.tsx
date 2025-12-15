@@ -55,7 +55,17 @@ function EmployeeEditContent() {
 
             if (response.ok) {
                 const data = await response.json();
-                setEmployee(data.profile || data);
+                // Backend returns { profile: ..., systemRole: { roles: [...], permissions: [...] } }
+                const employeeData = data.profile || data;
+                if (data.systemRole) {
+                    if (data.systemRole.roles) {
+                        employeeData.roles = data.systemRole.roles;
+                    }
+                    if (data.systemRole.permissions) {
+                        employeeData.permissions = data.systemRole.permissions;
+                    }
+                }
+                setEmployee(employeeData);
             } else {
                 console.error('Failed to fetch employee', response.status);
                 setError('Failed to load employee details');

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -8,7 +8,6 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Collapse from "@mui/material/Collapse";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
@@ -28,20 +27,16 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { usePathname, useRouter } from "next/navigation";
+import { getUserRoles } from "../../../utils/cookie-utils";
 
 const mainListItems = [
-  { text: "Home", icon: <HomeRoundedIcon />, path: "/employee/dashboard" },
+  { text: "Home", icon: <HomeRoundedIcon />, path: "/employee/dashboard", roles: [] },
   {
     text: "Calendar",
     icon: <CalendarMonthRoundedIcon />,
     path: "/employee/calendar",
   },
-  { text: "Team", icon: <PeopleRoundedIcon />, path: "/employee/team" },
-  // {
-  //   text: "Analytics",
-  //   icon: <AnalyticsRoundedIcon />,
-  //   path: "/employee/analytics",
-  // },
+  { text: "Team", icon: <PeopleRoundedIcon />, path: "/employee/team", roles: ["department head"] },
   {
     text: "Time Management",
     icon: <AccessTimeRoundedIcon />,
@@ -121,12 +116,27 @@ export default function MenuContent() {
   const pathname = usePathname();
   const router = useRouter();
   const [performanceOpen, setPerformanceOpen] = useState(false);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Load user roles only on client side to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+    setUserRoles(getUserRoles());
+  }, []);
 
   const isCandidate = pathname.startsWith("/candidate");
   const isPerformancePath = pathname.startsWith("/employee/performance");
 
   const visibleListItems = mainListItems.filter((item) => {
     if (isCandidate && item.text === "Team") return false;
+    // Only apply role-based filtering on client side after hydration
+    if (isClient) {
+      // @ts-ignore
+      if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -211,17 +221,26 @@ export default function MenuContent() {
 
         <Collapse in={performanceOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {performanceSubItems.map((item, index) => (
-              <ListItem key={index} disablePadding sx={{ display: "block" }}>
-                <ListItemButton
-                  selected={isSelected(item.text)}
-                  onClick={() => handleNavigation(item.text, item.path)}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {performanceSubItems.map((item, index) => {
+              // Only apply role-based filtering on client side after hydration
+              if (isClient) {
+                // @ts-ignore
+                if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+                  return null;
+                }
+              }
+              return (
+                <ListItem key={index} disablePadding sx={{ display: "block" }}>
+                  <ListItemButton
+                    selected={isSelected(item.text)}
+                    onClick={() => handleNavigation(item.text, item.path)}
+                  >
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
           </List>
         </Collapse>
       </List>

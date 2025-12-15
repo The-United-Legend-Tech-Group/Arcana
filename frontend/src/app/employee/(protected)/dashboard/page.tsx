@@ -52,6 +52,7 @@ interface LatestAppraisal {
 import OrganizationHierarchy from './OrganizationHierarchy';
 import PerformanceOverview from './PerformanceOverview';
 import { decryptData } from '../../../../common/utils/encryption';
+import { getUserRoles } from '../../../../common/utils/cookie-utils';
 
 export default function EmployeeDashboard(props: { disableCustomTheme?: boolean }) {
     const router = useRouter();
@@ -306,6 +307,32 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
 
                 {/* Organization Hierarchy Section */}
                 <OrganizationHierarchy />
+
+                {/* System Roles Section */}
+                <Card variant="outlined">
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>System Roles</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                            Access Level
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {getUserRoles().length > 0 ? (
+                                getUserRoles().map((role, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={role}
+                                        color="primary"
+                                        size="medium"
+                                        variant="outlined"
+                                        sx={{ fontWeight: 'medium' }}
+                                    />
+                                ))
+                            ) : (
+                                <Typography variant="body2" color="text.secondary">No roles assigned</Typography>
+                            )}
+                        </Stack>
+                    </CardContent>
+                </Card>
             </Stack>
         </Box >
     );

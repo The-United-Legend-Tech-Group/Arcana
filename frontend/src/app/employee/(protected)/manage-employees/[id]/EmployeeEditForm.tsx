@@ -400,6 +400,7 @@ export default function EmployeeEditForm({ employee, onUpdate }: EmployeeEditFor
                     <EmployeeRoleForm
                         employeeId={employee._id}
                         currentRoles={employee.roles || []}
+                        currentPermissions={employee.permissions || []}
                         onUpdate={onUpdate}
                     />
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-start' }}>

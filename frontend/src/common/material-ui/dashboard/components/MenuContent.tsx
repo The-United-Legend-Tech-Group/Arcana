@@ -110,7 +110,7 @@ const performanceSubItems = [
 
 const leavesSubItems = [
   {
-    text: "Policy Handling",
+    text: "Policy Management",
     icon: <ListAltRoundedIcon />,
     path: "/employee/leaves/policy",
 
@@ -124,7 +124,7 @@ const leavesSubItems = [
   {
     text: "Leave Type Management",
     icon: <PlaylistAddCheckRoundedIcon />,
-    path: "/employee/performance/disputes",
+    path: "/employee/leaves/type",
   },
 ];
 

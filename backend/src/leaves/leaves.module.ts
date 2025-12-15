@@ -47,6 +47,7 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsystem/employee/models/employee-system-role.schema';
+import { LeaveCategoryRepository } from './repository/leave-category.repository';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsys
     LeaveTypeRepository,
     LeaveAdjustmentRepository,
     LeaveRequestRepository,
+    LeaveCategoryRepository,
     AttachmentRepository,
     CalendarRepository,
   ],

@@ -183,6 +183,14 @@ export default function ManagePoliciesList() {
   }, [openId, pageSize, policies, page]);
 
   const totalPages = Math.max(1, Math.ceil(policies.length / pageSize));
+
+  // Keep current page within valid range after page size or data changes
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   const paginatedPolicies = policies.slice((page - 1) * pageSize, page * pageSize);
 
   return (
@@ -217,7 +225,6 @@ export default function ManagePoliciesList() {
         </Tooltip>
       </Stack>
 
-      {error && <Alert severity="error">{error}</Alert>}
 
       <List
         dense

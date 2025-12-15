@@ -27,6 +27,8 @@ import { AdjustmentType } from '../enums/adjustment-type.enum';
 import { AccrualMethod } from '../enums/accrual-method.enum';
 import { RoundingRule } from '../enums/rounding-rule.enum';
 import { AnnualResetDto } from '../dtos/annual-reset.dto';
+import { LeaveCategoryRepository } from '../repository/leave-category.repository';
+import { LeaveCategory } from '../models/leave-category.schema';
 
 @Injectable()
 export class LeavesPolicyService {
@@ -38,6 +40,7 @@ export class LeavesPolicyService {
     private readonly calendarRepository: CalendarRepository,
     private readonly employeeService: EmployeeService,
     private readonly attendanceService: AttendanceService,
+    private readonly leaveCategoryRepository: LeaveCategoryRepository,
   ) {}
   //private readonly approvalWorkflowService: ApprovalWorkflowService
 
@@ -726,5 +729,9 @@ async executeAnnualReset(): Promise<void> {
     employeeId: string,
   ): Promise<LeaveEntitlement[]> {
     return this.leaveEntitlementRepository.findByEmployeeId(employeeId);
+  }
+
+  async getLeaveCategories(): Promise<LeaveCategory[]> {
+    return this.leaveCategoryRepository.find();
   }
 }

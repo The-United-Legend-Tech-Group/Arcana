@@ -571,6 +571,28 @@ export class EmployeeService {
       }
     }
 
+    // Populate supervisor info
+    if (profileObj.supervisorPositionId) {
+      // Handle case where it might be populated or just an ID
+      const supPosId = (profileObj.supervisorPositionId._id || profileObj.supervisorPositionId).toString();
+
+      const supervisor = await this.employeeProfileModel.findOne({
+        primaryPositionId: new Types.ObjectId(supPosId)
+      })
+        .select('firstName lastName _id')
+        .lean<{ _id: Types.ObjectId; firstName: string; lastName: string }>()
+        .exec();
+
+      if (supervisor) {
+        profileObj.supervisor = {
+          _id: supervisor._id.toString(),
+          firstName: supervisor.firstName,
+          lastName: supervisor.lastName,
+          fullName: `${supervisor.firstName} ${supervisor.lastName}`
+        };
+      }
+    }
+
     // Fetch appraisal records for performance history (most recent first)
     const records: any[] = await this.appraisalRecordModel
       .find({ employeeProfileId: employeeId })

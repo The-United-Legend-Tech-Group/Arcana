@@ -45,6 +45,12 @@ interface Employee {
     department?: { name: string };
     position?: { title: string };
     biography?: string;
+    supervisor?: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        fullName: string;
+    };
 }
 
 export default function MemberDetailsPage() {
@@ -235,6 +241,25 @@ export default function MemberDetailsPage() {
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Employee ID</Typography>
                                     <Typography variant="body1">{employee.employeeNumber}</Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Supervisor</Typography>
+                                    {employee.supervisor ? (
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
+                                                color: 'primary.main',
+                                                textDecoration: 'none',
+                                                cursor: 'pointer',
+                                                '&:hover': { textDecoration: 'underline' }
+                                            }}
+                                            onClick={() => router.push(`/employee/team/member-details/${employee.supervisor?._id}`)}
+                                        >
+                                            {employee.supervisor.fullName}
+                                        </Typography>
+                                    ) : (
+                                        <Typography variant="body1">N/A</Typography>
+                                    )}
                                 </Box>
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Date of Hire</Typography>

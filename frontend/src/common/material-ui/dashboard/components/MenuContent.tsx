@@ -53,13 +53,13 @@ export const mainListItems: MenuItem[] = [
   {
     text: "Manage Organization",
     icon: <ApartmentRoundedIcon />,
-    path: "/employee/manage-organization",
-    roles: ["department employee"]
+    path: "/employee/manage-organization"
   },
   { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
   { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
   { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification' },
   { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests' },
+
 ];
 
 export const performanceSubItems: MenuItem[] = [

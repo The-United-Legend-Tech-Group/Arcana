@@ -31,7 +31,9 @@ import {
     Button,
     FormControl,
     Select,
-    MenuItem
+    MenuItem,
+    Tabs,
+    Tab
 } from '@mui/material';
 import GavelIcon from '@mui/icons-material/Gavel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -40,8 +42,39 @@ import { AppraisalRecord, AppraisalDispute, AppraisalDisputeStatus, RatingEntry 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ p: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
+}
+
+import { useRouter } from 'next/navigation';
+
 export default function ManageDisputesPage() {
-    const [disputes, setDisputes] = useState<AppraisalDispute[]>([]);
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState(0);
+    const [disputes, setDisputes] = useState<AppraisalDispute[]>([]); // Open disputes
+    const [historyDisputes, setHistoryDisputes] = useState<AppraisalDispute[]>([]); // Resolved/Rejected disputes
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -84,8 +117,39 @@ export default function ManageDisputesPage() {
     };
 
     useEffect(() => {
-        fetchDisputes();
-    }, []);
+        if (activeTab === 0) {
+            fetchDisputes();
+        } else {
+            fetchHistoryDisputes();
+        }
+    }, [activeTab]);
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setActiveTab(newValue);
+    };
+
+    const fetchHistoryDisputes = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            setLoading(true);
+            const response = await fetch(`${API_URL}/performance/disputes/history`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setHistoryDisputes(data);
+            } else {
+                console.error('Failed to fetch history disputes');
+            }
+        } catch (err) {
+            console.error('Error fetching history:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchDisputes = async () => {
         try {
@@ -233,6 +297,11 @@ export default function ManageDisputesPage() {
             setSuccess('Dispute resolved successfully');
             setResolveDialogOpen(false);
             fetchDisputes(); // Refresh list
+
+            // Redirect to manager assignments after a short delay to show success message
+            setTimeout(() => {
+                router.push('/employee/performance/manager-assignments');
+            }, 1000);
         } catch (err: any) {
             console.error('Error resolving dispute:', err);
             setError(err.message || 'An error occurred while resolving the dispute.');
@@ -266,71 +335,141 @@ export default function ManageDisputesPage() {
                     Manage Disputes
                 </Typography>
 
-                {hrAccessDenied ? (
-                    <Alert severity="warning">You are not authorized to view all open disputes.</Alert>
-                ) : disputes.length === 0 ? (
-                    <Alert severity="info">No open disputes found.</Alert>
-                ) : (
-                    <>
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Date</TableCell>
-                                        <TableCell>Employee</TableCell>
-                                        <TableCell>Reason</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {[...disputes]
-                                        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
-                                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        .map((dispute) => (
-                                            <TableRow key={dispute._id}>
-                                                <TableCell>{new Date(dispute.submittedAt).toLocaleDateString()}</TableCell>
-                                                <TableCell>
-                                                    {(dispute.raisedByEmployeeId as any)?.firstName
-                                                        ? `${(dispute.raisedByEmployeeId as any).firstName} ${(dispute.raisedByEmployeeId as any).lastName}`
-                                                        : String(dispute.raisedByEmployeeId)}
-                                                </TableCell>
-                                                <TableCell>{dispute.reason}</TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={dispute.status}
-                                                        color={getStatusColor(dispute.status) as any}
-                                                        size="small"
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Tooltip title="View Details">
-                                                        <IconButton onClick={() => handleOpenViewDialog(dispute)}>
-                                                            <VisibilityIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Resolve">
-                                                        <IconButton color="primary" onClick={() => handleOpenResolveDialog(dispute)}>
-                                                            <GavelIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <TablePagination
-                            rowsPerPageOptions={[4, 10, 25]}
-                            component="div"
-                            count={disputes.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                        />
-                    </>
-                )}
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs value={activeTab} onChange={handleTabChange} aria-label="manage disputes tabs">
+                        <Tab label="Open Disputes" />
+                        <Tab label="History" />
+                    </Tabs>
+                </Box>
+
+                <CustomTabPanel value={activeTab} index={0}>
+                    {hrAccessDenied ? (
+                        <Alert severity="warning">You are not authorized to view all open disputes.</Alert>
+                    ) : disputes.length === 0 ? (
+                        <Alert severity="info">No open disputes found.</Alert>
+                    ) : (
+                        <>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Date</TableCell>
+                                            <TableCell>Employee</TableCell>
+                                            <TableCell>Reason</TableCell>
+                                            <TableCell>Status</TableCell>
+                                            <TableCell>Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {[...disputes]
+                                            .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                            .map((dispute) => (
+                                                <TableRow key={dispute._id}>
+                                                    <TableCell>{new Date(dispute.submittedAt).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        {(dispute.raisedByEmployeeId as any)?.firstName
+                                                            ? `${(dispute.raisedByEmployeeId as any).firstName} ${(dispute.raisedByEmployeeId as any).lastName}`
+                                                            : String(dispute.raisedByEmployeeId)}
+                                                    </TableCell>
+                                                    <TableCell>{dispute.reason}</TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={dispute.status}
+                                                            color={getStatusColor(dispute.status) as any}
+                                                            size="small"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Tooltip title="View Details">
+                                                            <IconButton onClick={() => handleOpenViewDialog(dispute)}>
+                                                                <VisibilityIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Resolve">
+                                                            <IconButton color="primary" onClick={() => handleOpenResolveDialog(dispute)}>
+                                                                <GavelIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <TablePagination
+                                rowsPerPageOptions={[4, 10, 25]}
+                                component="div"
+                                count={disputes.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                            />
+                        </>
+                    )}
+                </CustomTabPanel>
+
+                <CustomTabPanel value={activeTab} index={1}>
+                    {historyDisputes.length === 0 ? (
+                        <Alert severity="info">No dispute history found.</Alert>
+                    ) : (
+                        <>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Date</TableCell>
+                                            <TableCell>Employee</TableCell>
+                                            <TableCell>Reason</TableCell>
+                                            <TableCell>Status</TableCell>
+                                            <TableCell>Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {[...historyDisputes]
+                                            .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                            .map((dispute) => (
+                                                <TableRow key={dispute._id} hover>
+                                                    <TableCell>{new Date(dispute.submittedAt).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        {(dispute.raisedByEmployeeId as any)?.firstName
+                                                            ? `${(dispute.raisedByEmployeeId as any).firstName} ${(dispute.raisedByEmployeeId as any).lastName}`
+                                                            : String(dispute.raisedByEmployeeId)}
+                                                    </TableCell>
+                                                    <TableCell>{dispute.reason}</TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={dispute.status}
+                                                            color={getStatusColor(dispute.status) as any}
+                                                            size="small"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Tooltip title="View Details">
+                                                            <IconButton onClick={() => handleOpenViewDialog(dispute)}>
+                                                                <VisibilityIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <TablePagination
+                                rowsPerPageOptions={[4, 10, 25]}
+                                component="div"
+                                count={historyDisputes.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                            />
+                        </>
+                    )}
+                </CustomTabPanel>
             </Paper>
 
             {/* Resolve Dialog */}
@@ -526,6 +665,14 @@ export default function ManageDisputesPage() {
                                 <Typography variant="subtitle2" color="textSecondary">Reason</Typography>
                                 <Typography variant="body1">{selectedDispute.reason}</Typography>
                             </Grid>
+
+                            {selectedDispute.details && (
+                                <Grid size={12}>
+                                    <Divider sx={{ my: 1 }} />
+                                    <Typography variant="subtitle2" color="textSecondary">Description</Typography>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{selectedDispute.details}</Typography>
+                                </Grid>
+                            )}
                         </Grid>
                     )}
                 </DialogContent>
@@ -533,6 +680,6 @@ export default function ManageDisputesPage() {
                     <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
-        </Container>
+        </Container >
     );
 }

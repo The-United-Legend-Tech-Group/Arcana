@@ -85,6 +85,15 @@ export default function DisputesPage() {
     const [myDisputesPage, setMyDisputesPage] = useState(0);
     const [myDisputesRowsPerPage, setMyDisputesRowsPerPage] = useState(4);
 
+    // View Dispute Details State
+    const [selectedDispute, setSelectedDispute] = useState<AppraisalDispute | null>(null);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
+
+    const handleRowClick = (dispute: AppraisalDispute) => {
+        setSelectedDispute(dispute);
+        setViewDialogOpen(true);
+    };
+
     const handleChangeMyDisputesPage = (event: unknown, newPage: number) => {
         setMyDisputesPage(newPage);
     };
@@ -337,7 +346,12 @@ export default function DisputesPage() {
                                             .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
                                             .slice(myDisputesPage * myDisputesRowsPerPage, myDisputesPage * myDisputesRowsPerPage + myDisputesRowsPerPage)
                                             .map((dispute) => (
-                                                <TableRow key={dispute._id}>
+                                                <TableRow
+                                                    key={dispute._id}
+                                                    hover
+                                                    onClick={() => handleRowClick(dispute)}
+                                                    sx={{ cursor: 'pointer' }}
+                                                >
                                                     <TableCell>{new Date(dispute.submittedAt).toLocaleDateString()}</TableCell>
                                                     <TableCell>{dispute.reason}</TableCell>
                                                     <TableCell>
@@ -365,6 +379,94 @@ export default function DisputesPage() {
                     )}
                 </CustomTabPanel>
             </Paper>
+
+            {/* View Details Dialog */}
+            <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Dispute Details</DialogTitle>
+                <DialogContent>
+                    {selectedDispute && (
+                        <Grid container spacing={2} sx={{ mt: 1 }}>
+                            <Grid size={12}>
+                                <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+                                <Chip
+                                    label={selectedDispute.status}
+                                    color={getStatusColor(selectedDispute.status) as any}
+                                    sx={{ mt: 0.5 }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="subtitle2" color="textSecondary">Submitted Date</Typography>
+                                <Typography>{new Date(selectedDispute.submittedAt).toLocaleString()}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="subtitle2" color="textSecondary">Raised By</Typography>
+                                <Typography>
+                                    {/* Assuming raisedBy is self, but for completeness/consistency */}
+                                    Me
+                                </Typography>
+                            </Grid>
+
+                            <Grid size={12}>
+                                <Divider sx={{ my: 1 }} />
+                            </Grid>
+
+                            <Grid size={12}>
+                                <Typography variant="subtitle2" color="textSecondary">Reason</Typography>
+                                <Typography variant="body1">{selectedDispute.reason}</Typography>
+                            </Grid>
+
+                            {selectedDispute.details && (
+                                <Grid size={12}>
+                                    <Divider sx={{ my: 1 }} />
+                                    <Typography variant="subtitle2" color="textSecondary">Details</Typography>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{selectedDispute.details}</Typography>
+                                </Grid>
+                            )}
+
+                            {/* Resolution Details */}
+                            {selectedDispute.status !== AppraisalDisputeStatus.OPEN && selectedDispute.status !== AppraisalDisputeStatus.UNDER_REVIEW && (
+                                <>
+                                    <Grid size={12}>
+                                        <Divider sx={{ my: 1 }} />
+                                    </Grid>
+                                    <Grid size={12}>
+                                        <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>Resolution</Typography>
+                                    </Grid>
+
+                                    {selectedDispute.resolvedAt && (
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <Typography variant="subtitle2" color="textSecondary">Resolved Date</Typography>
+                                            <Typography>{new Date(selectedDispute.resolvedAt).toLocaleString()}</Typography>
+                                        </Grid>
+                                    )}
+                                    {selectedDispute.resolvedByEmployeeId && (
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <Typography variant="subtitle2" color="textSecondary">Resolved By</Typography>
+                                            <Typography>
+                                                {typeof selectedDispute.resolvedByEmployeeId === 'object'
+                                                    ? `${(selectedDispute.resolvedByEmployeeId as any).firstName} ${(selectedDispute.resolvedByEmployeeId as any).lastName}`
+                                                    : 'Manager'}
+                                            </Typography>
+                                        </Grid>
+                                    )}
+
+                                    {selectedDispute.resolutionSummary && (
+                                        <Grid size={12}>
+                                            <Typography variant="subtitle2" color="textSecondary">Resolution Summary</Typography>
+                                            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', bgcolor: 'action.hover', p: 1, borderRadius: 1 }}>
+                                                {selectedDispute.resolutionSummary}
+                                            </Typography>
+                                        </Grid>
+                                    )}
+                                </>
+                            )}
+                        </Grid>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
             <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
                 <Alert onClose={() => setError(null)} severity="error" variant="filled" sx={{ width: '100%' }}>
                     {error}

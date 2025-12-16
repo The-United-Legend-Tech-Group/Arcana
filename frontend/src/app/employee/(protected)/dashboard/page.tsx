@@ -41,6 +41,7 @@ interface Employee {
     status: string;
     dateOfHire: string;
     profilePictureUrl?: string;
+    biography?: string;
 }
 
 interface LatestAppraisal {
@@ -175,7 +176,7 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                         <Typography variant="h4" fontWeight="bold" gutterBottom>
                                             {employee?.firstName} {employee?.middleName} {employee?.lastName}
                                         </Typography>
-                                        <Stack direction="row" spacing={1} alignItems="center">
+                                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                                             <Chip
                                                 label={employee?.status}
                                                 color={getStatusColor(employee?.status || '') as any}
@@ -205,6 +206,16 @@ export default function EmployeeDashboard(props: { disableCustomTheme?: boolean 
                                                         }}
                                                     />
                                                 </Tooltip>
+                                            )}
+                                            {/* Biography - inline with status */}
+                                            {employee?.biography && (
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{ fontStyle: 'italic', ml: 1 }}
+                                                >
+                                                    "{employee.biography}"
+                                                </Typography>
                                             )}
                                         </Stack>
                                     </Box>

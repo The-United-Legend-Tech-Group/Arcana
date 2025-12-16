@@ -44,6 +44,7 @@ interface Employee {
     profilePictureUrl?: string;
     department?: { name: string };
     position?: { title: string };
+    biography?: string;
 }
 
 export default function MemberDetailsPage() {
@@ -177,11 +178,23 @@ export default function MemberDetailsPage() {
                                         {employee.department?.name || 'Department'}
                                     </Typography>
                                 </Stack>
-                                <Chip
-                                    label={employee.status}
-                                    color={getStatusColor(employee.status) as any}
-                                    sx={{ fontWeight: 'bold' }}
-                                />
+                                <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+                                    <Chip
+                                        label={employee.status}
+                                        color={getStatusColor(employee.status) as any}
+                                        sx={{ fontWeight: 'bold' }}
+                                    />
+                                    {/* Biography - inline with status */}
+                                    {employee.biography && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{ fontStyle: 'italic' }}
+                                        >
+                                            "{employee.biography}"
+                                        </Typography>
+                                    )}
+                                </Stack>
                             </Box>
                         </Stack>
                     </CardContent>

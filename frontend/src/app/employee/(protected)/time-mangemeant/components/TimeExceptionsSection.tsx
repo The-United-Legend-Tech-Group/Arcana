@@ -28,6 +28,7 @@ import Tooltip from "@mui/material/Tooltip";
 
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CloseIcon from "@mui/icons-material/Close";
 
 import SectionHeading from "./SectionHeading";
 import {
@@ -387,15 +388,15 @@ export default function TimeExceptionsSection({
 
   const sortedExceptions = React.useMemo(() => {
     return [...exceptions].sort((a, b) => {
-      const p: Record<TimeExceptionStatus, number> = {
-        OPEN: 1,
-        PENDING: 2,
-        ESCALATED: 3,
-        APPROVED: 4,
-        RESOLVED: 5,
-        REJECTED: 6,
-      } as any;
-      return (p[a.status] || 99) - (p[b.status] || 99);
+      const priority: Record<string, number> = {
+        [TimeExceptionStatus.OPEN]: 1,
+        [TimeExceptionStatus.PENDING]: 2,
+        [TimeExceptionStatus.ESCALATED]: 3,
+        [TimeExceptionStatus.APPROVED]: 4,
+        [TimeExceptionStatus.RESOLVED]: 5,
+        [TimeExceptionStatus.REJECTED]: 6,
+      };
+      return (priority[a.status] || 99) - (priority[b.status] || 99);
     });
   }, [exceptions]);
 
@@ -579,12 +580,7 @@ export default function TimeExceptionsSection({
                                         }
                                       }}
                                     >
-                                      {/* Using a simple X via Unicode is not ideal; keep Close icon semantics */}
-                                      {/* For a compact X look, we can still use outlined cancel icon */}
-                                      <WarningAmberIcon
-                                        fontSize="small"
-                                        color="error"
-                                      />
+                                      <CloseIcon fontSize="small" />
                                     </IconButton>
                                   </span>
                                 </Tooltip>

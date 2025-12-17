@@ -36,10 +36,13 @@ import { AssignPersonalizedEntitlementDto } from '../dtos/personalized-entitleme
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
 import { LeaveCategory } from '../models/leave-category.schema';
 import { AuthGuard } from '../../common/guards/authentication.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { SystemRole } from 'src/employee-subsystem/employee/enums/employee-profile.enums';
 
 @ApiTags('Leaves Policy')
 @Controller('leaves')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, authorizationGuard)
 export class LeavesPolicyController {
   constructor(private readonly leavesService: LeavesPolicyService) {}
 
@@ -52,6 +55,7 @@ export class LeavesPolicyController {
     description: 'Leave policy initiated successfully',
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @Roles(SystemRole.HR_ADMIN)
   async initiatePolicy(@Body() dto: InitiatePolicyDto): Promise<LeavePolicy> {
     return this.leavesService.initiatePolicy(dto);
   }
@@ -61,6 +65,7 @@ export class LeavesPolicyController {
   @ApiOperation({
     summary: 'Configure leave settings for a specific leave type',
   })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'leaveTypeId', description: 'Leave type ID' })
   @ApiBody({ type: ConfigureSettingsDto })
   @ApiResponse({
@@ -78,6 +83,7 @@ export class LeavesPolicyController {
 
   @Get('leave-settings/:leaveTypeId')
   @ApiOperation({ summary: 'Get leave settings for a specific leave type' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'leaveTypeId', description: 'Leave type ID' })
   @ApiResponse({
     status: 200,
@@ -93,6 +99,7 @@ export class LeavesPolicyController {
   // ---------- REQ-005: Update leave entitlement ---------- Tested
   @Patch('update-entitlement')
   @ApiOperation({ summary: 'Update employee leave entitlement' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: UpdateEntitlementDto })
   @ApiResponse({
     status: 200,
@@ -116,6 +123,7 @@ export class LeavesPolicyController {
    */
   @Patch('update-entitlement-internal/:employeeId/:leaveTypeId')
   @ApiOperation({ summary: 'Recalculate and update leave entitlement (internal)' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'employeeId', description: 'Employee ID' })
   @ApiParam({ name: 'leaveTypeId', description: 'Leave Type ID' })
   @ApiResponse({ status: 200, description: 'Leave entitlement recalculated and updated.' })
@@ -133,6 +141,7 @@ export class LeavesPolicyController {
    */
   @Post('configure-leave-parameters/:leaveTypeId')
   @ApiOperation({ summary: 'Configure leave parameters such as max duration, notice period, approval flow' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'leaveTypeId', description: 'Leave Type ID' })
   @ApiBody({ type: ConfigureLeaveParametersDto })
   @ApiResponse({ status: 200, description: 'Leave parameters configured.' })
@@ -151,6 +160,7 @@ export class LeavesPolicyController {
   // Create leave type - Tested
   @Post('leave-types')
   @ApiOperation({ summary: 'Create a new leave type' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: CreateLeaveTypeDto })
   @ApiResponse({ status: 201, description: 'Leave type created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -162,6 +172,7 @@ export class LeavesPolicyController {
   // List all leave types - Tested
   @Get('leave-types') 
   @ApiOperation({ summary: 'Get all leave types' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiResponse({ status: 200, description: 'List of all leave types' })
   async getAllLeaveTypes(): Promise<LeaveType[]> {
     return this.leavesService.getAllLeaveTypes();
@@ -170,6 +181,7 @@ export class LeavesPolicyController {
   // Get leave type by ID - Tested
   @Get('leave-types/:id')
   @ApiOperation({ summary: 'Get leave type by ID' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'id', description: 'Leave type ID' })
   @ApiResponse({ status: 200, description: 'Leave type found' })
   @ApiResponse({ status: 404, description: 'Leave type not found' })
@@ -180,6 +192,7 @@ export class LeavesPolicyController {
   // Update leave type by ID - Tested
   @Patch('leave-types/:id')
   @ApiOperation({ summary: 'Update leave type by ID' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'id', description: 'Leave type ID' })
   @ApiBody({ type: UpdateLeaveTypeDto })
   @ApiResponse({ status: 200, description: 'Leave type updated successfully' })
@@ -195,6 +208,7 @@ export class LeavesPolicyController {
   @Delete('leave-types/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete leave type by ID' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'id', description: 'Leave type ID' })
   @ApiResponse({ status: 204, description: 'Leave type deleted successfully' })
   @ApiResponse({ status: 404, description: 'Leave type not found' })
@@ -205,6 +219,7 @@ export class LeavesPolicyController {
   // REQ-007: Set Eligibility Rules - Tested
   @Post('set-eligibility')
   @ApiOperation({ summary: 'Set eligibility rules for leave types' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: SetEligibilityRulesDto })
   @ApiResponse({
     status: 200,
@@ -220,7 +235,8 @@ export class LeavesPolicyController {
   @ApiOperation({
     summary: 'Assign personalized leave entitlements to employees',
   })
-  @ApiBody({ type: AssignPersonalizedEntitlementDto })
+  @Roles(SystemRole.HR_ADMIN)
+      @ApiBody({ type: AssignPersonalizedEntitlementDto })
   @ApiResponse({
     status: 200,
     description: 'Personalized entitlement assigned successfully',
@@ -236,6 +252,7 @@ export class LeavesPolicyController {
   // REQ-010: Configure calendar for a given year - Tested
   @Post('configure')
   @ApiOperation({ summary: 'Configure calendar for a specific year' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: ConfigureCalendarDto })
   @ApiResponse({ status: 200, description: 'Calendar configured successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -246,6 +263,7 @@ export class LeavesPolicyController {
   // Retrieve the calendar for a year
   @Get('calendar/:year')
   @ApiOperation({ summary: 'Get calendar configuration for a specific year' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'year', description: 'Calendar year' })
   @ApiResponse({ status: 200, description: 'Calendar retrieved successfully' })
   @ApiResponse({
@@ -262,6 +280,7 @@ export class LeavesPolicyController {
     summary: 'List holidays from Time Management for a specific year',
     description: 'Returns holiday details (id, name, dates, type) for the given year without modifying the calendar',
   })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'year', description: 'Target year for holiday lookup' })
   @ApiResponse({ status: 200, description: 'Holidays loaded successfully' })
   async getHolidaysForYear(@Param('year') year: number) {
@@ -274,6 +293,7 @@ export class LeavesPolicyController {
     summary: 'List blocked periods for a calendar year',
     description: 'Returns blocked periods (from, to, reason) stored in the Leaves Calendar for the given year',
   })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'year', description: 'Target year for blocked periods lookup' })
   @ApiResponse({ status: 200, description: 'Blocked periods loaded successfully' })
   async getBlockedPeriodsForYear(@Param('year') year: number) {
@@ -287,6 +307,7 @@ export class LeavesPolicyController {
      description:
        'Imports holiday data from the attendance/time-management system and updates the calendar for the specified year',
    })
+   @Roles(SystemRole.HR_ADMIN)
    @ApiParam({ name: 'year', description: 'Target year for holiday sync' })
    @ApiResponse({ status: 200, description: 'Holidays synced successfully' })
    @ApiResponse({
@@ -304,6 +325,7 @@ export class LeavesPolicyController {
      description:
        'Automatically imports holidays from Time Management for the current year',
    })
+   @Roles(SystemRole.HR_ADMIN)
    @ApiResponse({
      status: 200,
      description: 'Holidays synced successfully for current year',
@@ -318,6 +340,7 @@ export class LeavesPolicyController {
   // Create special leave type with rules
   @Post('special-leave-types-with-rules')
   @ApiOperation({ summary: 'Create special leave type with custom rules' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({
     schema: {
       type: 'object',
@@ -347,6 +370,7 @@ export class LeavesPolicyController {
 
   @Get('special-leave-types-with-rules/:leaveTypeId')
   @ApiOperation({ summary: 'Get special leave type with its rules' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'leaveTypeId', description: 'Leave type ID' })
   @ApiResponse({
     status: 200,
@@ -364,6 +388,7 @@ export class LeavesPolicyController {
   // ------------------------------
   @Post('execute-annual-reset')
   @ApiOperation({ summary: 'Execute annual leave reset for employees' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: AnnualResetDto })
   @ApiResponse({
     status: 200,
@@ -382,6 +407,7 @@ export class LeavesPolicyController {
   // ------------------------------
   @Post('manual-adjustment')
   @ApiOperation({ summary: 'Create manual leave balance adjustment' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiBody({ type: ManualAdjustmentDto })
   @ApiResponse({
     status: 201,
@@ -397,6 +423,7 @@ export class LeavesPolicyController {
 
   @Get('adjustment-history/:employeeId')
   @ApiOperation({ summary: 'Get adjustment history for an employee' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'employeeId', description: 'Employee ID' })
   @ApiResponse({
     status: 200,
@@ -412,7 +439,8 @@ export class LeavesPolicyController {
   // Get all leave entitlements for an employee
   @Get('leave-entitlements/:employeeId')
   @ApiOperation({ summary: 'Get all leave entitlements for an employee' })
-  @ApiParam({ name: 'employeeId', description: 'Employee ID' })
+  @Roles(SystemRole.HR_ADMIN)
+    @ApiParam({ name: 'employeeId', description: 'Employee ID' })
   @ApiResponse({ status: 200, description: 'Employee leave entitlements retrieved successfully' })
   async getLeaveEntitlementByEmployeeId(@Param('employeeId') employeeId: string) {
     return this.leavesService.getLeaveEntitlementByEmployeeId(employeeId);
@@ -421,6 +449,7 @@ export class LeavesPolicyController {
   // Get all leave policies
   @Get('policies')
   @ApiOperation({ summary: 'Get all leave policies' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiResponse({ status: 200, description: 'All leave policies retrieved successfully' })
   async managePolicy(): Promise<LeavePolicy[]> {
     return this.leavesService.managePolicy();
@@ -430,6 +459,7 @@ export class LeavesPolicyController {
   @Delete('policies/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete leave policy by ID' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'id', description: 'Leave policy ID' })
   @ApiResponse({ status: 204, description: 'Leave policy deleted successfully' })
   @ApiResponse({ status: 404, description: 'Leave policy not found' })
@@ -440,6 +470,7 @@ export class LeavesPolicyController {
   // Get leave/vacation type by code
   @Get('leave-types/code/:code')
   @ApiOperation({ summary: 'Get leave type by code' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiParam({ name: 'code', description: 'Leave type code' })
   @ApiResponse({ status: 200, description: 'Leave type found by code' })
   @ApiResponse({ status: 404, description: 'Leave type not found by code' })
@@ -449,6 +480,7 @@ export class LeavesPolicyController {
 
   @Get('leave-categories')
   @ApiOperation({ summary: 'Get all leave categories' })
+  @Roles(SystemRole.HR_ADMIN)
   @ApiResponse({ status: 200, description: 'All leave categories retrieved successfully' })
   async getLeaveCategories(): Promise<LeaveCategory[]> {
     return this.leavesService.getLeaveCategories();

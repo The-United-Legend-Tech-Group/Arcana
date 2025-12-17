@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "NEXUSHR - The Future of Human Resources",
+  title: "Arcana - HR System",
   description: "Transform your workforce management with cutting-edge AI-powered HR solutions",
   generator: "v0.app",
   icons: {

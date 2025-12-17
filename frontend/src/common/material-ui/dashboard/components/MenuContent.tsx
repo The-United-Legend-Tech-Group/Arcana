@@ -31,7 +31,7 @@ import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRou
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { getUserRoles } from "../../../utils/cookie-utils";
-import { CalendarViewDay } from "@mui/icons-material";
+import { CalendarViewDay, History } from "@mui/icons-material";
 import BalanceRoundedIcon from "@mui/icons-material/BalanceRounded";
 
 
@@ -169,6 +169,12 @@ export const leavesSubItems: MenuItem[] = [
     path: "/employee/leaves/calendar",
     roles: ["HR Admin"],
   },
+  {
+    text: "History",
+    icon: <History />,
+    path: "/employee/leaves/history",
+    roles: [],
+  },
 ];
 
 const secondaryListItems = [
@@ -239,6 +245,7 @@ export default function MenuContent() {
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/hr') return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
     if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
+    if (text === 'History' && pathname === '/employee/leaves/history') return true;
     return false;
   };
 

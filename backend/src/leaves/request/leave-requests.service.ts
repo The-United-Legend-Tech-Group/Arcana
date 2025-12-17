@@ -90,6 +90,28 @@ export class LeavesRequestService {
     });
   }
 
+  // ---------- Helper: Get requests for current employee ----------
+  async getRequestsForEmployee(employeeId: string): Promise<LeaveRequest[]> {
+    if (!employeeId) {
+      throw new BadRequestException('Missing employee ID');
+    }
+
+    return this.leaveRequestRepository.find({
+      employeeId: new Types.ObjectId(employeeId),
+    });
+  }
+
+  async getPendingRequestsForEmployee(employeeId: string): Promise<LeaveRequest[]> {
+    if (!employeeId) {
+      throw new BadRequestException('Missing employee ID');
+    }
+
+    return this.leaveRequestRepository.find({
+      employeeId: new Types.ObjectId(employeeId),
+      status: LeaveStatus.PENDING,
+    });
+  }
+
   // ---------- REQ-017: Update Pending Leave Requests ----------
   @UseGuards(AuthGuard, authorizationGuard)
   @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)

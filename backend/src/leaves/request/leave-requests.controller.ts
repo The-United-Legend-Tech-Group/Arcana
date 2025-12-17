@@ -5,6 +5,8 @@ import {
   Param,
   Get,
   Patch,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { LeavesRequestService } from './leave-requests.service';
@@ -16,6 +18,7 @@ import { LeaveStatus } from '../enums/leave-status.enum';
 import { LeaveRequest } from '../models/leave-request.schema';
 import { Attachment } from '../models/attachment.schema';
 import { Types } from 'mongoose';
+import { AuthGuard } from '../../common/guards/authentication.guard';
 
 @ApiTags('Leaves Requests')
 @Controller('leaves')
@@ -84,6 +87,31 @@ export class LeavesRequestController {
   @ApiResponse({ status: 404, description: 'Leave request not found' })
   async cancelRequest(@Param('id') id: string) {
     return this.leavesRequestService.cancelPendingRequest(id);
+  }
+
+  // ---------- My Requests (for current employee) ----------
+  @Get('my-requests')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get all leave requests for the current employee' })
+  @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
+  async getMyRequests(@Req() req: any): Promise<LeaveRequest[]> {
+    const user: any = (req as any).user;
+    const employeeId = user?.sub || user?.employeeId;
+    return this.leavesRequestService.getRequestsForEmployee(
+      new Types.ObjectId(employeeId).toString(),
+    );
+  }
+
+  @Get('my-pending-requests')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get pending leave requests for the current employee' })
+  @ApiResponse({ status: 200, description: 'Pending leave requests retrieved successfully' })
+  async getMyPendingRequests(@Req() req: any): Promise<LeaveRequest[]> {
+    const user: any = (req as any).user;
+    const employeeId = user?.sub || user?.employeeId;
+    return this.leavesRequestService.getPendingRequestsForEmployee(
+      new Types.ObjectId(employeeId).toString(),
+    );
   }
 // ------------------------------
 // REQ-020: Manager Review Request

@@ -69,6 +69,8 @@ export class LeaveRequestRepository extends BaseRepository<LeaveRequestDocument>
   }
 
   async findAllSorted(): Promise<LeaveRequestDocument[]> {
+    // Simple sorted find; higher-level services are responsible for enriching
+    // with employee profiles and leave type details without cross-subsystem populate.
     return this.model.find({}).sort({ createdAt: -1 }).exec();
   }
 }

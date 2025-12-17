@@ -757,7 +757,7 @@ async executeAnnualReset(): Promise<void> {
   }
 
   async getAdjustmentHistory(employeeId: string): Promise<LeaveAdjustment[]> {
-    return this.leaveAdjustmentRepository.findByEmployeeId(employeeId);
+    return this.leaveAdjustmentRepository.findByEmployeeId(new Types.ObjectId(employeeId));
   }
 
   //Ahmed Hebesha

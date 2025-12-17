@@ -91,7 +91,7 @@ export class LeavesReportService {
   ) {
     const query: any = {
       employeeId: new Types.ObjectId(employeeId),
-      status: { $in: ['APPROVED', 'REJECTED', 'CANCELLED'] }, // exclude pending
+      status: { $in: [LeaveStatus.APPROVED, LeaveStatus.REJECTED, LeaveStatus.CANCELLED] }, // exclude pending
     };
 
     // ============================

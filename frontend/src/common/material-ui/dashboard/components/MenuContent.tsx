@@ -32,6 +32,7 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { getUserRoles } from "../../../utils/cookie-utils";
 import { CalendarViewDay } from "@mui/icons-material";
+import BalanceRoundedIcon from "@mui/icons-material/BalanceRounded";
 
 
 // Type definition for menu items
@@ -157,6 +158,12 @@ export const leavesSubItems: MenuItem[] = [
     roles: ["HR Admin"],
   },
   {
+    text: "Balance",
+    icon: <BalanceRoundedIcon />,
+    path: "/employee/leaves/balance",
+    roles: ["HR Admin"],
+  },
+  {
     text: "Calendar",
     icon: <CalendarViewDay />,
     path: "/employee/leaves/calendar",
@@ -231,6 +238,7 @@ export default function MenuContent() {
     if (text === 'Calendar' && pathname === '/employee/leaves/calendar') return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/hr') return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
+    if (text === 'Balance' && pathname === '/employee/leaves/balance') return true;
     return false;
   };
 

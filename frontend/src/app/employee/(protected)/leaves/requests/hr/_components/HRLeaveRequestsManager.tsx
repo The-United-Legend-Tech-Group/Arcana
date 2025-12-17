@@ -43,6 +43,7 @@ type LeaveRequest = {
   _id: string;
   employeeId?: string | {
     _id: string;
+    employeeNumber?: string;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -70,6 +71,16 @@ type LeaveRequest = {
 };
 
 type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+// Helper to normalize employee object shape from backend
+function getEmployeeProfile(employee: any): any | null {
+  if (!employee || typeof employee !== 'object') return null;
+  // When coming from employeeService.getProfile, structure is { profile: {...} }
+  if (employee.profile && typeof employee.profile === 'object') {
+    return employee.profile;
+  }
+  return employee;
+}
 
 function getCurrentUserId() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -115,6 +126,7 @@ export default function HRLeaveRequestsManager() {
   const [bulkAction, setBulkAction] = useState<'approve' | 'reject'>('approve');
   const [processing, setProcessing] = useState(false);
 
+  
   const loadRequests = useCallback(async () => {
     if (!API_BASE) return;
     setLoading(true);
@@ -440,17 +452,20 @@ export default function HRLeaveRequestsManager() {
                       />
                     </TableCell>
                     <TableCell>
-                      {typeof request.employeeId === 'object' && request.employeeId
-                        ? `${request.employeeId.firstName || ''} ${request.employeeId.lastName || ''}`.trim() || request.employeeId.email || 'N/A'
-                        : typeof request.employeeId === 'string'
-                        ? `Employee: ${request.employeeId.slice(-8)}`
-                        : 'N/A'}
+                      {(() => {
+                        const emp = getEmployeeProfile(request.employeeId as any);
+                        if (!emp) return 'N/A';
+                        return (
+                          emp.employeeNumber ||
+                          `${emp.firstName || ''} ${emp.lastName || ''}`.trim() ||
+                          emp.email ||
+                          'N/A'
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {typeof request.leaveTypeId === 'object' && request.leaveTypeId
-                        ? `${request.leaveTypeId.code || ''} ${request.leaveTypeId.name || ''}`.trim() || 'N/A'
-                        : typeof request.leaveTypeId === 'string'
-                        ? `Type: ${request.leaveTypeId.slice(-8)}`
+                        ? request.leaveTypeId.code || request.leaveTypeId.name || 'N/A'
                         : 'N/A'}
                     </TableCell>
                     <TableCell>{formatDate(request.dates?.from)}</TableCell>

@@ -113,10 +113,75 @@ export class LeavesRequestService {
   }
 
   async getAllLeaveRequestsForHR(): Promise<LeaveRequest[]> {
-    // Get all leave requests without populating other subsystem schemas
-    // Returns leave requests with employeeId and leaveTypeId as ObjectIds only
-    // Sorted by createdAt descending (most recent first)
-    return this.leaveRequestRepository.findAllSorted();
+    // Get all leave requests, then manually enrich them with employee profile
+    // (via employeeService) and leave type details (via leaveTypeRepository),
+    // avoiding cross-subsystem Mongoose populate.
+    const requests = await this.leaveRequestRepository.findAllSorted();
+
+    // Collect unique employee and leave type IDs
+    const employeeIds = Array.from(
+      new Set(
+        requests
+          .map((r: any) => r.employeeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ),
+    );
+
+    const leaveTypeIds = Array.from(
+      new Set(
+        requests
+          .map((r: any) => r.leaveTypeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ),
+    );
+
+    // Fetch all related data in parallel; ignore failures for individual items
+    const [employeeResults, leaveTypeResults] = await Promise.all([
+      Promise.all(
+        employeeIds.map((id) =>
+          this.employeeService.getProfile(id).catch(() => null),
+        ),
+      ),
+      Promise.all(
+        leaveTypeIds.map((id) =>
+          this.leaveTypeRepository.findById(id).catch(() => null),
+        ),
+      ),
+    ]);
+
+    const employeeMap = new Map<string, any>();
+    employeeIds.forEach((id, idx) => {
+      const emp = employeeResults[idx];
+      if (emp) {
+        employeeMap.set(id, emp);
+      }
+    });
+
+    const leaveTypeMap = new Map<string, any>();
+    leaveTypeIds.forEach((id, idx) => {
+      const lt = leaveTypeResults[idx];
+      if (lt) {
+        leaveTypeMap.set(id, lt);
+      }
+    });
+
+    // Return plain objects with enriched fields where available
+    return requests.map((req: any) => {
+      const obj = req.toObject ? req.toObject() : { ...req };
+
+      const empId = req.employeeId?.toString?.();
+      const ltId = req.leaveTypeId?.toString?.();
+
+      if (empId && employeeMap.has(empId)) {
+        obj.employeeId = employeeMap.get(empId);
+      }
+
+      if (ltId && leaveTypeMap.has(ltId)) {
+        obj.leaveTypeId = leaveTypeMap.get(ltId);
+      }
+
+      return obj;
+    });
   }
 
   // ---------- REQ-017: Update Pending Leave Requests ----------

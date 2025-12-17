@@ -7,8 +7,10 @@ import {
   Patch,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 import { LeavesReportService } from './leave-reports.service';
 import { FilterLeaveHistoryDto } from '../dtos/filter-leave-history.dto';
 import { ManagerFilterTeamDataDto } from '../dtos/manager-filter-team-data.dto';
@@ -39,6 +41,19 @@ export class LeavesReportController {
   @ApiResponse({ status: 404, description: 'Employee not found' })
   async getEmployeeBalances(@Param('employeeId') employeeId: string) {
     return this.leavesReportService.getEmployeeLeaveBalances(employeeId);
+  }
+
+  // Get current employee's leave balances
+  @Get('my-balances')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get all leave balances for current employee' })
+  @ApiResponse({ status: 200, description: 'Leave balances retrieved successfully' })
+  async getMyBalances(@Req() req: any) {
+    const user: any = (req as any).user;
+    const employeeId = user?.sub || user?.employeeId;
+    return this.leavesReportService.getEmployeeLeaveBalances(
+      new Types.ObjectId(employeeId).toString(),
+    );
   }
 
   // Get leave balance for a specific leave type
@@ -73,6 +88,25 @@ async getEmployeeLeaveHistory(
   @Query() filters: FilterLeaveHistoryDto,
 ) {
   return this.leavesReportService.getEmployeeLeaveHistory(employeeId, filters);
+}
+
+// Get current employee's leave history
+@Get('my-history')
+@UseGuards(AuthGuard)
+@ApiOperation({ summary: 'Get filtered leave history for current employee' })
+@ApiQuery({ type: FilterLeaveHistoryDto, description: 'Filter options' })
+@ApiResponse({ status: 200, description: 'Leave history retrieved successfully' })
+@ApiResponse({ status: 400, description: 'Invalid filter parameters' })
+async getMyLeaveHistory(
+  @Req() req: any,
+  @Query() filters: FilterLeaveHistoryDto,
+) {
+  const user: any = (req as any).user;
+  const employeeId = user?.sub || user?.employeeId;
+  return this.leavesReportService.getEmployeeLeaveHistory(
+    new Types.ObjectId(employeeId).toString(),
+    filters,
+  );
 }
 // =============================
 // REQ-035 — Manager Filter Team Data

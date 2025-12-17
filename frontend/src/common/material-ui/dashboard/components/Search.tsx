@@ -16,7 +16,7 @@ import Popper from '@mui/material/Popper';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { mainListItems, performanceSubItems, MenuItem } from './MenuContent';
+import { mainListItems, performanceSubItems, MenuItem, leavesSubItems } from './MenuContent';
 import { getUserRoles } from '../../../utils/cookie-utils';
 
 export default function Search() {
@@ -54,6 +54,10 @@ export default function Search() {
     ...performanceSubItems.map(item => ({
       ...item,
       text: `Performance > ${item.text}`, // Prefix performance items
+    })),
+    ...leavesSubItems.map(item => ({
+      ...item,
+      text: `Leaves > ${item.text}`, // Prefix leaves items
     })),
   ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Stack,
@@ -25,7 +25,11 @@ type LeaveRequestOption = {
   status?: string;
 };
 
-export default function ManageLeaveRequestsPanel() {
+type ManageLeaveRequestsPanelProps = {
+  onRequestModified?: () => void;
+};
+
+export default function ManageLeaveRequestsPanel({ onRequestModified }: ManageLeaveRequestsPanelProps) {
   // Modify request state
   const [modifyForm, setModifyForm] = useState({
     requestId: '',
@@ -122,6 +126,17 @@ export default function ManageLeaveRequestsPanel() {
       }
 
       setModifySuccess('Leave request modified successfully');
+      setModifyForm({
+        requestId: '',
+        fromDate: '',
+        toDate: '',
+        justification: '',
+      });
+      // Refetch requests to see the update
+      loadRequests();
+      if (onRequestModified) {
+        onRequestModified();
+      }
     } catch (err: any) {
       setModifyError(err?.message ?? 'Failed to modify leave request');
     } finally {
@@ -164,6 +179,11 @@ export default function ManageLeaveRequestsPanel() {
 
       setCancelSuccess('Leave request cancelled successfully');
       setCancelId('');
+      // Refetch requests to see the update
+      loadRequests();
+      if (onRequestModified) {
+        onRequestModified();
+      }
     } catch (err: any) {
       setCancelError(err?.message ?? 'Failed to cancel leave request');
     } finally {
@@ -264,50 +284,62 @@ export default function ManageLeaveRequestsPanel() {
     return d.toLocaleDateString();
   };
 
-  useEffect(() => {
+  const loadRequests = useCallback(async () => {
     if (!API_BASE) return;
-    async function load() {
-      setRequestsLoading(true);
-      setRequestsError(null);
-      const token = localStorage.getItem('access_token');
-      try {
-        const commonHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
+    setRequestsLoading(true);
+    setRequestsError(null);
+    const token = localStorage.getItem('access_token');
+    try {
+      const commonHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-        const [allRes, pendingRes] = await Promise.all([
-          fetch(`${API_BASE}/leaves/my-requests`, {
-            headers: commonHeaders,
-            credentials: 'include',
-          }),
-          fetch(`${API_BASE}/leaves/my-pending-requests`, {
-            headers: commonHeaders,
-            credentials: 'include',
-          }),
-        ]);
+      const [allRes, pendingRes] = await Promise.all([
+        fetch(`${API_BASE}/leaves/my-requests`, {
+          headers: commonHeaders,
+          credentials: 'include',
+        }),
+        fetch(`${API_BASE}/leaves/my-pending-requests`, {
+          headers: commonHeaders,
+          credentials: 'include',
+        }),
+      ]);
 
-        if (!allRes.ok) {
-          const errData = await allRes.json().catch(() => ({ message: 'Failed to load requests' }));
-          throw new Error(errData.message || `Failed (${allRes.status})`);
-        }
-        if (!pendingRes.ok) {
-          const errData = await pendingRes
-            .json()
-            .catch(() => ({ message: 'Failed to load pending requests' }));
-          throw new Error(errData.message || `Failed (${pendingRes.status})`);
-        }
-
-        const allData = await allRes.json();
-        const pendingData = await pendingRes.json();
-        setMyRequests(Array.isArray(allData) ? allData : []);
-        setPendingRequests(Array.isArray(pendingData) ? pendingData : []);
-      } catch (err: any) {
-        setRequestsError(err?.message ?? 'Failed to load your requests');
-      } finally {
-        setRequestsLoading(false);
+      if (!allRes.ok) {
+        const errData = await allRes.json().catch(() => ({ message: 'Failed to load requests' }));
+        throw new Error(errData.message || `Failed (${allRes.status})`);
       }
-    }
+      if (!pendingRes.ok) {
+        const errData = await pendingRes
+          .json()
+          .catch(() => ({ message: 'Failed to load pending requests' }));
+        throw new Error(errData.message || `Failed (${pendingRes.status})`);
+      }
 
-    load();
+      const allData = await allRes.json();
+      const pendingData = await pendingRes.json();
+      setMyRequests(Array.isArray(allData) ? allData : []);
+      setPendingRequests(Array.isArray(pendingData) ? pendingData : []);
+    } catch (err: any) {
+      setRequestsError(err?.message ?? 'Failed to load your requests');
+    } finally {
+      setRequestsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadRequests();
+    
+    // Listen for refetch events from other components
+    const handleRefetch = () => {
+      loadRequests();
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('refetch-leave-requests', handleRefetch);
+      return () => {
+        window.removeEventListener('refetch-leave-requests', handleRefetch);
+      };
+    }
+  }, [loadRequests]);
 
   return (
     <Stack spacing={2} sx={{ height: '100%' }}>
@@ -356,7 +388,7 @@ export default function ManageLeaveRequestsPanel() {
               required
               helperText="Select one of your leave requests"
             >
-              {myRequests.map((req) => (
+              {pendingRequests.map((req) => (
                 <MenuItem key={req._id} value={req._id}>
                   {`${req._id.slice(-6)} · ${req.status ?? ''} · ${formatDate(
                     req.dates?.from,
@@ -400,8 +432,7 @@ export default function ManageLeaveRequestsPanel() {
               onChange={(e) => onModifyChange('justification', e.target.value)}
               fullWidth
               size="small"
-              multiline
-              minRows={2}
+
             />
 
             {modifyError && (

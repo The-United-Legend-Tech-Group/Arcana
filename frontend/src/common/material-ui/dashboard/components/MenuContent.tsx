@@ -120,7 +120,7 @@ export const performanceSubItems: MenuItem[] = [
   },
 ];
 
-const leavesSubItems = [
+export const leavesSubItems: MenuItem[] = [
   {
     text: "Leave Requests",
     icon: <ListAltRoundedIcon />,

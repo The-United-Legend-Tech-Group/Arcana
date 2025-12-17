@@ -1,12 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import NewLeaveRequestForm from './_components/NewLeaveRequestForm';
 import ManageLeaveRequestsPanel from './_components/ManageLeaveRequestsPanel';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
 export default function LeaveRequestsPage() {
+  const refetchRequests = useCallback(() => {
+    // Trigger a custom event that ManageLeaveRequestsPanel can listen to
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('refetch-leave-requests'));
+    }
+  }, []);
+
   return (
     <Box
       sx={{
@@ -49,7 +58,7 @@ export default function LeaveRequestsPage() {
             <Typography variant="subtitle1" fontWeight={600} mb={1.5}>
               New Leave Request
             </Typography>
-            <NewLeaveRequestForm />
+            <NewLeaveRequestForm onRequestCreated={refetchRequests} />
           </Paper>
         </Grid>
 
@@ -72,7 +81,7 @@ export default function LeaveRequestsPage() {
             <Typography variant="subtitle1" fontWeight={600} mb={1.5}>
               Manage Requests
             </Typography>
-            <ManageLeaveRequestsPanel />
+            <ManageLeaveRequestsPanel onRequestModified={refetchRequests} />
           </Paper>
         </Grid>
       </Grid>

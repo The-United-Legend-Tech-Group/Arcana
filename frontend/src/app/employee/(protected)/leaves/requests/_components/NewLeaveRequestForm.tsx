@@ -38,7 +38,11 @@ function getLeaveTypeLabel(lt: LeaveTypeOption) {
   return lt.code || lt.name || lt._id;
 }
 
-export default function NewLeaveRequestForm() {
+type NewLeaveRequestFormProps = {
+  onRequestCreated?: () => void;
+};
+
+export default function NewLeaveRequestForm({ onRequestCreated }: NewLeaveRequestFormProps) {
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeOption[]>([]);
   const [leaveTypesLoading, setLeaveTypesLoading] = useState(false);
   const [leaveTypesError, setLeaveTypesError] = useState<string | null>(null);
@@ -179,6 +183,11 @@ export default function NewLeaveRequestForm() {
         justification: '',
       });
       setFile(null);
+      
+      // Trigger refetch of requests
+      if (onRequestCreated) {
+        onRequestCreated();
+      }
     } catch (err: any) {
       setError(err?.message ?? 'Failed to submit leave request');
     } finally {
@@ -260,8 +269,7 @@ export default function NewLeaveRequestForm() {
           onChange={(e) => onChange('justification', e.target.value)}
           fullWidth
           size="small"
-          multiline
-          minRows={3}
+
           placeholder="Explain the reason for your leave (optional but recommended)"
         />
 

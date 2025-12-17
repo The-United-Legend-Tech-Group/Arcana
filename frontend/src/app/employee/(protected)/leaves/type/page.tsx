@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Stack, Button } from '@mui/material';
+import Link from 'next/link';
 import Grid from '@mui/material/Grid';
 import CreateLeaveTypeForm from './_components/CreateLeaveTypeForm';
 import LeaveTypeList from './_components/LeaveTypeList';
@@ -16,17 +17,31 @@ export default function LeaveTypePage() {
         width: '100%',
       }}
     >
-      <Box
-        sx={{
-          mb: 2,
-        }}
-      >
-        <Typography variant="h5" fontWeight={600} gutterBottom>
-          Leave Type Management
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Create new leave types and manage existing ones.
-      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={2}
+        >
+          <Box>
+            <Typography variant="h5" fontWeight={600} gutterBottom>
+              Leave Type Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Create new leave types and manage existing ones.
+            </Typography>
+          </Box>
+
+          <Button
+            component={Link}
+            href="/employee/leaves/type/special"
+            variant="outlined"
+            size="small"
+          >
+            Create Special Leave Types
+          </Button>
+        </Stack>
       </Box>
 
       <Grid container spacing={2} columns={12} sx={{ alignItems: 'stretch' }}>

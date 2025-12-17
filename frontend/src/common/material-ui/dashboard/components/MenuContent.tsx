@@ -234,11 +234,11 @@ export default function MenuContent() {
     if (text === 'Leave Requests' && pathname === '/employee/leaves/requests') return true;
     if (text === 'Leave Policies' && pathname === '/employee/leaves/policy') return true;
     if (text === 'Entitlements' && pathname === '/employee/leaves/entitlement') return true;
-    if (text === 'Leave Types' && pathname === '/employee/leaves/type') return true;
+    if (text === 'Leave Types' && (pathname === '/employee/leaves/type' || pathname === '/employee/leaves/type/special')) return true;
     if (text === 'Calendar' && pathname === '/employee/leaves/calendar') return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/hr') return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
-    if (text === 'Balance' && pathname === '/employee/leaves/balance') return true;
+    if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
     return false;
   };
 

@@ -171,12 +171,12 @@ async function submitReviewDecision(
     await axios.patch(
       `/api/attendance/corrections/${selectedRequest._id}/approve-reject`,
       {
-        approverId: hrEmployeeId,          // ✅ REQUIRED
-        decision,                          // ✅ REQUIRED
-        approverRole: "HR_MANAGER",        // ✅ OPTIONAL
+        approverId: hrEmployeeId,
+        decision,
+        approverRole: "HR_MANAGER",
         rejectionReason:
           decision === "REJECTED" ? rejectReason : undefined,
-        applyToPayroll: true,              // ✅ OPTIONAL
+        applyToPayroll: true,
       }
     );
 

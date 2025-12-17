@@ -29,6 +29,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import TablePagination from "@mui/material/TablePagination";
+import axios from "axios";
+import TextField from "@mui/material/TextField";
 
 
 import SectionHeading from "./SectionHeading";
@@ -150,6 +152,50 @@ const [selectedRequest, setSelectedRequest] = React.useState<any | null>(null);
 const [decisionLoading, setDecisionLoading] = React.useState(false);
 const [rejectReason, setRejectReason] = React.useState("");
 const [decisionError, setDecisionError] = React.useState<string | null>(null);
+
+
+async function submitReviewDecision(
+  decision: "APPROVED" | "REJECTED"
+) {
+  if (!selectedRequest) return;
+
+  if (decision === "REJECTED" && !rejectReason.trim()) {
+    setDecisionError("Rejection reason is required");
+    return;
+  }
+
+  try {
+    setDecisionLoading(true);
+    setDecisionError(null);
+
+    await axios.patch(
+      `/api/attendance/corrections/${selectedRequest._id}/approve-reject`,
+      {
+        approverId: hrEmployeeId,          // ✅ REQUIRED
+        decision,                          // ✅ REQUIRED
+        approverRole: "HR_MANAGER",        // ✅ OPTIONAL
+        rejectionReason:
+          decision === "REJECTED" ? rejectReason : undefined,
+        applyToPayroll: true,              // ✅ OPTIONAL
+      }
+    );
+
+    // Close dialogs
+    setReviewOpen(false);
+    setOpenAllDialog(false);
+
+    // Sync UI with backend
+    window.location.reload();
+
+  } catch (err: any) {
+    setDecisionError(
+      err?.response?.data?.message || "Failed to submit decision"
+    );
+  } finally {
+    setDecisionLoading(false);
+  }
+}
+
 
 
   return (
@@ -397,7 +443,71 @@ const [decisionError, setDecisionError] = React.useState<string | null>(null);
           )}
         </CardContent>
       </Card>
-      
+      <Dialog
+  open={reviewOpen}
+  onClose={() => setReviewOpen(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>Review Attendance Correction</DialogTitle>
+
+  <DialogContent dividers>
+    {selectedRequest && (
+      <Stack spacing={2}>
+        <Typography><b>Employee:</b> {selectedRequest.employeeId}</Typography>
+        <Typography><b>Type:</b> {selectedRequest.correctionType}</Typography>
+        <Typography>
+          <b>Date:</b>{" "}
+          {formatDate(
+            selectedRequest.appliesFromDate || selectedRequest.submittedAt
+          )}
+        </Typography>
+        <Typography>
+          <b>Duration:</b>{" "}
+          {formatDuration(selectedRequest.durationMinutes)}
+        </Typography>
+        <Typography><b>Reason:</b> {selectedRequest.reason || "—"}</Typography>
+
+        {decisionError && (
+          <Alert severity="error">{decisionError}</Alert>
+        )}
+
+        <TextField
+          label="Rejection Reason (required if rejecting)"
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          fullWidth
+          multiline
+          minRows={3}
+        />
+      </Stack>
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setReviewOpen(false)}>
+      Cancel
+    </Button>
+
+    <Button
+      color="error"
+      variant="outlined"
+      disabled={decisionLoading}
+      onClick={() => submitReviewDecision("REJECTED")}
+    >
+      Reject
+    </Button>
+
+    <Button
+      color="success"
+      variant="contained"
+      disabled={decisionLoading}
+      onClick={() => submitReviewDecision("APPROVED")}
+    >
+      Approve
+    </Button>
+  </DialogActions>
+</Dialog>
     </Box>
   );
 }

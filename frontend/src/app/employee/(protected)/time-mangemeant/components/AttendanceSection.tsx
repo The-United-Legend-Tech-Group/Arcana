@@ -16,12 +16,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import { alpha, useTheme } from "@mui/material/styles";
 
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
@@ -29,26 +23,28 @@ import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import TablePagination from "@mui/material/TablePagination";
+
+
 import SectionHeading from "./SectionHeading";
-import {
-  CorrectionRequest,
-  CorrectionRequestStatus,
-  SectionDefinition,
-} from "./types";
+import { CorrectionRequest, SectionDefinition } from "./types";
+
+
 
 const STATUS_COLORS: Record<
   string,
   "default" | "success" | "warning" | "error" | "info"
 > = {
-  // CorrectionRequestStatus enum values
-  [CorrectionRequestStatus.SUBMITTED]: "info",
-  [CorrectionRequestStatus.IN_REVIEW]: "warning",
-  [CorrectionRequestStatus.APPROVED]: "success",
-  [CorrectionRequestStatus.REJECTED]: "error",
-  [CorrectionRequestStatus.ESCALATED]: "error",
-  // Legacy/alternative status values
+  APPROVED: "success",
+  SUBMITTED: "info",
   PENDING: "info",
   REVIEW: "warning",
+  REJECTED: "error",
   RETURNED: "warning",
 };
 
@@ -57,16 +53,6 @@ function formatDate(value?: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString();
-}
-
-function formatStatus(status?: string) {
-  if (!status) return "N/A";
-  return status
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 function formatDuration(minutes?: number) {
@@ -84,8 +70,6 @@ type AttendanceSectionProps = {
   pending: CorrectionRequest[];
   loading: boolean;
   managerQueueEnabled: boolean;
-  lineManagerId?: string;
-  onRefresh?: () => void;
 };
 
 export default function AttendanceSection({
@@ -94,8 +78,6 @@ export default function AttendanceSection({
   pending,
   loading,
   managerQueueEnabled,
-  lineManagerId,
-  onRefresh,
 }: AttendanceSectionProps) {
   const recentHistory = React.useMemo(() => history.slice(0, 5), [history]);
 
@@ -153,76 +135,22 @@ export default function AttendanceSection({
     ];
   }, [history.length, approvedCount, rejectedCount, pending.length]);
 
-  const [reviewingId, setReviewingId] = React.useState<string | null>(null);
-  const [rejectDialogId, setRejectDialogId] = React.useState<string | null>(
-    null
-  );
-  const [rejectReason, setRejectReason] = React.useState<string>("");
-  const [actionError, setActionError] = React.useState<string>("");
+  const [openAllDialog, setOpenAllDialog] = React.useState(false);
+  const [page, setPage] = React.useState(0);
+  const rowsPerPage = 25;
 
-  async function authHeaders() {
-    if (typeof window === "undefined") return {} as Record<string, string>;
-    const token = window.localStorage.getItem("access_token");
-    return token
-      ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
-      : { "Content-Type": "application/json" };
-  }
+  const paginatedHistory = React.useMemo(() => {
+    const start = page * rowsPerPage;
+    return history.slice(start, start + rowsPerPage);
+    }, [history, page]);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
 
-  const handleApprove = async (id: string) => {
-    if (!lineManagerId) return;
-    setActionError("");
-    setReviewingId(id);
-    try {
-      const res = await fetch(`${apiBase}/time/corrections/${id}/review`, {
-        method: "PATCH",
-        headers: await authHeaders(),
-        body: JSON.stringify({
-          approverId: lineManagerId,
-          decision: "APPROVED",
-        }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Status ${res.status}`);
-      }
-      onRefresh?.();
-    } catch (e: any) {
-      setActionError(e?.message || "Approval failed");
-    } finally {
-      setReviewingId(null);
-    }
-  };
+const [reviewOpen, setReviewOpen] = React.useState(false);
+const [selectedRequest, setSelectedRequest] = React.useState<any | null>(null);
+const [decisionLoading, setDecisionLoading] = React.useState(false);
+const [rejectReason, setRejectReason] = React.useState("");
+const [decisionError, setDecisionError] = React.useState<string | null>(null);
 
-  const handleRejectConfirm = async () => {
-    const id = rejectDialogId;
-    if (!id || !lineManagerId) return;
-    setActionError("");
-    setReviewingId(id);
-    try {
-      const res = await fetch(`${apiBase}/time/corrections/${id}/review`, {
-        method: "PATCH",
-        headers: await authHeaders(),
-        body: JSON.stringify({
-          approverId: lineManagerId,
-          decision: "REJECTED",
-          rejectionReason: rejectReason,
-        }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Status ${res.status}`);
-      }
-      setRejectDialogId(null);
-      setRejectReason("");
-      onRefresh?.();
-    } catch (e: any) {
-      setActionError(e?.message || "Rejection failed");
-    } finally {
-      setReviewingId(null);
-    }
-  };
 
   return (
     <Box>
@@ -254,6 +182,98 @@ export default function AttendanceSection({
                 >
                   Recent correction activity
                 </Typography>
+                <Box sx={{ mb: 1, display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                  setPage(0);
+                  setOpenAllDialog(true);
+                 }}
+                >
+                   View all corrections
+                </Button>
+                <Dialog
+  open={openAllDialog}
+  onClose={() => setOpenAllDialog(false)}
+  maxWidth="lg"
+  fullWidth
+>
+  <DialogTitle>All Attendance Corrections</DialogTitle>
+
+  <DialogContent dividers>
+    {history.length === 0 ? (
+      <Alert severity="info">No corrections found.</Alert>
+    ) : (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Submitted</TableCell>
+            <TableCell>Employee</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Duration</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Manager</TableCell>
+            <TableCell>Notes</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {paginatedHistory.map((row) => (
+            <TableRow key={row._id} hover
+            onClick={() => {
+              setSelectedRequest(row);
+              setRejectReason("");
+              setDecisionError(null);
+              setReviewOpen(true);
+            }}
+            >
+              <TableCell>
+                {formatDate(row.appliesFromDate || row.submittedAt)}
+              </TableCell>
+              <TableCell>{row.employeeId || "—"}</TableCell>
+              <TableCell sx={{ textTransform: "capitalize" }}>
+                {row.correctionType
+                  ? row.correctionType.toLowerCase()
+                  : "—"}
+              </TableCell>
+              <TableCell>
+                {formatDuration(row.durationMinutes)}
+              </TableCell>
+              <TableCell>
+                <Chip
+                  size="small"
+                  label={row.status || "N/A"}
+                  color={STATUS_COLORS[row.status || ""] || "default"}
+                />
+              </TableCell>
+              <TableCell>{row.lineManagerId || "—"}</TableCell>
+              <TableCell sx={{ maxWidth: 240 }}>
+                <Typography variant="body2" noWrap>
+                  {row.rejectionReason || row.reason || "—"}
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )}
+  </DialogContent>
+
+  <DialogActions sx={{ justifyContent: "space-between" }}>
+    <TablePagination
+      component="div"
+      count={history.length}
+      page={page}
+      onPageChange={(_, newPage) => setPage(newPage)}
+      rowsPerPage={rowsPerPage}
+      rowsPerPageOptions={[25]}
+    />
+    <Button onClick={() => setOpenAllDialog(false)}>Close</Button>
+  </DialogActions>
+</Dialog>
+
+                </Box>
+
                 {recentHistory.length === 0 ? (
                   <Alert severity="info">
                     No corrections submitted in the selected period.
@@ -280,17 +300,18 @@ export default function AttendanceSection({
                             {row.correctionType
                               ? row.correctionType.toLowerCase()
                               : "—"}
+                          </TableCell>
+                          <TableCell>
+                            {formatDuration(row.durationMinutes)}
+                          </TableCell>
+                          <TableCell>
                             <Chip
-                              label={formatStatus(row.status)}
-                              color={
-                                row.status === "APPROVED"
-                                  ? "success"
-                                  : row.status === "REJECTED"
-                                  ? "error"
-                                  : "default"
-                              }
                               size="small"
-                              sx={{ ml: 1, fontWeight: 600 }}
+                              label={row.status || "N/A"}
+                              color={
+                                STATUS_COLORS[row.status || ""] || "default"
+                              }
+                              variant="outlined"
                             />
                           </TableCell>
                           <TableCell>{row.lineManagerId || "—"}</TableCell>
@@ -321,11 +342,6 @@ export default function AttendanceSection({
                     >
                       Manager approval queue
                     </Typography>
-                    {actionError && (
-                      <Alert severity="error" sx={{ mb: 1 }}>
-                        {actionError}
-                      </Alert>
-                    )}
                     {pendingQueue.length === 0 ? (
                       <Alert severity="success">
                         Your queue is clear. All submitted corrections are up to
@@ -340,7 +356,6 @@ export default function AttendanceSection({
                             <TableCell>Type</TableCell>
                             <TableCell>Duration</TableCell>
                             <TableCell>Status</TableCell>
-                            <TableCell align="right">Actions</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -363,46 +378,12 @@ export default function AttendanceSection({
                               <TableCell>
                                 <Chip
                                   size="small"
-                                  label={formatStatus(
-                                    row.status ||
-                                      CorrectionRequestStatus.SUBMITTED
-                                  )}
+                                  label={row.status || "SUBMITTED"}
                                   color={
                                     STATUS_COLORS[row.status || ""] || "info"
                                   }
                                   variant="filled"
                                 />
-                              </TableCell>
-                              <TableCell align="right">
-                                <Stack
-                                  direction="row"
-                                  spacing={1}
-                                  justifyContent="flex-end"
-                                >
-                                  <Chip
-                                    label={
-                                      reviewingId === row._id
-                                        ? "Approving…"
-                                        : "Approve"
-                                    }
-                                    color="success"
-                                    onClick={() => handleApprove(row._id)}
-                                    disabled={
-                                      !lineManagerId || reviewingId === row._id
-                                    }
-                                  />
-                                  <Chip
-                                    label="Reject"
-                                    color="error"
-                                    onClick={() => {
-                                      setRejectDialogId(row._id);
-                                      setRejectReason("");
-                                    }}
-                                    disabled={
-                                      !lineManagerId || reviewingId === row._id
-                                    }
-                                  />
-                                </Stack>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -416,40 +397,7 @@ export default function AttendanceSection({
           )}
         </CardContent>
       </Card>
-
-      {/* Reject reason dialog */}
-      <Dialog
-        open={Boolean(rejectDialogId)}
-        onClose={() => setRejectDialogId(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Reject Correction</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              label="Reason"
-              fullWidth
-              multiline
-              minRows={2}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-            />
-            {actionError && <Alert severity="error">{actionError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectDialogId(null)}>Cancel</Button>
-          <Button
-            onClick={handleRejectConfirm}
-            disabled={!rejectReason.trim()}
-            variant="contained"
-            color="error"
-          >
-            Reject
-          </Button>
-        </DialogActions>
-      </Dialog>
+      
     </Box>
   );
 }

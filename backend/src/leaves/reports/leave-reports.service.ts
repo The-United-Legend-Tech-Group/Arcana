@@ -189,46 +189,113 @@ export class LeavesReportService {
     }
 
     // -------------------------
-    // FETCH FROM DB
+    // FETCH FROM DB (no populate; avoid Employee schema)
     // -------------------------
-    const requests = await this.leaveRequestRepository.findWithFiltersAndPopulate(
+    const requests = await this.leaveRequestRepository.findWithFilters(
       requestQuery,
-      ['leaveTypeId', 'employeeId']
     );
 
-    const adjustments = await this.leaveAdjustmentRepository.findWithFiltersAndPopulate(
+    const adjustments = await this.leaveAdjustmentRepository.findWithFilters(
       adjustmentQuery,
-      ['leaveTypeId', 'employeeId', 'hrUserId']
     );
+
+    // -------------------------
+    // Enrich with employee + leave type via services/repos
+    // -------------------------
+    const employeeIds = Array.from(
+      new Set([
+        ...requests
+          .map((r: any) => r.employeeId?.toString?.())
+          .filter((id): id is string => !!id),
+        ...adjustments
+          .map((a: any) => a.employeeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ]),
+    );
+
+    const leaveTypeIds = Array.from(
+      new Set([
+        ...requests
+          .map((r: any) => r.leaveTypeId?.toString?.())
+          .filter((id): id is string => !!id),
+        ...adjustments
+          .map((a: any) => a.leaveTypeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ]),
+    );
+
+    const [employeeResults, leaveTypeResults] = await Promise.all([
+      Promise.all(
+        employeeIds.map((id) =>
+          this.employeeService.getProfile(id).catch(() => null),
+        ),
+      ),
+      Promise.all(
+        leaveTypeIds.map((id) =>
+          this.leaveTypeRepository.findById(id).catch(() => null),
+        ),
+      ),
+    ]);
+
+    const employeeMap = new Map<string, any>();
+    employeeIds.forEach((id, idx) => {
+      const emp = employeeResults[idx];
+      if (emp && emp.profile) {
+        employeeMap.set(id, emp.profile);
+      }
+    });
+
+    const leaveTypeMap = new Map<string, any>();
+    leaveTypeIds.forEach((id, idx) => {
+      const lt = leaveTypeResults[idx];
+      if (lt) {
+        const obj = (lt as any).toObject ? (lt as any).toObject() : lt;
+        leaveTypeMap.set(id, obj);
+      }
+    });
 
     // -------------------------
     // Format unified result
     // -------------------------
     const result = [
-      ...requests.map((req) => ({
-        type: 'REQUEST',
-        id: req._id,
-        employee: req.employeeId,
-        leaveType: req.leaveTypeId,
-        startDate: req.dates.from,
-        endDate: req.dates.to,
-        durationDays: req.durationDays,
-        justification: req.justification,
-        status: req.status,
-      })),
+      ...requests.map((req: any) => {
+        const empId = req.employeeId?.toString?.();
+        const ltId = req.leaveTypeId?.toString?.();
+        return {
+          type: 'REQUEST' as const,
+          id: req._id,
+          employee: empId && employeeMap.has(empId)
+            ? employeeMap.get(empId)
+            : empId,
+          leaveType: ltId && leaveTypeMap.has(ltId)
+            ? leaveTypeMap.get(ltId)
+            : ltId,
+          startDate: req.dates?.from,
+          endDate: req.dates?.to,
+          durationDays: req.durationDays,
+          justification: req.justification,
+          status: req.status,
+        };
+      }),
 
-      ...adjustments.map((adj) => ({
-        type: 'ADJUSTMENT',
-        id: adj._id,
-        employee: adj.employeeId,
-        leaveType: adj.leaveTypeId,
-        adjustmentType: adj.adjustmentType,
-        amount: adj.amount,
-        reason: adj.reason,
-        hrUser: adj.hrUserId,
-        //startDate: adj.dates.from,
-        //endDate: adj.dates.to,       <----------------------
-      })),
+      ...adjustments.map((adj: any) => {
+        const empId = adj.employeeId?.toString?.();
+        const ltId = adj.leaveTypeId?.toString?.();
+        return {
+          type: 'ADJUSTMENT' as const,
+          id: adj._id,
+          employee: empId && employeeMap.has(empId)
+            ? employeeMap.get(empId)
+            : empId,
+          leaveType: ltId && leaveTypeMap.has(ltId)
+            ? leaveTypeMap.get(ltId)
+            : ltId,
+          adjustmentType: adj.adjustmentType,
+          amount: adj.amount,
+          reason: adj.reason,
+          hrUser: adj.hrUserId,
+        };
+      }),
     ];
 
     // -------------------------
@@ -272,18 +339,58 @@ export class LeavesReportService {
     const teams = await this.employeeService.getTeamProfiles(managerId);
     if(!teams) throw new NotFoundException("No teams for Manager");
     // For each team member, get their leave entitlements (balances)
+    // and upcoming approved/pending leaves
     const result: Array<{
       employeeId: any;
       employeeName: string;
       balances: any[];
+      upcomingLeaves: any[];
     }> = [];
 
+    const employeeIds = teams.items.map(
+      (member: any) => member._id?.toString?.() || String(member._id),
+    );
+
+    // Fetch upcoming leaves for all team members in one go
+    const upcomingForTeam = await this.leaveRequestRepository.findUpcomingLeaves(
+      employeeIds.map((id: string) => new Types.ObjectId(id)),
+      new Date(),
+    );
+
     for (const member of teams.items) {
-      const balances = await this.leaveEntitlementRepository.findByEmployeeId(member._id.toString());
+      const memberId = member._id?.toString?.() || String(member._id);
+      const balances = await this.leaveEntitlementRepository.findByEmployeeId(
+        memberId,
+      );
+
+      const upcomingLeaves = (upcomingForTeam || [])
+        .filter((req: any) => {
+          const empId = req.employeeId?._id || req.employeeId;
+          return empId?.toString?.() === memberId;
+        })
+        .map((req: any) => ({
+          requestId: req._id?.toString?.() || req._id,
+          leaveType: req.leaveTypeId,
+          startDate: req.dates?.from,
+          endDate: req.dates?.to,
+          durationDays: req.durationDays,
+          status: req.status,
+        }));
+
+      const firstName = (member as any).firstName || '';
+      const lastName = (member as any).lastName || '';
+      const fullName =
+        (member as any).fullName ||
+        `${firstName} ${lastName}`.trim() ||
+        (member as any).employeeNumber ||
+        (member as any).workEmail ||
+        '';
+
       result.push({
         employeeId: member._id,
-        employeeName: member.fullName || '', // if such property exists
+        employeeName: fullName,
         balances,
+        upcomingLeaves,
       });
     }
     return result;

@@ -28,6 +28,10 @@ export class LeaveAdjustmentRepository extends BaseRepository<LeaveAdjustmentDoc
     return this.model.find({ adjustmentType }).exec();
   }
 
+  async findWithFilters(query: any): Promise<LeaveAdjustmentDocument[]> {
+    return this.model.find(query).exec();
+  }
+
   async findWithFiltersAndPopulate(query: any, populateFields: string[]): Promise<any[]> {
     let queryBuilder = this.model.find(query);
     populateFields.forEach(field => {

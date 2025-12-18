@@ -158,7 +158,8 @@ export class EmployeeController {
   }
 
   @Get(':id/correction-requests')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.SYSTEM_ADMIN, SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({ summary: 'Get employee correction requests' })
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiResponse({ status: 200, description: 'List of correction requests' })

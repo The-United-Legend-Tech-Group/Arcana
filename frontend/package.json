@@ -21,6 +21,7 @@
     "@mui/x-tree-view": "^8.21.0",
     "@react-spring/web": "^10.0.3",
     "@react-three/drei": "^10.7.7",
+    "@supabase/supabase-js": "^2.88.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@vercel/analytics": "^1.6.1",
     "date-fns": "^4.1.0",

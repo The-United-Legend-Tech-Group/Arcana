@@ -77,6 +77,7 @@ const EXCEPTION_STATUS_CONFIG: Record<
   [TimeExceptionStatus.RESOLVED]: { label: "Resolved", color: "success" },
 };
 
+
 export default function TimeExceptionsSection({
   section,
   exceptions,
@@ -120,6 +121,34 @@ export default function TimeExceptionsSection({
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState<string | null>(null);
+
+  const [correctionHistory, setCorrectionHistory] = React.useState<any[]>([]);
+  const [loadingCorrections, setLoadingCorrections] = React.useState(false);
+
+  const fetchCorrectionHistory = React.useCallback(async () => {
+  if (!employeeId) return;
+
+  try {
+    setLoadingCorrections(true);
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
+
+    const res = await fetch(
+      `${API_URL}/time/corrections/history/${employeeId}`
+    );
+
+    if (!res.ok) throw new Error("Failed to fetch correction history");
+
+    const data = await res.json();
+    setCorrectionHistory(Array.isArray(data) ? data : data?.data || []);
+  } catch (e) {
+    console.error("❌ Failed to load correction history", e);
+  } finally {
+    setLoadingCorrections(false);
+  }
+}, [employeeId]);
+
 
   // Validation
   const validateForm = React.useCallback(() => {
@@ -378,6 +407,10 @@ export default function TimeExceptionsSection({
     }
   };
 
+  React.useEffect(() => {
+    fetchCorrectionHistory();
+  }, []);
+
   const handleDialogClose = () => {
     if (submitting) return;
     setOpenDialog(false);
@@ -399,6 +432,7 @@ export default function TimeExceptionsSection({
       return (priority[a.status] || 99) - (priority[b.status] || 99);
     });
   }, [exceptions]);
+
 
   return (
     <Box>
@@ -606,6 +640,68 @@ export default function TimeExceptionsSection({
           )}
         </CardContent>
       </Card>
+      <Card variant="outlined" sx={{ mt: 3 }}>
+  <CardContent>
+    <Typography variant="h6" gutterBottom>
+      My Attendance Correction Requests
+    </Typography>
+
+    {loadingCorrections ? (
+      <Skeleton height={120} />
+    ) : correctionHistory.length === 0 ? (
+      <Alert severity="info">
+        You haven’t submitted any attendance correction requests yet.
+      </Alert>
+    ) : (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Date</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Reason</TableCell>
+            <TableCell align="right">Adjustment</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {correctionHistory.map((c) => (
+            <TableRow key={c._id}>
+              <TableCell>
+                {new Date(
+                  c.appliesFromDate || c.createdAt
+                ).toLocaleDateString()}
+              </TableCell>
+
+              <TableCell>
+                <Chip
+                  size="small"
+                  label={c.status}
+                  color={
+                    c.status === "APPROVED"
+                      ? "success"
+                      : c.status === "REJECTED"
+                      ? "error"
+                      : "info"
+                  }
+                />
+              </TableCell>
+
+              <TableCell sx={{ maxWidth: 300 }}>
+                <Typography variant="body2" noWrap>
+                  {c.reason}
+                </Typography>
+              </TableCell>
+
+              <TableCell align="right">
+                {c.correctionType} {c.durationMinutes} min
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )}
+  </CardContent>
+</Card>
+
 
       {/* ESS Correction Dialog */}
       <Dialog

@@ -13,6 +13,8 @@ import { ManagerApprovalDto } from '../dtos/manager-approve.dto';
 import { NotificationService } from '../../employee-subsystem/notification/notification.service';
 import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
 import { LeaveStatus } from '../enums/leave-status.enum';
+import { FilterLeaveRequestsByTypeDto } from '../dtos/filter-leave-requests-by-type.dto';
+import { SetApprovalFlowDto } from '../dtos/set-approval-flow.dto';
 import {
   LeaveRequestRepository,
   LeaveTypeRepository,
@@ -348,6 +350,65 @@ export class LeavesRequestService {
       }
 
       return obj;
+    });
+  }
+
+  /**
+   * Get all leave requests filtered by leave type and approval flow status/role
+   * For admin use - allows filtering by leaveTypeId, approvalFlow status, and approvalFlow role
+   */
+  async getLeaveRequestsByTypeAndApprovalFlow(
+    dto: FilterLeaveRequestsByTypeDto,
+  ): Promise<LeaveRequest[]> {
+    // Build query filter
+    const query: any = {
+      leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
+    };
+
+    // If filtering by approvalFlow status or role, we need to filter in memory
+    // since MongoDB doesn't easily support nested array filtering with multiple conditions
+    let requests = await this.leaveRequestRepository.find(query);
+
+    // Filter by approvalFlow status and/or role if provided
+    if (dto.approvalFlowStatus || dto.approvalFlowRole) {
+      requests = requests.filter((req: any) => {
+        const approvalFlow = req.approvalFlow || [];
+        
+        // If both status and role are provided, find entries that match both
+        if (dto.approvalFlowStatus && dto.approvalFlowRole) {
+          return approvalFlow.some(
+            (flow: any) =>
+              flow.status === dto.approvalFlowStatus &&
+              flow.role === dto.approvalFlowRole,
+          );
+        }
+        
+        // If only status is provided
+        if (dto.approvalFlowStatus) {
+          return approvalFlow.some(
+            (flow: any) => flow.status === dto.approvalFlowStatus,
+          );
+        }
+        
+        // If only role is provided
+        if (dto.approvalFlowRole) {
+          return approvalFlow.some(
+            (flow: any) => flow.role === dto.approvalFlowRole,
+          );
+        }
+        
+        return true;
+      });
+    }
+
+    // Enrich with employee and leave type data (similar to getAllLeaveRequestsForHR)
+    const enrichedRequests = await this.enrichLeaveRequests(requests);
+
+    // Sort by createdAt descending (most recent first)
+    return enrichedRequests.sort((a: any, b: any) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bDate - aDate;
     });
   }
 
@@ -887,48 +948,47 @@ export class LeavesRequestService {
 
   // ---------- REQ-021: Manager Approves a request ----------
   async approveRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
-    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
-      status: dto.status,
-      $push: {
-        approvalFlow: {
-          role: 'department head',
-          status: dto.status,
-          decidedBy: new Types.ObjectId(dto.decidedBy),
-          decidedAt: new Date(),
-        },
-      },
-    });
+    if (!dto.role) throw new BadRequestException('Missing approver role');
 
-    // Send notification to employee about approval
+    const updateFields:any = {
+      status: LeaveStatus.APPROVED,
+      decidedBy: new Types.ObjectId(dto.decidedBy),
+      decidedAt: new Date(),
+    };
+    if (dto.justification) updateFields.justification = dto.justification;
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(
+      leaveRequestId,
+      {}, // Don't change overall request status - keep it pending
+      dto.role,
+      { updateFields }
+    );
     if (updatedRequest) {
       await this.sendLeaveRequestNotification(updatedRequest, 'approved');
     }
-
     return updatedRequest;
   }
 
+
   // ---------- REQ-022: Manager Rejects a request ----------
   async rejectRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
-    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
-      status: dto.status,
-      $push: {
-        approvalFlow: {
-          role: 'department head',
-          status: dto.status,
-          decidedBy: new Types.ObjectId(dto.decidedBy),
-          decidedAt: new Date(),
-        },
-      },
-      justification: dto.justification,
-    });
-
-    // Send notification to employee about rejection
+    if (!dto.role) throw new BadRequestException('Missing approver role');
+    const updateFields:any = {
+      status: LeaveStatus.REJECTED,
+      decidedBy: new Types.ObjectId(dto.decidedBy),
+      decidedAt: new Date(),
+    };
+    if (dto.justification) updateFields.justification = dto.justification;
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(
+      leaveRequestId,
+      { justification: dto.justification }, // Don't change overall request status - keep it pending
+      dto.role,
+      { updateFields }
+    );
     if (updatedRequest) {
       await this.sendLeaveRequestNotification(updatedRequest, 'rejected', {
         reason: dto.justification,
       });
     }
-
     return updatedRequest;
   }
 
@@ -954,6 +1014,65 @@ export class LeavesRequestService {
       relatedModule: 'Leaves',
     });
   }
+  /**
+   * Send finalization notifications to employee, manager, and attendance coordinator
+   */
+  private async sendFinalizationNotifications(request: LeaveRequestDocument): Promise<void> {
+    try {
+      const recipientIds: string[] = [];
+
+      // 1. Add the employee
+      recipientIds.push(request.employeeId.toString());
+
+      // 2. Add the employee's manager
+      try {
+        const manager = await this.employeeService.getManagerForEmployee(request.employeeId.toString());
+        if (manager && manager._id) {
+          recipientIds.push(manager._id.toString());
+        }
+      } catch (error) {
+        console.error(`Failed to get manager for employee ${request.employeeId}:`, error);
+      }
+
+      // 3. Add attendance coordinators (Payroll Specialists)
+      try {
+        const allEmployees = await this.employeeService.findAll(1, 10000);
+        const attendanceCoordinators = allEmployees.items.filter((emp: any) => {
+          const empProfile = emp as any;
+          return empProfile.systemRole?.roles?.includes('Payroll Specialist');
+        });
+
+        attendanceCoordinators.forEach((coordinator: any) => {
+          const coordinatorId = coordinator._id?.toString() || (coordinator as any).id;
+          if (coordinatorId && !recipientIds.includes(coordinatorId)) {
+            recipientIds.push(coordinatorId);
+          }
+        });
+      } catch (error) {
+        console.error('Failed to get attendance coordinators:', error);
+      }
+
+      // Send notification to all recipients
+      if (recipientIds.length > 0) {
+        const fromDate = request.dates?.from ? new Date(request.dates.from).toLocaleDateString() : 'N/A';
+        const toDate = request.dates?.to ? new Date(request.dates.to).toLocaleDateString() : 'N/A';
+
+        await this.notificationService.create({
+          recipientId: recipientIds,
+          type: 'Success',
+          deliveryType: 'MULTICAST',
+          title: 'Leave Request Finalized',
+          message: `Leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) has been finalized and approved.`,
+          relatedEntityId: request._id.toString(),
+          relatedModule: 'Leaves',
+        });
+      }
+    } catch (error) {
+      // Log error but don't throw - notification failures shouldn't break finalization
+      console.error(`Failed to send finalization notifications for request ${request._id}:`, error);
+    }
+  }
+
   // =============================
   // REQ-025: HR Finalization
   // =============================
@@ -965,27 +1084,45 @@ export class LeavesRequestService {
     const request = await this.leaveRequestRepository.findById(leaveRequestId);
     if (!request) throw new NotFoundException('Leave request not found');
 
-    if (request.status !== LeaveStatus.APPROVED) {
+    // Check if medical documents are verified and manager has approved
+    const approvalFlow = request.approvalFlow || [];
+    const medicalVerified = approvalFlow.some(flow => flow.role === 'hr' && flow.status === 'approved');
+    const managerApproved = approvalFlow.some(flow => flow.role === 'department head' && flow.status === 'approved');
+
+    if (!medicalVerified) {
       throw new BadRequestException(
-        'Only approved leave requests can be finalized',
+        'Medical documents must be verified before finalization',
       );
     }
 
-    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
-      status: finalStatus, // This can be APPROVED or REJECTED
-      $push: {
-        approvalFlow: {
-          role: 'hr',
-          status: finalStatus,
-          decidedBy: new Types.ObjectId(hrUserId),
-          decidedAt: new Date(),
-        },
-      },
-    });
+    if (!managerApproved) {
+      throw new BadRequestException(
+        'Manager approval is required before finalization',
+      );
+    }
 
-    // Send notification to employee about finalization
+    if (finalStatus !== LeaveStatus.APPROVED) {
+      throw new BadRequestException(
+        'Only APPROVED status is allowed for finalization when medical is verified and manager has approved',
+      );
+    }
+
+    const updateFields: any = {
+      status: finalStatus,
+      decidedBy: new Types.ObjectId(hrUserId),
+      decidedAt: new Date(),
+    };
+
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(
+      leaveRequestId,
+      { status: finalStatus }, // Now change the overall status to APPROVED
+      'HR Manager',
+      { updateFields }
+    );
+
+    // Send notifications to employee, manager, and attendance coordinator about finalization
     if (updatedRequest) {
-      await this.sendLeaveRequestNotification(updatedRequest, 'finalized');
+      await this.sendFinalizationNotifications(updatedRequest);
 
       // Automatically update leave balance when HR finalizes with approval
       if (finalStatus === LeaveStatus.APPROVED) {
@@ -1020,27 +1157,27 @@ export class LeavesRequestService {
     const request = await this.leaveRequestRepository.findById(leaveRequestId);
     if (!request) throw new NotFoundException('Leave request not found');
 
-    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
-      status: newStatus, // Override the current status
-      $push: {
-        approvalFlow: {
-          role: 'hr',
-          status: newStatus,
-          decidedBy: new Types.ObjectId(hrUserId),
-          decidedAt: new Date(),
-        },
-      },
-      justification: `HR OVERRIDE: ${reason}`,
-    });
+    const updateFields: any = {
+      status: newStatus,
+      decidedBy: new Types.ObjectId(hrUserId),
+      decidedAt: new Date(),
+    };
+    if (reason) updateFields.justification = reason;
 
-    // Send notification to employee about HR override
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(
+      leaveRequestId,
+      { status: newStatus, justification: `HR OVERRIDE: ${reason}` }, // Always change status to newStatus
+      'HR Manager',
+      { updateFields }
+    );
+
+    // Send appropriate notifications
     if (updatedRequest) {
-      await this.sendLeaveRequestNotification(updatedRequest, 'hr_override', {
-        reason,
-      });
-
-      // Automatically update leave balance when HR overrides to approved
       if (newStatus === LeaveStatus.APPROVED) {
+        // Send finalization notifications when overriding to approved
+        await this.sendFinalizationNotifications(updatedRequest);
+
+        // Automatically update leave balance when HR overrides to approved
         try {
           await this.leaveEntitlementRepository.updateBalance(
             updatedRequest.employeeId,
@@ -1054,6 +1191,11 @@ export class LeavesRequestService {
             error,
           );
         }
+      } else {
+        // Send regular override notification for other statuses
+        await this.sendLeaveRequestNotification(updatedRequest, 'hr_override', {
+          reason,
+        });
       }
     }
 
@@ -1090,17 +1232,18 @@ export class LeavesRequestService {
           continue;
         }
 
-        const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(requestId, {
+        const updateFields: any = {
           status: newStatus,
-          $push: {
-            approvalFlow: {
-              role: 'hr',
-              status: newStatus,
-              decidedBy: new Types.ObjectId(hrUserId),
-              decidedAt: new Date(),
-            },
-          },
-        });
+          decidedBy: new Types.ObjectId(hrUserId),
+          decidedAt: new Date(),
+        };
+
+        const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(
+          requestId,
+          {}, // Don't change overall request status - keep it pending
+          'HR Manager',
+          { updateFields }
+        );
 
         // Send notification to employee about bulk processing
         if (updatedRequest) {
@@ -1190,5 +1333,177 @@ export class LeavesRequestService {
     }
 
     return { updated };
+  }
+
+  // =============================
+  // Admin: Set Approval Flow for Leave Request
+  // =============================
+  async setApprovalFlow(
+    leaveRequestId: string,
+    dto: SetApprovalFlowDto,
+  ): Promise<LeaveRequest | null> {
+    const request = await this.leaveRequestRepository.findById(leaveRequestId);
+    if (!request) throw new NotFoundException('Leave request not found');
+
+    // Create approval flow entries for each role with status "pending"
+    const approvalFlow = dto.roles.map((role) => ({
+      role,
+      status: 'pending',
+    }));
+
+    // Update the leave request with the new approval flow
+    const updatedRequest = await this.leaveRequestRepository.updateById(leaveRequestId, {
+      approvalFlow,
+    });
+
+    if (!updatedRequest) {
+      throw new NotFoundException('Failed to update leave request');
+    }
+
+    // Send notifications to employees with matching roles who are in positions above the requester
+    await this.notifyApproversForApprovalFlow(updatedRequest, dto.roles);
+
+    return updatedRequest;
+  }
+
+  /**
+   * Find employees with matching roles who are in positions above the requester
+   * and send them notifications about the leave request
+   */
+  private async notifyApproversForApprovalFlow(
+    request: LeaveRequestDocument,
+    roles: string[],
+  ): Promise<void> {
+    try {
+      // Get employees in positions above the requester
+      const employeesAboveIds = await this.getEmployeesAboveRequester(
+        request.employeeId.toString(),
+      );
+
+      if (employeesAboveIds.length === 0) {
+        console.log(
+          `[setApprovalFlow] No employees found above requester ${request.employeeId}`,
+        );
+        return;
+      }
+
+      // For each role in the approval flow, find employees with that role
+      // who are in positions above the requester
+      const approverIds = new Set<string>();
+
+      for (const role of roles) {
+        // Check each employee above the requester
+        for (const employeeAboveId of employeesAboveIds) {
+          try {
+            // Get employee profile with system roles
+            const empProfile = await this.employeeService.getProfile(
+              employeeAboveId,
+            );
+            const empRoles: string[] = Array.isArray(
+              (empProfile as any)?.systemRole?.roles,
+            )
+              ? (empProfile as any).systemRole.roles
+              : [];
+
+            // Check if employee has the matching role
+            if (empRoles.includes(role)) {
+              const empId =
+                (empProfile as any)?._id?.toString() ||
+                employeeAboveId;
+              if (empId) {
+                approverIds.add(empId);
+              }
+            }
+          } catch (err) {
+            // Skip employees that can't be loaded
+            console.error(
+              `[setApprovalFlow] Failed to load employee profile ${employeeAboveId}:`,
+              err,
+            );
+            continue;
+          }
+        }
+      }
+
+      // Send notifications to all approvers
+      if (approverIds.size > 0) {
+        // Get requester info for notification
+        const requestingEmployee = await this.employeeService.getProfile(
+          request.employeeId.toString(),
+        );
+        const requesterName = requestingEmployee?.profile
+          ? `${requestingEmployee.profile.firstName || ''} ${requestingEmployee.profile.lastName || ''}`.trim() ||
+            requestingEmployee.profile.email ||
+            'An employee'
+          : 'An employee';
+
+        const fromDate = request.dates?.from
+          ? new Date(request.dates.from).toLocaleDateString()
+          : 'N/A';
+        const toDate = request.dates?.to
+          ? new Date(request.dates.to).toLocaleDateString()
+          : 'N/A';
+
+        await this.notificationService.create({
+          recipientId: Array.from(approverIds),
+          type: 'Info',
+          deliveryType: 'MULTICAST',
+          title: 'Leave Request Requires Your Approval',
+          message: `${requesterName} has submitted a leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}). Your approval is required based on your role.`,
+          relatedEntityId: request._id.toString(),
+          relatedModule: 'Leaves',
+        });
+      }
+    } catch (error) {
+      // Log error but don't throw - notification failures shouldn't break the main flow
+      console.error(
+        `[setApprovalFlow] Failed to send notifications for leave request ${request._id}:`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Get all employee IDs who are in positions above the requester
+   * Uses employee service to traverse the hierarchy upward
+   */
+  private async getEmployeesAboveRequester(
+    requesterEmployeeId: string,
+  ): Promise<string[]> {
+    const employeeIdsAbove: string[] = [];
+    const visited = new Set<string>();
+    let currentEmployeeId: string | null = requesterEmployeeId;
+
+    console.log('currentEmployeeId', currentEmployeeId);
+
+    // Traverse up the hierarchy (max 10 levels to avoid infinite loops)
+    for (let level = 0; level < 10; level++) {
+      if (!currentEmployeeId || visited.has(currentEmployeeId)) {
+        break;
+      }
+      visited.add(currentEmployeeId);
+
+      // Get the manager for the current employee
+      const manager = await this.employeeService.getManagerForEmployee(
+        currentEmployeeId,
+      );
+
+      console.log('Current Employee ID', currentEmployeeId);
+      console.log('manager', manager);
+      if (!manager || !manager._id) {
+        break;
+      }
+
+      const managerId = manager._id.toString();
+      if (managerId && !employeeIdsAbove.includes(managerId)) {
+        employeeIdsAbove.push(managerId);
+      }
+
+      // Move up to the manager
+      currentEmployeeId = managerId;
+    }
+
+    console.log('employeeIdsAbove', employeeIdsAbove);
+    return employeeIdsAbove;
   }
 }

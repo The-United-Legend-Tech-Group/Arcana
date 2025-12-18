@@ -155,6 +155,12 @@ export const leavesSubItems: MenuItem[] = [
     roles: ["HR Admin"],
   },
   {
+    text: "Approval Flow",
+    icon: <ListAltRoundedIcon />,
+    path: "/employee/leaves/requests/admin",
+    roles: ["HR Admin"],
+  },
+  {
     text: "Leave Requests",
     icon: <ListAltRoundedIcon />,
     path: "/employee/leaves/requests",
@@ -252,6 +258,7 @@ export default function MenuContent() {
     if (text === 'Calendar' && pathname === '/employee/leaves/calendar') return true;
     if (text === 'Requests Dashboard' && pathname === '/employee/leaves/requests/hr' ) return true;
     if (text === 'Requests Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
+    if (text === 'Approval Flow' && pathname === '/employee/leaves/requests/admin') return true;
     if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
     if (text === 'History' && pathname === '/employee/leaves/history') return true;
     if (text === 'Automation' && pathname === '/employee/leaves/automation') return true;

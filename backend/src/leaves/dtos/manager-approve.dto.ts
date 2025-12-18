@@ -12,6 +12,11 @@ export class ManagerApprovalDto {
   @IsMongoId()
   decidedBy: string;
 
+  // <--- Add the role being used to approve, required for targeting correct item in approvalFlow
+  @IsOptional()
+  role?: string;
+
   @IsOptional()
   justification?: string;
 }
+

@@ -325,6 +325,7 @@ export default function ManagerLeaveRequestsPanel() {
         credentials: 'include',
         body: JSON.stringify({
           decidedBy: managerId,
+          role: 'department head', // Specify the role being used to approve
         }),
       });
 
@@ -363,6 +364,7 @@ export default function ManagerLeaveRequestsPanel() {
         body: JSON.stringify({
           decidedBy: managerId,
           justification: rejectJustification,
+          role: 'department head', // Specify the role being used to reject
         }),
       });
 

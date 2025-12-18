@@ -119,7 +119,6 @@ export default function HRLeaveRequestsManager() {
   const [bulkDialog, setBulkDialog] = useState<{ open: boolean }>({ open: false });
   
   // Form states
-  const [finalizeStatus, setFinalizeStatus] = useState<LeaveStatus>('approved');
   const [overrideStatus, setOverrideStatus] = useState<LeaveStatus>('approved');
   const [overrideReason, setOverrideReason] = useState('');
   const [verifyStatus, setVerifyStatus] = useState(true);
@@ -199,7 +198,7 @@ export default function HRLeaveRequestsManager() {
         credentials: 'include',
         body: JSON.stringify({
           hrUserId,
-          finalStatus: finalizeStatus,
+          finalStatus: 'approved', // Always approved when medical verified and manager approved
         }),
       });
 
@@ -541,16 +540,22 @@ export default function HRLeaveRequestsManager() {
                     </TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={0.5}>
-                        {request.status === 'approved' && (
-                          <Tooltip title="Finalize">
-                            <IconButton
-                              size="small"
-                              onClick={() => setFinalizeDialog({ open: true, requestId: request._id })}
-                            >
-                              <CheckCircleIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
+                        {(() => {
+                          const medicalVerified = request.approvalFlow?.some(flow => flow.role === 'HR Manager' && flow.status === 'approved');
+                          const managerApproved = request.approvalFlow?.some(flow => flow.role === 'department head' && flow.status === 'approved');
+                          const canFinalize = medicalVerified && managerApproved;
+
+                          return canFinalize ? (
+                            <Tooltip title="Finalize (Medical verified & Manager approved)">
+                              <IconButton
+                                size="small"
+                                onClick={() => setFinalizeDialog({ open: true, requestId: request._id })}
+                              >
+                                <CheckCircleIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          ) : null;
+                        })()}
                         <Tooltip title="Override">
                           <IconButton
                             size="small"
@@ -601,18 +606,11 @@ export default function HRLeaveRequestsManager() {
         <DialogTitle>Finalize Leave Request</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              select
-              label="Final Status"
-              value={finalizeStatus}
-              onChange={(e) => setFinalizeStatus(e.target.value as LeaveStatus)}
-              fullWidth
-            >
-              <MenuItem value="approved">Approved</MenuItem>
-              <MenuItem value="rejected">Rejected</MenuItem>
-            </TextField>
+            <Alert severity="info">
+              Medical documents verified and manager approved. This request can now be finalized to APPROVED status.
+            </Alert>
             <Typography variant="body2" color="text.secondary">
-              Finalizing will update employee records and payroll accordingly.
+              Finalizing will update employee records, leave balances, and payroll accordingly.
             </Typography>
           </Stack>
         </DialogContent>

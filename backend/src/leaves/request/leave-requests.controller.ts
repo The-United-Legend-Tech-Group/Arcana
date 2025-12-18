@@ -7,6 +7,7 @@ import {
   Patch,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { LeavesRequestService } from './leave-requests.service';
@@ -22,6 +23,8 @@ import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { FilterLeaveRequestsByTypeDto } from '../dtos/filter-leave-requests-by-type.dto';
+import { SetApprovalFlowDto } from '../dtos/set-approval-flow.dto';
 
 @ApiTags('Leaves Requests')
 @Controller('leaves')
@@ -160,6 +163,44 @@ async getMyTeamRequests(@Req() req: any): Promise<LeaveRequest[]> {
 @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
 async getAllLeaveRequestsForHR(): Promise<LeaveRequest[]> {
   return this.leavesRequestService.getAllLeaveRequestsForHR();
+}
+
+// ------------------------------
+// Admin: Get Leave Requests by Type and Approval Flow
+// ------------------------------
+@Get('admin/filter-by-type')
+@Roles(SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN)
+@ApiOperation({ 
+  summary: 'Get all leave requests filtered by leave type and approval flow status/role',
+  description: 'Allows filtering leave requests by specific leave type and approval flow criteria'
+})
+@ApiResponse({ status: 200, description: 'Filtered leave requests retrieved successfully' })
+@ApiResponse({ status: 400, description: 'Invalid filter parameters' })
+async getLeaveRequestsByTypeAndApprovalFlow(
+  @Query() dto: FilterLeaveRequestsByTypeDto,
+): Promise<LeaveRequest[]> {
+  return this.leavesRequestService.getLeaveRequestsByTypeAndApprovalFlow(dto);
+}
+
+// ------------------------------
+// Admin: Set Approval Flow for Leave Request
+// ------------------------------
+@Patch('admin/:id/set-approval-flow')
+@Roles(SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN)
+@ApiOperation({ 
+  summary: 'Set approval flow roles for a leave request',
+  description: 'Sets which roles need to approve the leave request. All roles will have status "pending" initially.'
+})
+@ApiParam({ name: 'id', description: 'Leave request ID' })
+@ApiBody({ type: SetApprovalFlowDto })
+@ApiResponse({ status: 200, description: 'Approval flow set successfully' })
+@ApiResponse({ status: 400, description: 'Invalid input data' })
+@ApiResponse({ status: 404, description: 'Leave request not found' })
+async setApprovalFlow(
+  @Param('id') id: string,
+  @Body() dto: SetApprovalFlowDto,
+): Promise<LeaveRequest | null> {
+  return this.leavesRequestService.setApprovalFlow(id, dto);
 }
 
     // ---------- REQ-021: Manager Approves a request ----------

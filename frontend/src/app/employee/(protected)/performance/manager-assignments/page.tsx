@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     Box,
     Button,
@@ -55,6 +55,9 @@ export default function AppraisalReviewHubPage() {
         severity: 'success',
     });
 
+    // Track if this is the initial mount to skip debounced search on first render
+    const isInitialMount = useRef(true);
+
     const loadRecords = useCallback(async () => {
         try {
             setLoading(true);
@@ -99,14 +102,27 @@ export default function AppraisalReviewHubPage() {
         }
     }, [paginationModel, searchQuery, statusFilter]);
 
+    // Initial data fetch on mount
     useEffect(() => {
         loadRecords();
-    }, [loadRecords]);
+        isInitialMount.current = false;
+    }, []);
 
-    // Debounced search
+    // Refetch when pagination or status filter changes (but not on initial mount)
     useEffect(() => {
+        if (!isInitialMount.current) {
+            loadRecords();
+        }
+    }, [paginationModel, statusFilter]);
+
+    // Debounced search - only triggers after user types (skip initial mount)
+    useEffect(() => {
+        if (isInitialMount.current) {
+            return;
+        }
+
         const timer = setTimeout(() => {
-            // Reset to first page on search
+            // Reset to first page on search change
             if (paginationModel.page !== 0) {
                 setPaginationModel(prev => ({ ...prev, page: 0 }));
             } else {

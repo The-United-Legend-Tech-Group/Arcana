@@ -1,8 +1,10 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { EmployeeStatus } from './enums/employee-profile.enums';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginCandidateDto } from './dto/login-candidate.dto';
@@ -89,6 +91,11 @@ export class AuthService {
     const employee = await this.employeeProfileRepository.findByEmail(email);
     if (!employee) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if employee is terminated - block login before password check
+    if (employee.status === EmployeeStatus.TERMINATED) {
+      throw new ForbiddenException('EMPLOYEE_TERMINATED');
     }
 
     console.log('🔐 [AuthService.employeeLogin] Employee found:', {

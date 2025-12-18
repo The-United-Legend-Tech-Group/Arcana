@@ -318,7 +318,7 @@ export function OffboardingClearance() {
                         {employee ? `${employee.firstName} ${employee.lastName}` : 'Employee'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        ID: {termination.employeeId ? termination.employeeId.toString().slice(-8) : 'N/A'} · {employee?.department || 'N/A'}
+                        ID: {termination.employeeId ? termination.employeeId.toString().slice(-8) : 'N/A'} · {typeof employee?.department === 'string' ? employee.department : employee?.department?.name || 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Last Working Day: {termination.terminationDate ? new Date(termination.terminationDate).toLocaleDateString() : 'TBD'}
@@ -354,6 +354,9 @@ export function OffboardingClearance() {
                         {(checklist.items || []).map((clearance: any, index: number) => {
                           const isCleared = clearance.status === 'approved';
                           const isRejected = clearance.status === 'rejected';
+                          const deptLabel = typeof clearance.department === 'string'
+                            ? clearance.department
+                            : clearance.department?.name || (clearance.department?._id ? String(clearance.department._id) : 'Department');
 
                           return (
                             <Box key={index}>
@@ -374,7 +377,7 @@ export function OffboardingClearance() {
                                     ) : (
                                       <ClockIcon sx={{ fontSize: 16, color: 'warning.main' }} />
                                     )}
-                                    <Typography variant="body2">{clearance.department}</Typography>
+                                    <Typography variant="body2">{deptLabel}</Typography>
                                   </Stack>
                                   <Chip
                                     label={isCleared ? 'Cleared' : isRejected ? 'Rejected' : 'Pending'}
@@ -423,7 +426,7 @@ export function OffboardingClearance() {
                                   ) : (
                                     <ClockIcon sx={{ fontSize: 16, color: 'warning.main' }} />
                                   )}
-                                  <Typography variant="body2">{asset.name || 'Equipment'}</Typography>
+                                  <Typography variant="body2">{typeof asset.name === 'string' ? asset.name : asset.name?.name || 'Equipment'}</Typography>
                                 </Stack>
                                 <Box textAlign="right">
                                   <Chip
@@ -432,7 +435,7 @@ export function OffboardingClearance() {
                                     color={isReturned ? 'success' : 'warning'}
                                   />
                                   {asset.condition && (
-                                    <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>Condition: {asset.condition}</Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>Condition: {typeof asset.condition === 'string' ? asset.condition : asset.condition?.name || 'N/A'}</Typography>
                                   )}
                                 </Box>
                               </Stack>
@@ -554,7 +557,7 @@ export function OffboardingClearance() {
                     <strong>ID:</strong> {selectedChecklist.termination.employeeId ? selectedChecklist.termination.employeeId.toString().slice(-8) : 'N/A'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>Department:</strong> {selectedChecklist.employee?.department || 'N/A'}
+                    <strong>Department:</strong> {typeof selectedChecklist.employee?.department === 'string' ? selectedChecklist.employee.department : selectedChecklist.employee?.department?.name || 'N/A'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     <strong>Last Working Day:</strong> {selectedChecklist.termination.terminationDate ? new Date(selectedChecklist.termination.terminationDate).toLocaleDateString() : 'TBD'}
@@ -570,6 +573,9 @@ export function OffboardingClearance() {
                     const isApproved = clearance.status === 'approved';
                     const isRejected = clearance.status === 'rejected';
                     const isPending = clearance.status === 'pending';
+                    const deptLabel = typeof clearance.department === 'string'
+                      ? clearance.department
+                      : clearance.department?.name || (clearance.department?._id ? String(clearance.department._id) : 'Department');
 
                     return (
                       <Paper
@@ -591,7 +597,7 @@ export function OffboardingClearance() {
                               ) : (
                                 <ClockIcon sx={{ fontSize: 20, color: 'warning.main' }} />
                               )}
-                              <Typography variant="subtitle2">{clearance.department}</Typography>
+                              <Typography variant="subtitle2">{deptLabel}</Typography>
                               <Chip
                                 label={isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending'}
                                 size="small"
@@ -620,18 +626,18 @@ export function OffboardingClearance() {
                           </Box>
 
                           {/* Status Dropdown - Only show if not already approved */}
-                          {!isApproved && (
-                            <FormControl size="small" sx={{ minWidth: 140 }}>
-                              <Select
-                                value={clearance.status || 'pending'}
-                                onChange={(e) => {
-                                  handleUpdateDepartmentStatus(
-                                    selectedChecklist.checklist._id,
-                                    clearance.department,
-                                    e.target.value
-                                  );
-                                }}
-                              >
+                            {!isApproved && (
+                              <FormControl size="small" sx={{ minWidth: 140 }}>
+                                <Select
+                                  value={clearance.status || 'pending'}
+                                  onChange={(e) => {
+                                    handleUpdateDepartmentStatus(
+                                      selectedChecklist.checklist._id,
+                                      deptLabel,
+                                      e.target.value
+                                    );
+                                  }}
+                                >
                                 <MenuItem value="pending">Pending</MenuItem>
                                 <MenuItem value="under_review">Under Review</MenuItem>
                                 <MenuItem value="approved">Approved</MenuItem>
@@ -670,10 +676,10 @@ export function OffboardingClearance() {
                               <ClockIcon sx={{ fontSize: 20, color: 'warning.main' }} />
                             )}
                             <Box>
-                              <Typography variant="body2">{asset.name || 'Equipment'}</Typography>
+                              <Typography variant="body2">{typeof asset.name === 'string' ? asset.name : asset.name?.name || 'Equipment'}</Typography>
                               {asset.condition && (
                                 <Typography variant="caption" color="text.secondary" display="block">
-                                  {asset.condition}
+                                  {typeof asset.condition === 'string' ? asset.condition : asset.condition?.name || 'N/A'}
                                 </Typography>
                               )}
                             </Box>
@@ -690,7 +696,7 @@ export function OffboardingClearance() {
                                 <Checkbox
                                   checked={isReturned}
                                   onChange={(e) => {
-                                    const equipName = asset.name || 'Equipment';
+                                    const equipName = typeof asset.name === 'string' ? asset.name : asset.name?.name || 'Equipment';
                                     handleUpdateEquipmentReturn(
                                       selectedChecklist.checklist._id,
                                       equipName,

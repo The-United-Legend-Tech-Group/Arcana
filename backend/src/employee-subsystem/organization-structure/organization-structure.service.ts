@@ -34,6 +34,7 @@ import { CreatePositionAssignmentDto } from './dto/create-position-assignment.dt
 import { EmployeeSystemRoleRepository } from '../employee/repository/employee-system-role.repository';
 import { EmployeeProfileRepository } from '../employee/repository/employee-profile.repository';
 import { SystemRole } from '../employee/enums/employee-profile.enums';
+
 @Injectable()
 export class OrganizationStructureService {
   constructor(
@@ -49,11 +50,13 @@ export class OrganizationStructureService {
     private readonly positionAssignmentModel: Model<PositionAssignmentDocument>,
     private readonly notificationService: NotificationService,
     private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
-    private readonly employeeProfileRepository: EmployeeProfileRepository,) { }
+    private readonly employeeProfileRepository: EmployeeProfileRepository,
+  ) { }
 
   async getOpenPositions(): Promise<Position[]> {
     return this.positionRepository.find({ isActive: false });
   }
+
   async getOpenDepartments(): Promise<any[]> {
     // 1. Fetch all inactive positions (Open Positions) and Recruiter Roles in parallel
     const [openPositions, recruiterRoles] = await Promise.all([
@@ -140,6 +143,7 @@ export class OrganizationStructureService {
 
     return results;
   }
+
   async listChangeRequests(): Promise<StructureChangeRequest[]> {
     return this.changeRequestModel.find().sort({ createdAt: -1 }).exec();
   }

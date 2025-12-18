@@ -17,7 +17,7 @@ import {
     treeViewCustomizations,
 } from '../../../common/material-ui/dashboard/theme/customizations';
 import { decryptData } from '../../../common/utils/encryption';
-import { ToastProvider } from '@/lib/hooks/useToast';
+import { AuthProvider } from '../../../context/AuthContext';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -79,8 +79,8 @@ export default function CandidateLayout({ children }: LayoutProps) {
     }, [router]);
 
     return (
-        <AppTheme themeComponents={xThemeComponents}>
-            <ToastProvider>
+        <AuthProvider initialRoles={[]} initialLoading={false}>
+            <AppTheme themeComponents={xThemeComponents}>
                 <CssBaseline enableColorScheme />
                 <Box sx={{ display: 'flex' }}>
                     <SideMenu user={candidate ? {
@@ -122,7 +122,7 @@ export default function CandidateLayout({ children }: LayoutProps) {
                         </Stack>
                     </Box>
                 </Box>
-            </ToastProvider>
-        </AppTheme>
+            </AppTheme>
+        </AuthProvider>
     );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -28,7 +28,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import WorkRoundedIcon from '@mui/icons-material/WorkRounded';
 import { usePathname, useRouter } from "next/navigation";
-import { getUserRoles } from "../../../utils/cookie-utils";
+import { useAuth } from "@/hooks/use-auth";
 
 // Type definition for menu items
 export interface MenuItem {
@@ -39,7 +39,7 @@ export interface MenuItem {
 }
 
 export const mainListItems: MenuItem[] = [
-  { text: "Home", icon: <HomeRoundedIcon />, path: "/employee/dashboard", roles: [] },
+  { text: "Home", icon: <HomeRoundedIcon />, roles: [] },
   {
     text: "Calendar",
     icon: <CalendarMonthRoundedIcon />,
@@ -54,12 +54,13 @@ export const mainListItems: MenuItem[] = [
   {
     text: "Manage Organization",
     icon: <ApartmentRoundedIcon />,
-    path: "/employee/manage-organization"
+    path: "/employee/manage-organization",
+    roles: ["System Admin"]
   },
-  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests' },
-  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees' },
-  { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification' },
-  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests' },
+  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests', roles: ["HR Admin"] },
+  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees', roles: ["HR Admin"] },
+  { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification', roles: ["System Admin", "HR Admin", "HR Manager", "department head"] },
+  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests', roles: ["System Admin"] },
 
 ];
 
@@ -68,36 +69,43 @@ export const performanceSubItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/performance/dashboard",
+    roles: ["HR Manager"]
   },
   {
     text: "Performance Templates",
     icon: <AssessmentRoundedIcon />,
     path: "/employee/performance/templates",
+    roles: ["HR Manager"]
   },
   {
     text: "Appraisal Cycles",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/performance/cycles",
+    roles: ["HR Manager"]
   },
   {
     text: "Appraisal Assignments",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/assignments",
+    roles: ["HR Employee"]
   },
   {
     text: "Appraisal Monitoring",
     icon: <VisibilityRoundedIcon />,
     path: "/employee/performance/monitoring",
+    roles: ["HR Employee"]
   },
   {
     text: "Manager Appraisal",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/manager",
+    roles: ["department head"]
   },
   {
-    text: "My Assigned Appraisals",
+    text: "Appraisal Review Hub",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/manager-assignments",
+    roles: ["HR Employee"]
   },
   {
     text: "My Performance",
@@ -108,20 +116,22 @@ export const performanceSubItems: MenuItem[] = [
     text: "Manage Disputes",
     icon: <GavelRoundedIcon />,
     path: "/employee/performance/manage-disputes",
+    roles: ["HR Manager"]
   },
   {
     text: "Disputes",
     icon: <ReportProblemRoundedIcon />,
     path: "/employee/performance/disputes",
+    roles: ["HR Employee", "department employee"]
   },
 ];
 
 export const recruitmentSubItems: MenuItem[] = [
-  { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/employee/recruitment_sub' },
-  { text: 'Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/employee' },
-  { text: 'HR Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-employee' },
-  { text: 'HR Manager', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-manager' },
-  { text: 'System Admin', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/system-admin' },
+  { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/employee/recruitment_sub', roles: ['System Admin'] },
+  { text: 'Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/employee', roles: ['department employee'] },
+  { text: 'HR Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-employee', roles: ['HR Manager', 'HR Employee'] },
+  { text: 'HR Manager', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-manager', roles: ['HR Manager'] },
+  { text: 'System Admin', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/system-admin', roles: ['System Admin'] },
 ];
 
 const secondaryListItems = [
@@ -135,23 +145,19 @@ export default function MenuContent() {
   const router = useRouter();
   const [performanceOpen, setPerformanceOpen] = useState(false);
   const [recruitmentOpen, setRecruitmentOpen] = useState(false);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Load user roles only on client side to avoid hydration mismatch
-  useEffect(() => {
-    setIsClient(true);
-    setUserRoles(getUserRoles());
-  }, []);
+  const { roles: userRoles, loading } = useAuth();
 
   const isCandidate = pathname.startsWith("/candidate");
   const isPerformancePath = pathname.startsWith("/employee/performance");
   const isRecruitmentPath = pathname.startsWith('/employee/recruitment_sub');
 
   const visibleListItems = mainListItems.filter((item) => {
-    if (isCandidate && item.text === "Team") return false;
-    // Only apply role-based filtering on client side after hydration
-    if (isClient) {
+    // For candidates, only show the Home button
+    if (isCandidate) {
+      return item.text === "Home";
+    }
+    // Only apply role-based filtering after roles are loaded
+    if (!loading) {
       // @ts-ignore
       if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
         return false;
@@ -178,7 +184,7 @@ export default function MenuContent() {
     if (text === 'Appraisal Assignments' && pathname === '/employee/performance/assignments') return true;
     if (text === 'Appraisal Monitoring' && pathname === '/employee/performance/monitoring') return true;
     if (text === 'Manager Appraisal' && pathname === '/employee/performance/manager') return true;
-    if (text === 'My Assigned Appraisals' && pathname === '/employee/performance/manager-assignments') return true;
+    if (text === 'Appraisal Review Hub' && pathname === '/employee/performance/manager-assignments') return true;
     if (text === 'My Performance' && pathname === '/employee/performance/my-records') return true;
     if (text === 'Manage Disputes' && pathname === '/employee/performance/manage-disputes') return true;
     if (text === 'Disputes' && pathname === '/employee/performance/disputes') return true;
@@ -226,44 +232,48 @@ export default function MenuContent() {
           </ListItem>
         ))}
 
-        {/* Performance Dropdown */}
-        <ListItem disablePadding sx={{ display: "block" }}>
-          <ListItemButton
-            selected={isPerformancePath}
-            onClick={() => setPerformanceOpen(!performanceOpen)}
-          >
-            <ListItemIcon>
-              <TrendingUpRoundedIcon />
-            </ListItemIcon>
-            <ListItemText primary="Performance" />
-            {performanceOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </ListItemButton>
-        </ListItem>
+        {/* Performance Dropdown - Only show for employees, not candidates */}
+        {!isCandidate && (
+          <>
+            <ListItem disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                selected={isPerformancePath}
+                onClick={() => setPerformanceOpen(!performanceOpen)}
+              >
+                <ListItemIcon>
+                  <TrendingUpRoundedIcon />
+                </ListItemIcon>
+                <ListItemText primary="Performance" />
+                {performanceOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
 
-        <Collapse in={performanceOpen} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {performanceSubItems.map((item, index) => {
-              // Only apply role-based filtering on client side after hydration
-              if (isClient) {
-                // @ts-ignore
-                if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
-                  return null;
-                }
-              }
-              return (
-                <ListItem key={index} disablePadding sx={{ display: "block" }}>
-                  <ListItemButton
-                    selected={isSelected(item.text)}
-                    onClick={() => handleNavigation(item.text, item.path)}
-                  >
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-        </Collapse>
+            <Collapse in={performanceOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {performanceSubItems.map((item, index) => {
+                  // Only apply role-based filtering after roles are loaded
+                  if (!loading) {
+                    // @ts-ignore
+                    if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+                      return null;
+                    }
+                  }
+                  return (
+                    <ListItem key={index} disablePadding sx={{ display: "block" }}>
+                      <ListItemButton
+                        selected={isSelected(item.text)}
+                        onClick={() => handleNavigation(item.text, item.path)}
+                      >
+                        <ListItemIcon>{item.icon}</ListItemIcon>
+                        <ListItemText primary={item.text} />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </List>
+            </Collapse>
+          </>
+        )}
 
         {/* Recruitment Dropdown */}
         <ListItem disablePadding sx={{ display: 'block' }}>
@@ -281,34 +291,46 @@ export default function MenuContent() {
 
         <Collapse in={recruitmentOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {recruitmentSubItems.map((item, index) => (
-              <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-                <ListItemButton
-                  selected={isSelected(item.text)}
-                  onClick={() => handleNavigation(item.text, item.path)}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {recruitmentSubItems.map((item, index) => {
+              // Only apply role-based filtering after roles are loaded
+              if (!loading) {
+                // @ts-ignore
+                if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+                  return null;
+                }
+              }
+              return (
+                <ListItem key={index} disablePadding sx={{ display: 'block' }}>
+                  <ListItemButton
+                    selected={isSelected(item.text)}
+                    onClick={() => handleNavigation(item.text, item.path)}
+                  >
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
           </List>
         </Collapse>
       </List>
 
-      <List dense>
-        {secondaryListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              selected={isSelected(item.text)}
-              onClick={() => handleNavigation(item.text)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {/* Secondary items - Only show for employees, not candidates */}
+      {!isCandidate && (
+        <List dense>
+          {secondaryListItems.map((item, index) => (
+            <ListItem key={index} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                selected={isSelected(item.text)}
+                onClick={() => handleNavigation(item.text)}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      )}
     </Stack>
   );
 }

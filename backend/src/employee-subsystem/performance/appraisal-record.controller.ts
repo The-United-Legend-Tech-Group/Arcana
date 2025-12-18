@@ -45,7 +45,7 @@ export class AppraisalRecordController {
 
     @Patch(':id')
     @UseGuards(AuthGuard, authorizationGuard)
-    @Roles(SystemRole.DEPARTMENT_HEAD)
+    @Roles(SystemRole.DEPARTMENT_HEAD, SystemRole.HR_MANAGER)
     @ApiOperation({ summary: 'Update appraisal record ratings and feedback' })
     @ApiResponse({
         status: 200,

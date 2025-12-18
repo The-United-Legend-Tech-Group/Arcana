@@ -1,8 +1,10 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { EmployeeStatus } from './enums/employee-profile.enums';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginCandidateDto } from './dto/login-candidate.dto';
@@ -10,12 +12,14 @@ import { RegisterCandidateDto } from './dto/register-candidate.dto';
 import { Candidate } from './models/candidate.schema';
 import { CandidateRepository } from './repository/candidate.repository';
 import { EmployeeProfileRepository } from './repository/employee-profile.repository';
+import { EmployeeSystemRoleRepository } from './repository/employee-system-role.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly candidateRepository: CandidateRepository,
     private readonly employeeProfileRepository: EmployeeProfileRepository,
+    private readonly employeeSystemRoleRepository: EmployeeSystemRoleRepository,
     private readonly jwtService: JwtService,
   ) { }
 
@@ -79,23 +83,59 @@ export class AuthService {
     };
   }
 
-  async employeeLogin(loginDto: LoginCandidateDto): Promise<{ access_token: string; employeeId: string }> {
+  async employeeLogin(loginDto: LoginCandidateDto): Promise<{ access_token: string; employeeId: string; roles: string[] }> {
     const { email, password } = loginDto;
+
+    console.log('🔐 [AuthService.employeeLogin] Starting login for email:', email);
 
     const employee = await this.employeeProfileRepository.findByEmail(email);
     if (!employee) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check if employee is terminated - block login before password check
+    if (employee.status === EmployeeStatus.TERMINATED) {
+      throw new ForbiddenException('EMPLOYEE_TERMINATED');
+    }
+
+    console.log('🔐 [AuthService.employeeLogin] Employee found:', {
+      employeeId: employee._id,
+      employeeIdType: typeof employee._id,
+      employeeIdConstructor: employee._id?.constructor?.name,
+      employeeIdToString: employee._id?.toString(),
+    });
+
     const isPasswordValid = await bcrypt.compare(password, employee.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: employee._id, email: employee.personalEmail };
+    // Fetch employee system roles
+    // Pass the _id directly - the repository handles type conversion
+    const employeeIdForQuery = employee._id.toString();
+    console.log('🔐 [AuthService.employeeLogin] Looking up roles with employeeProfileId:', employeeIdForQuery);
+
+    const employeeSystemRole = await this.employeeSystemRoleRepository.findByEmployeeProfileId(
+      employeeIdForQuery
+    );
+
+    console.log('🔐 [AuthService.employeeLogin] System role lookup result:', {
+      found: !!employeeSystemRole,
+      documentId: employeeSystemRole?._id?.toString(),
+      employeeProfileIdInDocument: employeeSystemRole?.employeeProfileId,
+      employeeProfileIdTypeInDocument: typeof employeeSystemRole?.employeeProfileId,
+      roles: employeeSystemRole?.roles,
+      isActive: employeeSystemRole?.isActive,
+    });
+
+    const roles = employeeSystemRole ? employeeSystemRole.roles : [];
+    console.log('🔐 [AuthService.employeeLogin] Final roles to set in cookie:', roles);
+
+    const payload = { sub: employee._id, email: employee.personalEmail, roles };
     return {
       access_token: this.jwtService.sign(payload),
       employeeId: employee._id.toString(),
+      roles,
     };
   }
 

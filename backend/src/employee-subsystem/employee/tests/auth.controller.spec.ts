@@ -4,7 +4,7 @@ import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { LoginCandidateDto } from '../dto/login-candidate.dto';
 import { RegisterCandidateDto } from '../dto/register-candidate.dto';
-import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -89,7 +89,7 @@ describe('AuthController', () => {
         email: 'employee@example.com',
         password: 'password',
       };
-      const authResult = { access_token: 'jwt_token', employeeId: 'empId' };
+      const authResult = { access_token: 'jwt_token', employeeId: 'empId', roles: ['admin'] };
       mockAuthService.employeeLogin.mockResolvedValue(authResult);
 
       const mockResponse = {
@@ -102,6 +102,7 @@ describe('AuthController', () => {
         message: 'Login successful',
         access_token: 'jwt_token',
         employeeId: 'empId',
+        roles: ['admin'],
       });
       expect(mockAuthService.employeeLogin).toHaveBeenCalledWith(loginDto);
       expect(mockResponse.cookie).toHaveBeenCalledWith(
@@ -112,6 +113,11 @@ describe('AuthController', () => {
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'employeeid',
         'empId',
+        expect.any(Object),
+      );
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'user_roles',
+        JSON.stringify(['admin']),
         expect.any(Object),
       );
     });
@@ -129,6 +135,22 @@ describe('AuthController', () => {
 
       await expect(controller.employeeLogin(loginDto, mockResponse)).rejects.toThrow(
         UnauthorizedException,
+      );
+    });
+
+    it('should throw ForbiddenException when employee is terminated', async () => {
+      const loginDto: LoginCandidateDto = {
+        email: 'terminated@example.com',
+        password: 'password',
+      };
+      mockAuthService.employeeLogin.mockRejectedValue(new ForbiddenException('EMPLOYEE_TERMINATED'));
+
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as unknown as Response;
+
+      await expect(controller.employeeLogin(loginDto, mockResponse)).rejects.toThrow(
+        ForbiddenException,
       );
     });
   });

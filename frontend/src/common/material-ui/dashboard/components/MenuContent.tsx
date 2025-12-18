@@ -134,6 +134,10 @@ export const recruitmentSubItems: MenuItem[] = [
   { text: 'System Admin', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/system-admin', roles: ['System Admin'] },
 ];
 
+export const candidateRecruitmentSubItems: MenuItem[] = [
+  { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/candidate/recruitment_sub' },
+];
+
 const secondaryListItems = [
   { text: "Settings", icon: <SettingsRoundedIcon /> },
   { text: "About", icon: <InfoRoundedIcon /> },
@@ -149,7 +153,7 @@ export default function MenuContent() {
 
   const isCandidate = pathname.startsWith("/candidate");
   const isPerformancePath = pathname.startsWith("/employee/performance");
-  const isRecruitmentPath = pathname.startsWith('/employee/recruitment_sub');
+  const isRecruitmentPath = pathname.includes('/recruitment_sub');
 
   const visibleListItems = mainListItems.filter((item) => {
     // For candidates, only show the Home button
@@ -188,7 +192,7 @@ export default function MenuContent() {
     if (text === 'My Performance' && pathname === '/employee/performance/my-records') return true;
     if (text === 'Manage Disputes' && pathname === '/employee/performance/manage-disputes') return true;
     if (text === 'Disputes' && pathname === '/employee/performance/disputes') return true;
-    if (text === 'Recruitment' && pathname.startsWith('/employee/recruitment_sub')) return true;
+    if (text === 'Recruitment' && pathname.includes('/recruitment_sub')) return true;
     return false;
   };
 
@@ -291,7 +295,7 @@ export default function MenuContent() {
 
         <Collapse in={recruitmentOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {recruitmentSubItems.map((item, index) => {
+            {(isCandidate ? candidateRecruitmentSubItems : recruitmentSubItems).map((item, index) => {
               // Only apply role-based filtering after roles are loaded
               if (!loading) {
                 // @ts-ignore

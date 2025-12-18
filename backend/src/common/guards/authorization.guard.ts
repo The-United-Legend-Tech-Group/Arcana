@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -14,6 +15,8 @@ import { EmployeeSystemRole } from '../../employee-subsystem/employee/models/emp
 
 @Injectable()
 export class authorizationGuard implements CanActivate {
+  private readonly logger = new Logger(authorizationGuard.name);
+
   constructor(
     private readonly reflector: Reflector,
     @InjectModel(EmployeeSystemRole.name)
@@ -30,7 +33,10 @@ export class authorizationGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest();
     const { user } = request;
-    if (!user) throw new UnauthorizedException('no user attached');
+    if (!user) {
+      this.logger.error('Authorization failed: No user attached to request');
+      throw new UnauthorizedException('no user attached');
+    }
 
     // Prefer employee id from cookies (note: cookie name is 'employeeid' in auth.controller)
     const rawEmployeeId =
@@ -46,6 +52,7 @@ export class authorizationGuard implements CanActivate {
 
     // If we have an employee id, look up roles from the EmployeeSystemRole collection
     if (employeeId) {
+      this.logger.debug(`Checking roles for employeeId: ${employeeId}`);
       // Some deployments have employeeProfileId stored as ObjectId, some as string.
       // Query both forms to avoid false negatives.
       const or: any[] = [{ employeeProfileId: employeeId }];
@@ -63,9 +70,11 @@ export class authorizationGuard implements CanActivate {
           employeeRoles.roles.includes(role),
         );
         if (hasRoleFromDb) {
+          this.logger.verbose(`Authorization granted (DB) for employee ${employeeId}: matched ${employeeRoles.roles}`);
           return true;
         }
         // DB record exists but doesn't contain the role → deny
+        this.logger.warn(`Authorization denied (DB) for employee ${employeeId}: required one of [${requiredRoles}], but user has [${employeeRoles.roles}]`);
         throw new ForbiddenException('unauthorized access');
       }
     }
@@ -74,10 +83,11 @@ export class authorizationGuard implements CanActivate {
     const jwtRoles: string[] | undefined = Array.isArray(user.roles)
       ? user.roles
       : user.role
-      ? [user.role]
-      : undefined;
+        ? [user.role]
+        : undefined;
 
     if (!jwtRoles || jwtRoles.length === 0) {
+      this.logger.warn(`Authorization denied for user ${user.sub}: no roles found in JWT`);
       throw new ForbiddenException('unauthorized access');
     }
 
@@ -86,9 +96,11 @@ export class authorizationGuard implements CanActivate {
     );
 
     if (!hasRoleFromJwt) {
+      this.logger.warn(`Authorization denied (JWT) for user ${user.sub}: required one of [${requiredRoles}], but user has [${jwtRoles}]`);
       throw new ForbiddenException('unauthorized access');
     }
 
+    this.logger.verbose(`Authorization granted (JWT) for user ${user.sub}: matched roles ${jwtRoles}`);
     return true;
   }
 }

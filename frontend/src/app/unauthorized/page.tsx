@@ -52,14 +52,14 @@ export default function UnauthorizedPage() {
                         Please make sure you're logged in with the correct account or contact your HR administrator.
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button
+                        {/* <Button
                             variant="outlined"
                             component={Link}
                             href="/employee/login"
                             sx={{ px: 3, borderRadius: 2 }}
                         >
                             Sign In
-                        </Button>
+                        </Button> */}
                         <Button
                             variant="contained"
                             component={Link}

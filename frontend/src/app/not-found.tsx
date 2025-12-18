@@ -51,14 +51,14 @@ export default function NotFoundPage() {
                         The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button
+                        {/* <Button
                             variant="outlined"
                             component={Link}
                             href="/employee/login"
                             sx={{ px: 3, borderRadius: 2 }}
                         >
                             Sign In
-                        </Button>
+                        </Button> */}
                         <Button
                             variant="contained"
                             component={Link}

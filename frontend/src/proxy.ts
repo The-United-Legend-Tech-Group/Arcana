@@ -11,6 +11,25 @@ type RouteConfig = {
 // 'System Admin', 'Legal & Policy Admin', 'Recruiter', 'Finance Staff', 'Job Candidate',
 // 'HR Admin', 'Payroll Manager'
 
+/**
+ * Decode JWT payload without verification (for role checking in middleware)
+ * Note: This only decodes the payload, it does not verify the signature
+ */
+function decodeJwtPayload(token: string): { roles?: string[] } | null {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+
+        const payload = parts[1];
+        // Base64Url decode
+        const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = Buffer.from(base64, 'base64').toString('utf-8');
+        return JSON.parse(jsonPayload);
+    } catch {
+        return null;
+    }
+}
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -30,7 +49,7 @@ export function proxy(request: NextRequest) {
         '/employee/manage-organization': ['System Admin'],
         '/employee/manage-requests': ['HR Admin'],
         '/employee/compose-notification': ['System Admin', 'HR Admin', 'HR Manager', 'department head'],
-        '/employee/structure-request' : ['department head'],
+        '/employee/structure-request': ['department head'],
         '/employee/manage-structure-requests': ['System Admin'],
         '/employee/performance/dashboard': ['HR Manager'],
         '/employee/performance/templates': ['HR Manager'],
@@ -54,19 +73,18 @@ export function proxy(request: NextRequest) {
 
     if (matchingPath) {
         const allowedRoles = protectedRoutes[matchingPath];
-        const rolesCookie = request.cookies.get('user_roles');
+        const accessToken = request.cookies.get('access_token');
 
-        // Check if cookie exists
-        if (!rolesCookie || !rolesCookie.value) {
-            // Redirect to unauthorized page if no roles found
+        // Check if token exists
+        if (!accessToken || !accessToken.value) {
+            // Redirect to unauthorized page if no token found
             return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
 
         try {
-            // Parse roles from cookie
-            // Matches logic in cookie-utils.ts: decode -> JSON parse
-            const decodedCookie = decodeURIComponent(rolesCookie.value);
-            const userRoles: string[] = JSON.parse(decodedCookie);
+            // Extract roles from JWT token payload
+            const payload = decodeJwtPayload(accessToken.value);
+            const userRoles: string[] = payload?.roles || [];
 
             // Check if user has any of the allowed roles
             const hasPermission = userRoles.some(role => allowedRoles.includes(role));
@@ -77,8 +95,8 @@ export function proxy(request: NextRequest) {
             }
 
         } catch (error) {
-            // Failsafe for corrupted cookies
-            console.error('Middleware: Error parsing user_roles cookie:', error);
+            // Failsafe for corrupted token
+            console.error('Middleware: Error parsing access_token:', error);
             return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
     }
@@ -91,3 +109,4 @@ export const config = {
     // Excluding static files, api, etc. to avoid unnecessary processing
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
+

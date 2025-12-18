@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -27,7 +27,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { usePathname, useRouter } from "next/navigation";
-import { getUserRoles } from "../../../utils/cookie-utils";
+import { useAuth } from "@/hooks/use-auth";
 
 // Type definition for menu items
 export interface MenuItem {
@@ -135,22 +135,15 @@ export default function MenuContent() {
   const pathname = usePathname();
   const router = useRouter();
   const [performanceOpen, setPerformanceOpen] = useState(false);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Load user roles only on client side to avoid hydration mismatch
-  useEffect(() => {
-    setIsClient(true);
-    setUserRoles(getUserRoles());
-  }, []);
+  const { roles: userRoles, loading } = useAuth();
 
   const isCandidate = pathname.startsWith("/candidate");
   const isPerformancePath = pathname.startsWith("/employee/performance");
 
   const visibleListItems = mainListItems.filter((item) => {
     if (isCandidate && item.text === "Team") return false;
-    // Only apply role-based filtering on client side after hydration
-    if (isClient) {
+    // Only apply role-based filtering after roles are loaded
+    if (!loading) {
       // @ts-ignore
       if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
         return false;
@@ -241,8 +234,8 @@ export default function MenuContent() {
         <Collapse in={performanceOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {performanceSubItems.map((item, index) => {
-              // Only apply role-based filtering on client side after hydration
-              if (isClient) {
+              // Only apply role-based filtering after roles are loaded
+              if (!loading) {
                 // @ts-ignore
                 if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
                   return null;

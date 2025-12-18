@@ -5,7 +5,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { LeaveRequest } from '../models/leave-request.schema';
+import { LeaveRequest, LeaveRequestDocument } from '../models/leave-request.schema';
 import { Attachment } from '../models/attachment.schema';
 import { CreateLeaveRequestDto } from '../dtos/create-leave-request.dto';
 import { UploadAttachmentDto } from '../dtos/upload-attachment.dto';
@@ -202,7 +202,25 @@ export class LeavesRequestService {
       throw new BadRequestException('Only pending requests can be modified');
     }
 
-    return await this.leaveRequestRepository.updateById(id, dto);
+    // Track which fields are being modified for notification
+    const modifiedFields: string[] = [];
+    if (dto.dates) modifiedFields.push('dates');
+    if (dto.durationDays !== undefined) modifiedFields.push('duration');
+    if (dto.justification !== undefined) modifiedFields.push('justification');
+    if (dto.leaveTypeId) modifiedFields.push('leave type');
+
+    const updatedRequest = await this.leaveRequestRepository.updateById(id, dto);
+
+    // Send notification about modification
+    if (updatedRequest) {
+      await this.sendLeaveRequestNotification(
+        updatedRequest,
+        'modified',
+        { modifiedFields },
+      );
+    }
+
+    return updatedRequest;
   }
 
   // ---------- REQ-018: Cancel Pending Leave Requests ----------
@@ -223,31 +241,109 @@ export class LeavesRequestService {
     return request.save();
   }
 
-  // REQ-019: As an employee, receive notifications when my leave request is approved, rejected
+  /**
+   * Helper method to send notifications to employees about leave request status changes
+   * REQ-019: As an employee, receive notifications when my leave request is approved, rejected, returned for correction, or modified
+   */
+  private async sendLeaveRequestNotification(
+    request: LeaveRequestDocument,
+    action: 'approved' | 'rejected' | 'modified' | 'returned_for_correction' | 'finalized' | 'hr_override',
+    additionalInfo?: { reason?: string; modifiedFields?: string[] },
+  ): Promise<void> {
+    try {
+      const fromDate = request.dates?.from
+        ? new Date(request.dates.from).toLocaleDateString()
+        : 'N/A';
+      const toDate = request.dates?.to
+        ? new Date(request.dates.to).toLocaleDateString()
+        : 'N/A';
+
+      let type: 'Success' | 'Warning' | 'Info' = 'Info';
+      let title: string;
+      let message: string;
+
+      switch (action) {
+        case 'approved':
+          type = 'Success';
+          title = 'Leave Request Approved';
+          message = `Your leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) has been approved by your manager.`;
+          break;
+
+        case 'rejected':
+          type = 'Warning';
+          title = 'Leave Request Rejected';
+          const rejectionReason = additionalInfo?.reason
+            ? ` Reason: ${additionalInfo.reason}`
+            : '';
+          message = `Your leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) has been rejected.${rejectionReason}`;
+          break;
+
+        case 'modified':
+        case 'returned_for_correction':
+          type = 'Info';
+          title = 'Leave Request Modified';
+          const modifiedFields = additionalInfo?.modifiedFields?.length
+            ? ` The following fields were updated: ${additionalInfo.modifiedFields.join(', ')}.`
+            : '';
+          message = `Your leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) has been modified.${modifiedFields} Please review the changes.`;
+          break;
+
+        case 'finalized':
+          type = request.status === LeaveStatus.APPROVED ? 'Success' : 'Warning';
+          title =
+            request.status === LeaveStatus.APPROVED
+              ? 'Leave Request Finalized - Approved'
+              : 'Leave Request Finalized - Rejected';
+          message = `Your leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) has been finalized by HR and is now ${request.status}.`;
+          break;
+
+        case 'hr_override':
+          type = request.status === LeaveStatus.APPROVED ? 'Success' : 'Warning';
+          title = 'Leave Request Status Changed by HR';
+          const overrideReason = additionalInfo?.reason
+            ? ` Reason: ${additionalInfo.reason}`
+            : '';
+          message = `Your leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}) status has been changed to ${request.status} by HR.${overrideReason}`;
+          break;
+
+        default:
+          type = 'Info';
+          title = 'Leave Request Update';
+          message = `Your leave request status has been updated to ${request.status}.`;
+      }
+
+      await this.notificationService.create({
+        recipientId: [request.employeeId.toString()],
+        type,
+        deliveryType: 'UNICAST',
+        title,
+        message,
+        relatedEntityId: request._id.toString(),
+        relatedModule: 'Leaves',
+      });
+    } catch (error) {
+      // Log error but don't throw - notification failures shouldn't break the main flow
+      console.error(
+        `Failed to send notification for leave request ${request._id}:`,
+        error,
+      );
+    }
+  }
+
+  // REQ-019: Legacy method - kept for backward compatibility
   @UseGuards(AuthGuard, authorizationGuard)
   @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async notifyEmployee(status: LeaveStatus, r: string) {
     const request = await this.leaveRequestRepository.findById(r);
-    if(!request) throw new NotFoundException("No Request Found");
-    
-    // status: 'approved' | 'rejected' | ..
-    // status: 'approved' | 'rejected' | ...
-    const type = status === LeaveStatus.APPROVED ? 'Success' : status === LeaveStatus.REJECTED ? 'Warning' : 'Info';
-    const title = status === LeaveStatus.APPROVED ? 'Leave Request Approved' : status === LeaveStatus.REJECTED ? 'Leave Request Rejected' : 'Leave Request Update';
-    const message = status === LeaveStatus.APPROVED
-      ? `Your leave request for ${request.durationDays} day(s), submitted on ${request.dates?.from?.toLocaleDateString?.() || ''}, has been approved.`
+    if (!request) throw new NotFoundException('No Request Found');
+
+    const action =
+      status === LeaveStatus.APPROVED
+        ? 'approved'
       : status === LeaveStatus.REJECTED
-        ? `Your leave request for ${request.durationDays} day(s), submitted on ${request.dates?.from?.toLocaleDateString?.() || ''}, has been rejected.`
-        : `Your leave request status is now ${status}`;
-    return this.notificationService.create({
-      recipientId: [request.employeeId.toString()],
-      type,
-      deliveryType: 'UNICAST',
-      title,
-      message,
-      relatedEntityId: request?.leaveTypeId.toString?.(),
-      relatedModule: 'Leaves',
-    });
+          ? 'rejected'
+          : 'modified';
+    await this.sendLeaveRequestNotification(request, action as any);
   }
 
   // =============================
@@ -278,7 +374,7 @@ export class LeavesRequestService {
   @UseGuards(AuthGuard, authorizationGuard)
   @Roles(SystemRole.DEPARTMENT_HEAD)
   async approveRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
-    return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.APPROVED,
       $push: {
         approvalFlow: {
@@ -289,13 +385,20 @@ export class LeavesRequestService {
         },
       },
     });
+
+    // Send notification to employee about approval
+    if (updatedRequest) {
+      await this.sendLeaveRequestNotification(updatedRequest, 'approved');
+    }
+
+    return updatedRequest;
   }
 
   // ---------- REQ-022: Manager Rejects a request ----------
   @UseGuards(AuthGuard, authorizationGuard)
   @Roles(SystemRole.DEPARTMENT_HEAD)
   async rejectRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
-    return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.REJECTED,
       $push: {
         approvalFlow: {
@@ -307,6 +410,15 @@ export class LeavesRequestService {
       },
       justification: dto.justification,
     });
+
+    // Send notification to employee about rejection
+    if (updatedRequest) {
+      await this.sendLeaveRequestNotification(updatedRequest, 'rejected', {
+        reason: dto.justification,
+      });
+    }
+
+    return updatedRequest;
   }
 
   @UseGuards(AuthGuard, authorizationGuard)
@@ -352,7 +464,7 @@ export class LeavesRequestService {
       );
     }
 
-    return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: finalStatus, // This can be APPROVED or REJECTED
       $push: {
         approvalFlow: {
@@ -363,6 +475,30 @@ export class LeavesRequestService {
         },
       },
     });
+
+    // Send notification to employee about finalization
+    if (updatedRequest) {
+      await this.sendLeaveRequestNotification(updatedRequest, 'finalized');
+
+      // Automatically update leave balance when HR finalizes with approval
+      if (finalStatus === LeaveStatus.APPROVED) {
+        try {
+          await this.leaveEntitlementRepository.updateBalance(
+            updatedRequest.employeeId,
+            updatedRequest.leaveTypeId,
+            updatedRequest.durationDays,
+          );
+        } catch (error) {
+          // Log error but don't throw - balance update failures shouldn't break finalization
+          console.error(
+            `Failed to update leave balance for request ${leaveRequestId}:`,
+            error,
+          );
+        }
+      }
+    }
+
+    return updatedRequest;
   }
 
   // =============================
@@ -379,7 +515,7 @@ export class LeavesRequestService {
     const request = await this.leaveRequestRepository.findById(leaveRequestId);
     if (!request) throw new NotFoundException('Leave request not found');
 
-    return await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
+    const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: newStatus, // Override the current status
       $push: {
         approvalFlow: {
@@ -391,6 +527,32 @@ export class LeavesRequestService {
       },
       justification: `HR OVERRIDE: ${reason}`,
     });
+
+    // Send notification to employee about HR override
+    if (updatedRequest) {
+      await this.sendLeaveRequestNotification(updatedRequest, 'hr_override', {
+        reason,
+      });
+
+      // Automatically update leave balance when HR overrides to approved
+      if (newStatus === LeaveStatus.APPROVED) {
+        try {
+          await this.leaveEntitlementRepository.updateBalance(
+            updatedRequest.employeeId,
+            updatedRequest.leaveTypeId,
+            updatedRequest.durationDays,
+          );
+        } catch (error) {
+          // Log error but don't throw - balance update failures shouldn't break override
+          console.error(
+            `Failed to update leave balance for HR override request ${leaveRequestId}:`,
+            error,
+          );
+        }
+      }
+    }
+
+    return updatedRequest;
   }
 
   // =============================
@@ -425,7 +587,7 @@ export class LeavesRequestService {
           continue;
         }
 
-        await this.leaveRequestRepository.updateWithApprovalFlow(requestId, {
+        const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(requestId, {
           status: newStatus,
           $push: {
             approvalFlow: {
@@ -436,6 +598,29 @@ export class LeavesRequestService {
             },
           },
         });
+
+        // Send notification to employee about bulk processing
+        if (updatedRequest) {
+          const notificationAction = action === 'approve' ? 'approved' : 'rejected';
+          await this.sendLeaveRequestNotification(updatedRequest, notificationAction as any);
+
+          // Automatically update leave balance when bulk approved
+          if (newStatus === LeaveStatus.APPROVED) {
+            try {
+              await this.leaveEntitlementRepository.updateBalance(
+                updatedRequest.employeeId,
+                updatedRequest.leaveTypeId,
+                updatedRequest.durationDays,
+              );
+            } catch (error) {
+              // Log error but don't throw - balance update failures shouldn't break bulk processing
+              console.error(
+                `Failed to update leave balance for bulk processed request ${requestId}:`,
+                error,
+              );
+            }
+          }
+        }
 
         processed++;
       } catch (error) {

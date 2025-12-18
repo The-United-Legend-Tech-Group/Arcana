@@ -33,6 +33,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { getUserRoles } from "../../../utils/cookie-utils";
 import { CalendarViewDay, History } from "@mui/icons-material";
 import BalanceRoundedIcon from "@mui/icons-material/BalanceRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+
 
 
 // Type definition for menu items
@@ -126,6 +128,12 @@ export const leavesSubItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/leaves/requests/hr",
+    roles: ["HR Manager"],
+  },
+  {
+    text: "Automation",
+    icon: <AutoAwesomeRoundedIcon   />,
+    path: "/employee/leaves/automation",
     roles: ["HR Manager"],
   },
   {
@@ -246,6 +254,7 @@ export default function MenuContent() {
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
     if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
     if (text === 'History' && pathname === '/employee/leaves/history') return true;
+    if (text === 'Automation' && pathname === '/employee/leaves/automation') return true;
     return false;
   };
 

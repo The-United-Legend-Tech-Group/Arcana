@@ -439,6 +439,8 @@ export default function HRLeaveRequestsManager() {
                   <TableCell>To</TableCell>
                   <TableCell>Duration</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Medical Verification</TableCell>
+                  <TableCell>Finalization Status</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -479,6 +481,28 @@ export default function HRLeaveRequestsManager() {
                       />
                     </TableCell>
                     <TableCell>
+                      {request.attachmentId ? (() => {
+                        const hrEntries = request.approvalFlow?.filter(flow => flow.role === 'hr') || [];
+                        if (hrEntries.length > 0) {
+                          const firstHr = hrEntries[0];
+                          return firstHr.status === 'approved' ? 'Verified - Approved' : 'Verified - Rejected';
+                        } else {
+                          return 'Not Verified';
+                        }
+                      })() : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const hrEntries = request.approvalFlow?.filter(flow => flow.role === 'hr') || [];
+                        if (hrEntries.length > 1) {
+                          const lastHr = hrEntries[hrEntries.length - 1];
+                          return lastHr.status === 'approved' ? 'Finalized - Approved' : 'Finalized - Rejected';
+                        } else {
+                          return 'Not Finalized';
+                        }
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       <Stack direction="row" spacing={0.5}>
                         {request.status === 'approved' && (
                           <Tooltip title="Finalize">
@@ -514,7 +538,7 @@ export default function HRLeaveRequestsManager() {
                 ))}
                 {filteredRequests.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">No leave requests found</Typography>
                     </TableCell>
                   </TableRow>

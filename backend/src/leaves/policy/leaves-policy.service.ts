@@ -376,16 +376,30 @@ export class LeavesPolicyService {
     }
 
     if (dto.extraDays !== undefined) {
-      updateData.yearlyEntitlement =
-        (entitlement.yearlyEntitlement || 0) + dto.extraDays;
+      switch (dto.adjustmentType) {
+        case AdjustmentType.ADD:
+          updateData.yearlyEntitlement =
+            (updateData.yearlyEntitlement ?? entitlement.yearlyEntitlement ?? 0) + dto.extraDays;
+          break;
+        case AdjustmentType.DEDUCT:
+          updateData.yearlyEntitlement =
+            (updateData.yearlyEntitlement ?? entitlement.yearlyEntitlement ?? 0) - dto.extraDays;
+          break;
+        case AdjustmentType.ENCASHMENT:
+          // For encashment, subtract from remaining balance
+          updateData.remaining = (entitlement.remaining ?? 0) - dto.extraDays;
+          break;
+      }
     }
 
-    // Recalculate remaining
-    const taken = entitlement.taken || 0;
-    const pending = entitlement.pending || 0;
-    updateData.remaining =
-      (updateData.yearlyEntitlement || entitlement.yearlyEntitlement || 0) -
-      (taken + pending);
+    // Recalculate remaining if not encashment (which handles remaining directly)
+    if (dto.adjustmentType !== AdjustmentType.ENCASHMENT) {
+      const taken = entitlement.taken || 0;
+      const pending = entitlement.pending || 0;
+      updateData.remaining =
+        (updateData.yearlyEntitlement ?? entitlement.yearlyEntitlement ?? 0) -
+        (taken + pending);
+    }
 
     const updatedEntitlement = await this.leaveEntitlementRepository.updateById(
       entitlement._id.toString(),
@@ -393,11 +407,12 @@ export class LeavesPolicyService {
     );
 
     // 3. Store adjustment audit log
+    const amountValue = dto.extraDays ?? dto.overrideYearlyEntitlement ?? 0;
     await this.leaveAdjustmentRepository.create({
       employeeId: new Types.ObjectId(dto.employeeId),
       leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
       adjustmentType: dto.adjustmentType,
-      amount: dto.extraDays ?? dto.overrideYearlyEntitlement,
+      amount: dto.adjustmentType === AdjustmentType.DEDUCT || dto.adjustmentType === AdjustmentType.ENCASHMENT ? -amountValue : amountValue,
       reason: dto.reason,
       hrUserId: new Types.ObjectId(dto.hrUserId),
     });

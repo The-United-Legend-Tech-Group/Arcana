@@ -330,7 +330,10 @@ export class LeavesReportService {
   //⚠️i didnt add controller for this since its an automatic scheduled job
   // =============================
 
-  // Runs every year on December 31st at midnight
+  /**
+   * REQ-041: Automatic Carry-Forward
+   * Processes carry-forward of unused leave days
+   */
   async carryForwardLeaves() {
     const entitlements = await this.leaveEntitlementRepository.find();
 
@@ -349,6 +352,10 @@ export class LeavesReportService {
 
       if (leftover > 0) {
         entitlement.carryForward = leftover; // add leftover to carryForward
+        entitlement.remaining =
+          entitlement.carryForward -
+          (entitlement.taken || 0) -
+          (entitlement.pending || 0);
         await entitlement.save();
 
         results.push({
@@ -360,9 +367,26 @@ export class LeavesReportService {
     }
 
     console.log('Carry-forward results:', results);
-    return results;
+    return {
+      processed: entitlements.length,
+      successful: results.length,
+      failed: entitlements.length - results.length,
+      details: results.map((r) => ({
+        employeeId: r.employeeId.toString(),
+        leaveTypeId: r.leaveTypeId.toString(),
+        previousRemaining: 0, // Not calculated in this method
+        carriedForward: r.carriedForward,
+        expired: 0, // Not calculated in this method
+        cappedAt: r.carriedForward, // Not calculated in this method
+      })),
+    };
   }
 
+  /**
+   * REQ-040: Automatic Accrual
+   * Processes automatic leave accrual for all employees according to company policy
+   * REQ-042: Automatically adjusts accrual for unpaid leave periods
+   */
   async accrueLeaves() {
     const policies = await this.leavePolicyRepository.find();
     const entitlements = await this.leaveEntitlementRepository.find();
@@ -372,11 +396,30 @@ export class LeavesReportService {
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const totalDays = monthEnd.getDate();
 
+    const results: {
+      employeeId: Types.ObjectId;
+      leaveTypeId: Types.ObjectId;
+      baseAccrual: number;
+      unpaidDays: number;
+      adjustedAccrual: number;
+    }[] = [];
+
     for (const entitlement of entitlements) {
       const policy = policies.find(
         (p) => p.leaveTypeId.toString() === entitlement.leaveTypeId.toString(),
       );
       if (!policy) continue;
+
+      // Check if accrual already processed for this month
+      if (entitlement.lastAccrualDate) {
+        const lastAccrual = new Date(entitlement.lastAccrualDate);
+        if (
+          lastAccrual.getFullYear() === today.getFullYear() &&
+          lastAccrual.getMonth() === today.getMonth()
+        ) {
+          continue; // Already processed this month
+        }
+      }
 
       // Base accrual (monthly or yearly/12)
       let accrual =
@@ -440,18 +483,37 @@ export class LeavesReportService {
           entitlement.accruedRounded = entitlement.accruedActual;
       }
 
+      // Update remaining balance
+      entitlement.remaining =
+        (entitlement.accruedRounded || 0) +
+        (entitlement.carryForward || 0) -
+        (entitlement.taken || 0) -
+        (entitlement.pending || 0);
+
+      entitlement.lastAccrualDate = today;
       await entitlement.save();
 
-      const results: {
-        employeeId: Types.ObjectId;
-        leaveTypeId: Types.ObjectId;
-        baseAccrual: number;
-        unpaidDays: number;
-        adjustedAccrual: number;
-      }[] = [];
-
-      return results;
+      results.push({
+        employeeId: entitlement.employeeId,
+        leaveTypeId: entitlement.leaveTypeId,
+        baseAccrual: accrual,
+        unpaidDays,
+        adjustedAccrual,
+      });
     }
+
+    return {
+      processed: entitlements.length,
+      successful: results.length,
+      failed: entitlements.length - results.length,
+      details: results.map((r) => ({
+        employeeId: r.employeeId.toString(),
+        leaveTypeId: r.leaveTypeId.toString(),
+        accrualAmount: r.adjustedAccrual,
+        adjustedForUnpaidLeave: r.unpaidDays > 0,
+        unpaidDays: r.unpaidDays,
+      })),
+    };
   }
 
 
@@ -464,14 +526,46 @@ export class LeavesReportService {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
+    // Use the base repository's countDocuments method
     const totalUnpaidLeaves = await this.leaveRequestRepository.countDocuments({
-      employeeId,
+      employeeId: new Types.ObjectId(employeeId),
       leaveTypeId: { $in: unpaidLeaveTypeIds },
-      status: 'APPROVED',
+      status: LeaveStatus.APPROVED,
       'dates.from': { $lte: monthEnd },
       'dates.to': { $gte: monthStart },
     });
 
     return totalUnpaidLeaves;
+  }
+
+  /**
+   * Get accrual automation status
+   */
+  async getAccrualStatus() {
+    const entitlements = await this.leaveEntitlementRepository.find();
+    const policies = await this.leavePolicyRepository.find();
+
+    // Find the most recent accrual date
+    const lastAccrualDates = entitlements
+      .map((e) => e.lastAccrualDate)
+      .filter((d) => d != null)
+      .map((d) => new Date(d!));
+
+    const lastProcessedDate =
+      lastAccrualDates.length > 0
+        ? new Date(Math.max(...lastAccrualDates.map((d) => d.getTime())))
+        : null;
+
+    // Next scheduled date is first day of next month
+    const nextScheduledDate = new Date();
+    nextScheduledDate.setMonth(nextScheduledDate.getMonth() + 1);
+    nextScheduledDate.setDate(1);
+
+    return {
+      lastProcessedDate,
+      nextScheduledDate,
+      totalEmployees: new Set(entitlements.map((e) => e.employeeId.toString())).size,
+      totalPolicies: policies.length,
+    };
   }
 }

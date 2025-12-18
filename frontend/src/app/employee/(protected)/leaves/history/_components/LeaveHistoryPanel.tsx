@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Stack,
@@ -25,6 +25,9 @@ import {
   Refresh as RefreshIcon,
   FilterList as FilterListIcon,
   Clear as ClearIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
+  UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
@@ -78,6 +81,10 @@ export default function LeaveHistoryPanel() {
     from: '',
     to: '',
   });
+
+  // Sorting
+  const [sortBy, setSortBy] = useState<'startDate' | 'endDate' | 'durationDays' | 'status' | 'leaveType'>('startDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const loadLeaveTypes = useCallback(async () => {
     if (!API_BASE) return;
@@ -168,6 +175,79 @@ export default function LeaveHistoryPanel() {
 
   const hasActiveFilters = filters.leaveTypeId || filters.status || filters.from || filters.to;
 
+  // Sort and filter history
+  const sortedAndFilteredHistory = useMemo(() => {
+    let result = [...history];
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortBy) {
+        case 'startDate':
+          aValue = new Date(a.startDate).getTime();
+          bValue = new Date(b.startDate).getTime();
+          break;
+        case 'endDate':
+          aValue = new Date(a.endDate).getTime();
+          bValue = new Date(b.endDate).getTime();
+          break;
+        case 'durationDays':
+          aValue = a.durationDays || 0;
+          bValue = b.durationDays || 0;
+          break;
+        case 'status':
+          aValue = (a.status || '').toLowerCase();
+          bValue = (b.status || '').toLowerCase();
+          break;
+        case 'leaveType':
+          aValue = getLeaveTypeName(a.leaveType).toLowerCase();
+          bValue = getLeaveTypeName(b.leaveType).toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      // Compare values
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      } else {
+        const comparison = String(aValue).localeCompare(String(bValue));
+        return sortOrder === 'asc' ? comparison : -comparison;
+      }
+    });
+
+    return result;
+  }, [history, sortBy, sortOrder]);
+
+  const handleSort = (column: typeof sortBy) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to descending
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
+
+  const getSortIcon = (column: typeof sortBy) => {
+    if (sortBy !== column) {
+      return <UnfoldMoreIcon sx={{ fontSize: 16, opacity: 0.5 }} />;
+    }
+    return sortOrder === 'asc' ? (
+      <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+    ) : (
+      <ArrowDownwardIcon sx={{ fontSize: 16 }} />
+    );
+  };
+
   return (
     <Stack spacing={2}>
       {error && (
@@ -257,11 +337,35 @@ export default function LeaveHistoryPanel() {
       <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
         <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="h6" fontWeight={600}>
-            Leave History ({history.length} {history.length === 1 ? 'request' : 'requests'})
+            Leave History ({sortedAndFilteredHistory.length} {sortedAndFilteredHistory.length === 1 ? 'request' : 'requests'})
           </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TextField
+              select
+              label="Sort By"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              size="small"
+              sx={{ minWidth: 150 }}
+            >
+              <MenuItem value="startDate">Start Date</MenuItem>
+              <MenuItem value="endDate">End Date</MenuItem>
+              <MenuItem value="durationDays">Duration</MenuItem>
+              <MenuItem value="status">Status</MenuItem>
+              <MenuItem value="leaveType">Leave Type</MenuItem>
+            </TextField>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              startIcon={sortOrder === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+            >
+              {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+            </Button>
           <IconButton onClick={loadHistory} disabled={loading} size="small">
             <RefreshIcon />
           </IconButton>
+          </Stack>
         </Stack>
 
         {loading ? (
@@ -273,16 +377,43 @@ export default function LeaveHistoryPanel() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Leave Type</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell align="right">Duration</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Justification</TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }} onClick={() => handleSort('leaveType')}>
+                      <Typography variant="subtitle2" fontWeight={600}>Leave Type</Typography>
+                      {getSortIcon('leaveType')}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }} onClick={() => handleSort('startDate')}>
+                      <Typography variant="subtitle2" fontWeight={600}>Start Date</Typography>
+                      {getSortIcon('startDate')}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }} onClick={() => handleSort('endDate')}>
+                      <Typography variant="subtitle2" fontWeight={600}>End Date</Typography>
+                      {getSortIcon('endDate')}
+                    </Stack>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer', justifyContent: 'flex-end' }} onClick={() => handleSort('durationDays')}>
+                      <Typography variant="subtitle2" fontWeight={600}>Duration</Typography>
+                      {getSortIcon('durationDays')}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                      <Typography variant="subtitle2" fontWeight={600}>Status</Typography>
+                      {getSortIcon('status')}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2" fontWeight={600}>Justification</Typography>
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {history.map((item) => (
+                {sortedAndFilteredHistory.map((item) => (
                   <TableRow key={item.requestId} hover>
                     <TableCell>
                       <Typography variant="body2" fontWeight={500}>
@@ -306,7 +437,7 @@ export default function LeaveHistoryPanel() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {history.length === 0 && (
+                {sortedAndFilteredHistory.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">

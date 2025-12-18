@@ -165,11 +165,71 @@ async viewBalance(@Param('managerId') managerId: string) {
 @ApiResponse({ status: 201, description: 'Post-leave feedback submitted successfully' })
 @ApiResponse({ status: 400, description: 'Invalid input data' })
 @ApiResponse({ status: 404, description: 'Employee not found' })
-async submitPostLeave(
-  @Param('employeeId') employeeId: string,
-  @Body() body: SubmitPostLeaveDto,
-) {
-  return this.leavesReportService.submitPostLeave(employeeId, body);
-}
+  async submitPostLeave(
+    @Param('employeeId') employeeId: string,
+    @Body() body: SubmitPostLeaveDto,
+  ) {
+    return this.leavesReportService.submitPostLeave(employeeId, body);
+  }
+
+  // =============================
+  // REQ-040, REQ-041, REQ-042 — Leave Automation
+  // =============================
+
+  /**
+   * REQ-040: Process automatic accrual for all employees
+   */
+  @Post('automation/process-accrual')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN)
+  @ApiOperation({
+    summary: 'Process automatic leave accrual for all employees',
+    description:
+      'Automatically adds leave days to each employee balance according to company policy. Accrual is adjusted for unpaid leave periods.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Accrual processed successfully',
+  })
+  async processAccrual() {
+    return this.leavesReportService.accrueLeaves();
+  }
+
+  /**
+   * REQ-041: Process year-end/period carry-forward
+   */
+  @Post('automation/process-carry-forward')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN)
+  @ApiOperation({
+    summary: 'Process year-end/period carry-forward',
+    description:
+      'Automatically processes carry-forward of unused leave days',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Carry-forward processed successfully',
+  })
+  async processCarryForward() {
+    return this.leavesReportService.carryForwardLeaves();
+  }
+
+  /**
+   * Get accrual automation status
+   */
+  @Get('automation/status')
+  @UseGuards(AuthGuard, authorizationGuard)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.SYSTEM_ADMIN)
+  @ApiOperation({
+    summary: 'Get accrual automation status',
+    description: 'Returns information about accrual processing status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Status retrieved successfully',
+  })
+  async getAutomationStatus() {
+    return this.leavesReportService.getAccrualStatus();
+  }
 
 }

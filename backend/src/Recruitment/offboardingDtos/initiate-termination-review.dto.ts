@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  IsDateString,
 } from 'class-validator';
 
 import { TerminationInitiation } from '../enums/termination-initiation.enum';
@@ -37,4 +38,9 @@ export class InitiateTerminationReviewDto {
   @IsOptional()
   @IsString({ message: 'HR comments must be a string' })
   hrComments?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Termination date must be an ISO date string' })
+  // Use ISO date string in DTO (frontend will send yyyy-mm-dd)
+  terminationDate?: string;
 }

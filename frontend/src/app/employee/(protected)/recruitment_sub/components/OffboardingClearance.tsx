@@ -82,10 +82,13 @@ export function OffboardingClearance() {
       // Get approverId from user context - for now using a placeholder
       // TODO: Replace with actual logged-in user ID from auth context
 
+      // Send the status as selected by the user. Do not introduce 'in_progress'.
+      // When user selects 'under_review' it will be sent as 'under_review' (matches backend enum).
+      
       await offboardingApi.processDepartmentSignOff({
         clearanceChecklistId: checklistId,
         department: department,
-        status: status as 'approved' | 'rejected',
+        status: status as 'approved' | 'rejected' | 'pending' | 'under_review',
         comments: undefined,
       });
 
@@ -106,28 +109,17 @@ export function OffboardingClearance() {
         }
       }
 
-      // If not all clearances are done -> mark termination as under_review; server auto-approves when fully cleared
+      // If not all clearances are done -> inform user. Do NOT auto-change termination status to 'under_review' here.
       try {
         const updatedItem = newChecklists.find((it: any) => it.checklist._id === checklistId);
         const allCleared = !!updatedItem?.progress?.allCleared;
-        const terminationId = updatedItem?.termination?._id;
-
-        if (terminationId) {
-          if (allCleared) {
-            // Backend will auto-approve via server-side check; just notify user
-            toast.success('All clearances completed — termination will be auto-approved');
-          } else {
-            // Set termination to 'under_review' so HR knows it's not ready
-            await offboardingApi.approveTermination({
-              terminationRequestId: terminationId,
-              status: 'under_review',
-              hrComments: 'Clearances incomplete — set to under review.'
-            });
-            toast.info('Termination set to under review (clearances incomplete)');
-          }
+        if (allCleared) {
+          toast.success('All clearances completed — termination will be auto-approved by the server');
+        } else {
+          toast.info('Clearance updated. Some items remain pending or under review.');
         }
       } catch (err: any) {
-        console.error('Error updating termination approval status:', err);
+        console.error('Error processing clearance update status:', err);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Failed to update status');
@@ -169,28 +161,17 @@ export function OffboardingClearance() {
         }
       }
 
-      // If not all clearances are done -> mark termination as under_review; server auto-approves when fully cleared
+      // Inform user about overall clearance state. Do not auto-set termination to 'under_review' here.
       try {
         const updatedItem = newChecklists.find((it: any) => it.checklist._id === checklistId);
         const allCleared = !!updatedItem?.progress?.allCleared;
-        const terminationId = updatedItem?.termination?._id;
-
-        if (terminationId) {
-          if (allCleared) {
-            // Backend will auto-approve via server-side check; just notify user
-            toast.success('All clearances completed — termination will be auto-approved');
-          } else {
-            // Set termination to 'under_review' so HR knows it's not ready
-            await offboardingApi.approveTermination({
-              terminationRequestId: terminationId,
-              status: 'under_review',
-              hrComments: 'Clearances incomplete — set to under review.'
-            });
-            toast.info('Termination set to under review (clearances incomplete)');
-          }
+        if (allCleared) {
+          toast.success('All clearances completed — termination will be auto-approved by the server');
+        } else {
+          toast.info('Equipment status updated. Some items or departments still pending.');
         }
       } catch (err: any) {
-        console.error('Error updating termination approval status:', err);
+        console.error('Error processing equipment update status:', err);
       }
     } catch (error: any) {
       console.error('Equipment update error:', error);
@@ -222,29 +203,18 @@ export function OffboardingClearance() {
         }
       }
 
-      // If not all clearances are done -> mark termination as under_review; server auto-approves when fully cleared
+      // Inform user about overall clearance state. Do not auto-set termination to 'under_review' here.
       try {
         const updatedItem = newChecklists.find((it: any) => it.checklist._id === checklistId);
         const allCleared = !!updatedItem?.progress?.allCleared;
-        const terminationId = updatedItem?.termination?._id;
         console.log('Updated item for access card:', allCleared);
-
-        if (terminationId) {
-          if (allCleared) {
-            // Backend will auto-approve via server-side check; just notify user
-            toast.success('All clearances completed — termination will be auto-approved');
-          } else {
-            // Set termination to 'under_review' so HR knows it's not ready
-            await offboardingApi.approveTermination({
-              terminationRequestId: terminationId,
-              status: 'under_review',
-              hrComments: 'Clearances incomplete — set to under review.'
-            });
-            toast.info('Termination set to under review (clearances incomplete)');
-          }
+        if (allCleared) {
+          toast.success('All clearances completed — termination will be auto-approved by the server');
+        } else {
+          toast.info('Access card status updated. Some items or departments still pending.');
         }
       } catch (err: any) {
-        console.error('Error updating termination approval status:', err);
+        console.error('Error processing access card update status:', err);
       }
     } catch (error: any) {
       console.error('Access card update error:', error);
@@ -354,6 +324,8 @@ export function OffboardingClearance() {
                         {(checklist.items || []).map((clearance: any, index: number) => {
                           const isCleared = clearance.status === 'approved';
                           const isRejected = clearance.status === 'rejected';
+                          const isUnderReview = clearance.status === 'under_review';
+                          const isPending = clearance.status === 'pending';
                           const deptLabel = typeof clearance.department === 'string'
                             ? clearance.department
                             : clearance.department?.name || (clearance.department?._id ? String(clearance.department._id) : 'Department');
@@ -364,8 +336,8 @@ export function OffboardingClearance() {
                                 variant="outlined"
                                 sx={{
                                   p: 2,
-                                  bgcolor: isCleared ? 'success.50' : isRejected ? 'error.50' : 'warning.50',
-                                  borderColor: isCleared ? 'success.200' : isRejected ? 'error.200' : 'warning.200'
+                                  bgcolor: isCleared ? 'success.50' : isRejected ? 'error.50' : isUnderReview ? 'info.50' : 'warning.50',
+                                  borderColor: isCleared ? 'success.200' : isRejected ? 'error.200' : isUnderReview ? 'info.200' : 'warning.200'
                                 }}
                               >
                                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
@@ -374,15 +346,17 @@ export function OffboardingClearance() {
                                       <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
                                     ) : isRejected ? (
                                       <XCircleIcon sx={{ fontSize: 16, color: 'error.main' }} />
+                                    ) : isUnderReview ? (
+                                      <ClockIcon sx={{ fontSize: 16, color: 'info.main' }} />
                                     ) : (
                                       <ClockIcon sx={{ fontSize: 16, color: 'warning.main' }} />
                                     )}
-                                    <Typography variant="body2">{deptLabel}</Typography>
+                                    <Typography variant="body2">{deptLabel} {clearance.status}</Typography>
                                   </Stack>
                                   <Chip
-                                    label={isCleared ? 'Cleared' : isRejected ? 'Rejected' : 'Pending'}
+                                    label={isCleared ? 'Cleared' : isRejected ? 'Rejected' : isUnderReview ? 'Under Review' : 'Pending'}
                                     size="small"
-                                    color={isCleared ? 'success' : isRejected ? 'error' : 'warning'}
+                                    color={isCleared ? 'success' : isRejected ? 'error' : isUnderReview ? 'info' : 'warning'}
                                   />
                                 </Stack>
                                 {clearance.updatedBy && (
@@ -572,6 +546,7 @@ export function OffboardingClearance() {
                   {(selectedChecklist.checklist.items || []).map((clearance: any, index: number) => {
                     const isApproved = clearance.status === 'approved';
                     const isRejected = clearance.status === 'rejected';
+                    const isUnderReview = clearance.status === 'under_review';
                     const isPending = clearance.status === 'pending';
                     const deptLabel = typeof clearance.department === 'string'
                       ? clearance.department
@@ -583,8 +558,8 @@ export function OffboardingClearance() {
                         variant="outlined"
                         sx={{
                           p: 2,
-                          bgcolor: isApproved ? 'success.50' : isRejected ? 'error.50' : 'warning.50',
-                          borderColor: isApproved ? 'success.200' : isRejected ? 'error.200' : 'warning.200'
+                          bgcolor: isApproved ? 'success.50' : isRejected ? 'error.50' : isUnderReview ? 'info.50' : 'warning.50',
+                          borderColor: isApproved ? 'success.200' : isRejected ? 'error.200' : isUnderReview ? 'info.200' : 'warning.200'
                         }}
                       >
                         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
@@ -594,14 +569,16 @@ export function OffboardingClearance() {
                                 <CheckCircleIcon sx={{ fontSize: 20, color: 'success.main' }} />
                               ) : isRejected ? (
                                 <XCircleIcon sx={{ fontSize: 20, color: 'error.main' }} />
+                              ) : isUnderReview ? (
+                                <ClockIcon sx={{ fontSize: 20, color: 'info.main' }} />
                               ) : (
                                 <ClockIcon sx={{ fontSize: 20, color: 'warning.main' }} />
                               )}
-                              <Typography variant="subtitle2">{deptLabel}</Typography>
+                              <Typography variant="subtitle2">{deptLabel} {clearance.status}</Typography>
                               <Chip
-                                label={isApproved ? 'Approved' : isRejected ? 'Rejected' : 'Pending'}
+                                label={isApproved ? 'Approved' : isRejected ? 'Rejected' : isUnderReview ? 'Under Review' : 'Pending'}
                                 size="small"
-                                color={isApproved ? 'success' : isRejected ? 'error' : 'warning'}
+                                color={isApproved ? 'success' : isRejected ? 'error' : isUnderReview ? 'info' : 'warning'}
                                 sx={{ textTransform: 'capitalize' }}
                               />
                             </Stack>

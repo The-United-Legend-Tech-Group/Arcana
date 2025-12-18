@@ -52,6 +52,7 @@ export function TerminationReviews() {
     employeeNumber: '',
     reason: '',
     initiator: '',
+    terminationDate: '',
     employeeComments: '',
     hrComments: '',
   });
@@ -141,8 +142,8 @@ export function TerminationReviews() {
 
   const handleInitiateTermination = async () => {
     // Validate required fields
-    if (!formData.employeeNumber || !formData.reason || !formData.initiator) {
-      toast.error('Please fill in all required fields');
+    if (!formData.employeeNumber || !formData.reason || !formData.initiator || !formData.terminationDate) {
+      toast.error('Please fill in all required fields (including termination date)');
       return;
     }
 
@@ -152,6 +153,7 @@ export function TerminationReviews() {
         employeeNumber: formData.employeeNumber.trim(),
         reason: formData.reason.trim(),
         initiator: formData.initiator.trim(),
+        terminationDate: formData.terminationDate,
         employeeComments: formData.employeeComments.trim() || undefined,
         hrComments: formData.hrComments.trim() || undefined,
       });
@@ -162,6 +164,7 @@ export function TerminationReviews() {
         employeeNumber: '',
         reason: '',
         initiator: '',
+        terminationDate: '',
         employeeComments: '',
         hrComments: '',
       });
@@ -609,6 +612,18 @@ export function TerminationReviews() {
             </Box>
 
             <Box>
+              <Typography variant="body2" sx={{ mb: 1 }}>Termination Date *</Typography>
+              <TextField
+                fullWidth
+                type="date"
+                value={formData.terminationDate}
+                onChange={(e) => setFormData({ ...formData, terminationDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                helperText="Select the effective termination date"
+              />
+            </Box>
+
+            <Box>
               <Typography variant="body2" sx={{ mb: 1 }}>Employee Comments</Typography>
               <TextField
                 fullWidth
@@ -670,6 +685,7 @@ export function TerminationReviews() {
                 employeeNumber: '',
                 reason: '',
                 initiator: '',
+                terminationDate: '',
                 employeeComments: '',
                 hrComments: '',
               });
@@ -681,7 +697,7 @@ export function TerminationReviews() {
           </Button>
           <Button
             onClick={handleInitiateTermination}
-            disabled={isSubmitting || !formData.employeeNumber || !formData.reason || !formData.initiator}
+            disabled={isSubmitting || !formData.employeeNumber || !formData.reason || !formData.initiator || !formData.terminationDate}
             variant="contained"
             color="error"
             startIcon={isSubmitting && <CircularProgress size={16} color="inherit" />}

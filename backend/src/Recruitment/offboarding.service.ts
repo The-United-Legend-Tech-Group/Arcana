@@ -74,7 +74,17 @@ export class OffboardingService {
     const employeeObjectId = rawId instanceof Types.ObjectId ? rawId : new Types.ObjectId(String(rawId));
     const employeeId = employeeObjectId.toString();
 
-    // Check if employee has existing active termination request first
+    // Ensure employee number resolved to an ID — otherwise it's invalid
+    // Also prevent duplicate termination requests for the same employee (any status)
+    const existingTerminations = await this.terminationRequestRepository.findByEmployeeId(employeeId);
+    if (existingTerminations && existingTerminations.length > 0) {
+      const ids = existingTerminations.map(t => String(t._id)).join(', ');
+      console.warn(`Employee ${dto.employeeNumber} already has existing termination request(s): ${ids}`);
+      // throw new BadRequestException(`Cannot initiate termination for employee ${dto.employeeNumber} - existing termination request(s) found: ${ids}`);
+      throw new BadRequestException(`Cannot initiate termination for employee ${dto.employeeNumber} as existing termination request was found `);
+    }
+
+    // Check if employee has existing active termination request (legacy check preserved for clarity)
     const existingTerminationRequest = await this.terminationRequestRepository
       .findActiveByEmployeeId(employeeId);
 
@@ -156,7 +166,8 @@ export class OffboardingService {
       //TODO: in case the employee didn't write a comment what should be done in this case?
       employeeComments: dto.employeeComments,
       hrComments: dto.hrComments,
-      status: TerminationStatus.PENDING
+      status: TerminationStatus.PENDING,
+      terminationDate: dto.terminationDate ? new Date(dto.terminationDate) : undefined,
     };
     const savedTerminationRequest = await this.terminationRequestRepository.create(terminationRequestData);
     console.log(`Termination review initiated successfully for employee ${dto.employeeNumber} with ID ${savedTerminationRequest._id}`);
@@ -415,7 +426,7 @@ Please navigate to the Offboarding Clearance section to sign off on your departm
       console.warn(
         `Offboarding checklist already exists for termination request ${dto.terminationId}`,
       );
-      throw new BadRequestException(`Offboarding checklist already exists for termination request ${dto.terminationId}`
+      throw new BadRequestException(`Offboarding checklist already exists for this Employee`
       );
     }
 
@@ -1336,7 +1347,9 @@ ${dto.additionalMessage ? `--- ADDITIONAL NOTES ---\n${dto.additionalMessage}\n\
 
     const previousStatus = departmentItem.status;
 
-    departmentItem.status = dto.status; // Set new status (APPROVED, REJECTED, or PENDING)
+    // Store status directly as received from frontend (TerminationStatus enum values)
+    // Accepts: 'pending', 'under_review', 'approved', 'rejected'
+    departmentItem.status = dto.status as any;
     if (approverObjectId) {
       departmentItem.updatedBy = approverObjectId; // Track who made the approval/rejection (if provided)
     }

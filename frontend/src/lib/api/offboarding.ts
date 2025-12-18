@@ -6,6 +6,7 @@ export interface InitiateTerminationReviewDto {
   employeeNumber: string;
   reason: string;
   initiator: string;
+  terminationDate: string;
   employeeComments?: string;
   hrComments?: string;
 }
@@ -57,7 +58,8 @@ export interface DepartmentClearanceSignOffDto {
   clearanceChecklistId: string;
   department: string;
   approverId?: string;
-  status: 'approved' | 'rejected' | 'pending' | 'in_progress';
+  // Uses TerminationStatus enum values instead of ApprovalStatus
+  status: 'approved' | 'rejected' | 'pending' | 'under_review';
   comments?: string;
 }
 

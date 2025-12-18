@@ -36,6 +36,7 @@ import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
+import { apiService } from '@/common/services/api';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
@@ -293,6 +294,42 @@ export default function HRLeaveRequestsManager() {
     }
   };
 
+  const handleViewMedicalDocument = async (request: LeaveRequest) => {
+    if (!API_BASE || !request.attachmentId) return;
+    setProcessing(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(
+        `${API_BASE}/leaves/attachments/${request.attachmentId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
+        },
+      );
+
+      if (!res.ok) {
+        const errData = await res
+          .json()
+          .catch(() => ({ message: 'Failed to load attachment' }));
+        throw new Error(errData.message || `Failed (${res.status})`);
+      }
+
+      const attachment = await res.json();
+      const filePath = attachment?.filePath as string;
+      if (!filePath) {
+        throw new Error('Attachment has no file path');
+      }
+      const publicUrl = await apiService.getPublicFileUrl(filePath);
+      if (typeof window !== 'undefined') {
+        window.open(publicUrl, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to open medical document');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleBulkProcess = async () => {
     if (selectedRequests.length === 0) {
       setError('Please select at least one request');
@@ -523,14 +560,24 @@ export default function HRLeaveRequestsManager() {
                           </IconButton>
                         </Tooltip>
                         {request.attachmentId && (
-                          <Tooltip title="Verify Medical">
-                            <IconButton
-                              size="small"
-                              onClick={() => setVerifyDialog({ open: true, requestId: request._id })}
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <>
+                            <Tooltip title="View Medical Document">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewMedicalDocument(request)}
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Verify Medical">
+                              <IconButton
+                                size="small"
+                                onClick={() => setVerifyDialog({ open: true, requestId: request._id })}
+                              >
+                                <CheckCircleIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
                         )}
                       </Stack>
                     </TableCell>

@@ -78,6 +78,15 @@ export class LeavesRequestService {
     });
   }
 
+  // Fetch single attachment (for viewing documents)
+  async getAttachmentById(attachmentId: string): Promise<Attachment> {
+    const attachment = await this.attachmentRepository.findById(attachmentId);
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+    return attachment;
+  }
+
   // Optional: Attach existing uploaded document to a leave request
   async attachToLeaveRequest(
     leaveRequestId: string,

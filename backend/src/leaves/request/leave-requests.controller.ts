@@ -52,6 +52,17 @@ export class LeavesRequestController {
     return this.leavesRequestService.uploadAttachment(dto);
   }
 
+  @Get('attachments/:attachmentId')
+  @ApiOperation({ summary: 'Get attachment metadata (for viewing documents)' })
+  @ApiParam({ name: 'attachmentId', description: 'Attachment ID' })
+  @ApiResponse({ status: 200, description: 'Attachment retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Attachment not found' })
+  async getAttachment(
+    @Param('attachmentId') attachmentId: string,
+  ): Promise<Attachment> {
+    return this.leavesRequestService.getAttachmentById(attachmentId);
+  }
+
   // Optional: attach an already uploaded document to an existing leave request
   @Post('attach-document/:leaveRequestId/:attachmentId')
   @ApiOperation({ summary: 'Attach uploaded document to existing leave request' })

@@ -312,18 +312,13 @@ export class LeavesPolicyService {
    *
    * Uses EmployeeService (org/role source of truth) and Leaves repositories for policies/types.
    */
-  async getLeaveTypesForEmployeeRole(employeeId: string): Promise<LeaveType[]> {
+  async getLeaveTypesForEmployeeRole(employeeId: string, roles: string[]): Promise<LeaveType[]> {
     const employee = await this.employeeService.getProfile(employeeId);
-    const roles: string[] = Array.isArray((employee as any)?.systemRole?.roles)
-      ? (employee as any).systemRole.roles
-      : [];
-
     const isHrOrAdmin = roles.some((r) =>
       [
         SystemRole.HR_ADMIN,
         SystemRole.HR_MANAGER,
-        SystemRole.HR_EMPLOYEE,
-        SystemRole.SYSTEM_ADMIN,
+        SystemRole.SYSTEM_ADMIN
       ].includes(r as SystemRole),
     );
 
@@ -341,8 +336,10 @@ export class LeavesPolicyService {
 
     const profile: any = (employee as any)?.profile || {};
     const dateOfHire = profile.dateOfHire ? new Date(profile.dateOfHire) : null;
-    const primaryPositionId = profile.primaryPositionId?._id || profile.primaryPositionId;
     const contractType = profile.contractType;
+
+    console.log('dateOfHire', dateOfHire);
+    console.log('contractType', contractType);
 
     const tenureMonths = (() => {
       if (!dateOfHire || Number.isNaN(dateOfHire.getTime())) return null;
@@ -355,6 +352,8 @@ export class LeavesPolicyService {
       return Math.max(0, months);
     })();
 
+    console.log('tenureMonths', tenureMonths);
+
     return leaveTypes.filter((lt: any) => {
       const typeObj = lt.toObject ? lt.toObject() : lt;
       const policy = policyMap.get(String(typeObj._id));
@@ -362,6 +361,7 @@ export class LeavesPolicyService {
 
       // If no policy/eligibility configured, allow by default (keeps system usable).
       if (!eligibility) return true;
+
 
       // 1) minTenureMonths
       const minTenureMonths =
@@ -374,19 +374,35 @@ export class LeavesPolicyService {
         return false;
       }
 
-      // 2) positionsAllowed (if set, must match employee primaryPositionId)
+      // 2) positionsAllowed
+      // NOTE: In this system, positionsAllowed is configured as a list of *roles*
+      // (e.g. DEPARTMENT_EMPLOYEE, DEPARTMENT_HEAD, HR_ADMIN, ...) not org-position IDs.
+      // Only show leave types where the employee's role matches at least one role in positionsAllowed.
+      // If positionsAllowed is empty or not defined, don't show the leave type.
       const positionsAllowed: string[] = Array.isArray(eligibility.positionsAllowed)
         ? eligibility.positionsAllowed.map(String)
         : [];
-      if (positionsAllowed.length > 0) {
-        const posIdStr = primaryPositionId ? String(primaryPositionId) : '';
-        if (!posIdStr || !positionsAllowed.includes(posIdStr)) return false;
+      
+      // If positionsAllowed is empty or not defined, don't show this leave type
+      if (positionsAllowed.length === 0) {
+        return false;
+      }
+
+      // Check if employee has at least one role that matches positionsAllowed
+      const userRoles = roles.map(String);
+      console.log('userRoles', userRoles);
+      const hasAllowedRole = userRoles.some((r) => positionsAllowed.includes(r));
+
+
+      if (!hasAllowedRole) {
+        return false;
       }
 
       // 3) contractTypesAllowed (if set, must match employee contractType)
       const contractTypesAllowed: string[] = Array.isArray(eligibility.contractTypesAllowed)
         ? eligibility.contractTypesAllowed.map(String)
         : [];
+
       if (contractTypesAllowed.length > 0) {
         const ct = contractType ? String(contractType) : '';
         if (!ct || !contractTypesAllowed.includes(ct)) return false;

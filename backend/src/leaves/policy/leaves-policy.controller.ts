@@ -189,21 +189,11 @@ export class LeavesPolicyController {
   async getLeaveTypesForMe(@Req() req: any): Promise<LeaveType[]> {
     const user: any = (req as any).user;
     const employeeId = user?.sub || user?.employeeId;
+    const roles = user?.roles || [];
     return this.leavesService.getLeaveTypesForEmployeeRole(
       new Types.ObjectId(employeeId).toString(),
+      roles,
     );
-  }
-
-  /**
-   * Get leave types available for a specific employee (based on their role + eligibility rules)
-   */
-  @Get('leave-types/for-employee/:employeeId')
-  @ApiOperation({ summary: 'Get leave types available for a specific employee' })
-  @ApiParam({ name: 'employeeId', description: 'Employee ID' })
-  async getLeaveTypesForEmployee(
-    @Param('employeeId') employeeId: string,
-  ): Promise<LeaveType[]> {
-    return this.leavesService.getLeaveTypesForEmployeeRole(employeeId);
   }
   
 

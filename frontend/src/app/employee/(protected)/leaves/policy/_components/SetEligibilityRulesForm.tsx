@@ -129,9 +129,36 @@ export default function SetEligibilityRulesForm({ policy, onSaved, onCancel }: P
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
       <Stack spacing={2}>
+        {error && (
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" onClose={() => setSuccess(null)}>
+            {success}
+          </Alert>
+        )}
+        
         <Typography variant="body2" color="text.secondary">
           Leave Type: <strong>{policy.leaveTypeId ?? 'N/A'}</strong>
         </Typography>
+        
+        <TextField
+          label="Minimum Tenure (Months)"
+          type="number"
+          value={form.minTenureMonths}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              minTenureMonths: e.target.value,
+            }))
+          }
+          fullWidth
+          size="small"
+          inputProps={{ min: 0, step: 1 }}
+        />
+
         <FormControl fullWidth size="small">
           <InputLabel>Positions Allowed</InputLabel>
           <Select

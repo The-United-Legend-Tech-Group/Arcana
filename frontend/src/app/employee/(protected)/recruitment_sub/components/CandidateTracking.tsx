@@ -70,7 +70,7 @@ export function CandidateTracking() {
       // Build referrals set and map from backend data (multiple referrals per candidate)
       const referralCandidateIds = new Set<string>();
       const referralMap = new Map<string, any[]>();
-      
+
       // Fetch employee data for each referral
       const referralsWithEmployees = await Promise.all(
         (referralsResponse.data || []).map(async (referral: any) => {
@@ -92,20 +92,20 @@ export function CandidateTracking() {
           return referral;
         })
       );
-      
+
       referralsWithEmployees.forEach((referral: any) => {
         const candidateId = referral.candidateId?._id || referral.candidateId;
         if (candidateId) {
           const candidateIdStr = candidateId.toString();
           referralCandidateIds.add(candidateIdStr);
-          
+
           // Add referral to array for this candidate
           const existing = referralMap.get(candidateIdStr) || [];
           existing.push(referral);
           referralMap.set(candidateIdStr, existing);
         }
       });
-      
+
       setReferrals(referralCandidateIds);
       setReferralData(referralMap);
     } catch (error: any) {
@@ -761,7 +761,7 @@ export function CandidateTracking() {
             const candidateKey = candidateId?.toString();
             const referralsData = referralData.get(candidateKey);
             const referralsList = Array.isArray(referralsData) ? referralsData : (referralsData ? [referralsData] : []);
-            
+
             return (
               <Stack spacing={3}>
                 <Box>

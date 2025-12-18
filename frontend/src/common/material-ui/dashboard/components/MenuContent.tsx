@@ -134,7 +134,7 @@ export const leavesSubItems: MenuItem[] = [
     text: "Requests Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/leaves/requests/manager",
-    roles: ["head of department"],
+    roles: ["department head"],
   },
   {
     text: "Automation",

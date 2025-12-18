@@ -19,9 +19,10 @@ import { LeaveRequest } from '../models/leave-request.schema';
 import { Attachment } from '../models/attachment.schema';
 import { Types } from 'mongoose';
 import { AuthGuard } from '../../common/guards/authentication.guard';
-import { authorizationGuard } from 'src/common/guards/authorization.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { SystemRole } from 'src/employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+
 @ApiTags('Leaves Requests')
 @Controller('leaves')
 @UseGuards(AuthGuard,authorizationGuard)

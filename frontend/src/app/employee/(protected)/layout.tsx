@@ -17,6 +17,7 @@ import {
     treeViewCustomizations,
 } from '../../../common/material-ui/dashboard/theme/customizations';
 import { decryptData } from '../../../common/utils/encryption';
+import { ToastProvider } from '@/lib/hooks/useToast';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -93,62 +94,64 @@ export default function EmployeeLayout({ children }: LayoutProps) {
 
     return (
         <AppTheme themeComponents={xThemeComponents}>
-            <CssBaseline enableColorScheme />
-            <Box sx={{ display: 'flex' }}>
-                <SideMenu user={employee ? {
-                    name: `${employee.firstName} ${employee.lastName}`,
-                    email: employee.workEmail || employee.personalEmail,
-                    image: employee.profilePictureUrl || ''
-                } : undefined} />
-                <AppNavbar />
+            <ToastProvider>
+                <CssBaseline enableColorScheme />
+                <Box sx={{ display: 'flex' }}>
+                    <SideMenu user={employee ? {
+                        name: `${employee.firstName} ${employee.lastName}`,
+                        email: employee.workEmail || employee.personalEmail,
+                        image: employee.profilePictureUrl || ''
+                    } : undefined} />
+                    <AppNavbar />
 
-                {/* Main Content Area */}
-                <Box
-                    component="main"
-                    sx={(theme) => ({
-                        display: 'flex',
-                        flexDirection: 'column',
-                        flexGrow: 1,
-                        backgroundColor: theme.vars
-                            ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
-                            : alpha(theme.palette.background.default, 1),
-                        overflow: 'hidden',
-                        height: '100vh',
-                    })}
-                >
+                    {/* Main Content Area */}
                     <Box
-                        sx={{
-                            zIndex: 1100,
-                            width: '100%',
-                            bgcolor: 'background.default',
-                            px: 3, //CHANGE HERE
-                            py: 0.5, //CHANGE HERE
-                            mt: { xs: 8, md: 0 },
-                            mb: 1, //CHANGE HERE
-                            flexShrink: 0,
-                        }}
-                    >
-                        {/* Header is universal for this layout */}
-                        <Header notificationPath="/employee/notifications" />
-                    </Box>
-
-                    <Stack
-                        spacing={2}
-                        sx={{
-                            alignItems: 'center',
-                            mx: 3,
-                            pb: 5,
+                        component="main"
+                        sx={(theme) => ({
+                            display: 'flex',
+                            flexDirection: 'column',
                             flexGrow: 1,
-                            overflow: 'auto',
-                        }}
+                            backgroundColor: theme.vars
+                                ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
+                                : alpha(theme.palette.background.default, 1),
+                            overflow: 'hidden',
+                            height: '100vh',
+                        })}
                     >
-                        {/* Page Content */}
-                        <Box sx={{ width: '100%', height: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
-                            {children}
+                        <Box
+                            sx={{
+                                zIndex: 1100,
+                                width: '100%',
+                                bgcolor: 'background.default',
+                                px: 3, //CHANGE HERE
+                                py: 0.5, //CHANGE HERE
+                                mt: { xs: 8, md: 0 },
+                                mb: 1, //CHANGE HERE
+                                flexShrink: 0,
+                            }}
+                        >
+                            {/* Header is universal for this layout */}
+                            <Header notificationPath="/employee/notifications" />
                         </Box>
-                    </Stack>
+
+                        <Stack
+                            spacing={2}
+                            sx={{
+                                alignItems: 'center',
+                                mx: 3,
+                                pb: 5,
+                                flexGrow: 1,
+                                overflow: 'auto',
+                            }}
+                        >
+                            {/* Page Content */}
+                            <Box sx={{ width: '100%', height: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+                                {children}
+                            </Box>
+                        </Stack>
+                    </Box>
                 </Box>
-            </Box>
+            </ToastProvider>
         </AppTheme>
     );
 }

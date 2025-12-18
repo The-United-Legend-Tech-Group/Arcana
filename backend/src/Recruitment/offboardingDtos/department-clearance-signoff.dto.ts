@@ -16,13 +16,13 @@ export class DepartmentClearanceSignOffDto {
   @IsNotEmpty({ message: 'Department name is required' })
   department: string;
   @IsEnum(ApprovalStatus, {
-    message: 'Status must be one of: approved, rejected, or pending',
+    message: 'Status must be one of: approved, rejected, pending, or in_progress',
   })
   @IsNotEmpty({ message: 'Approval status is required' })
   status: ApprovalStatus;
+  @IsOptional()
   @IsMongoId({ message: 'Approver ID must be a valid MongoDB ObjectId' })
-  @IsNotEmpty({ message: 'Approver ID is required' })
-  approverId: string;
+  approverId?: string;
   @IsOptional()
   @IsString({ message: 'Comments must be a string' })
   comments?: string;

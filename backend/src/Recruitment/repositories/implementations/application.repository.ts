@@ -14,7 +14,7 @@ export class ApplicationRepository extends BaseRepository<ApplicationDocument> i
   }
 
   async findByRequisitionId(requisitionId: string): Promise<ApplicationDocument[]> {
-    return this.applicationModel.find({ requisitionId }).exec();
+    return this.applicationModel.find({ requisitionId: new Types.ObjectId(requisitionId) }).exec();
   }
 
   async findByCandidateId(candidateId: string): Promise<ApplicationDocument[]> {

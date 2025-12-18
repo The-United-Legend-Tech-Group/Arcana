@@ -2057,6 +2057,15 @@ export class RecruitmentService {
       throw new NotFoundException(`Cannot schedule interview for application with status ${application.status}`);
     }
 
+    // Check if interview already exists for this application
+    const existingInterviews = await this.interviewRepository.findByApplicationId(createInterviewDto.applicationId);
+    const hasScheduledInterview = existingInterviews.some(
+      interview => interview.status === InterviewStatus.SCHEDULED
+    );
+    if (hasScheduledInterview) {
+      throw new NotFoundException(`An interview is already scheduled for this application. Please cancel or complete the existing interview before scheduling a new one.`);
+    }
+
     // Use userId as hrId if provided
     // userId is passed but not currently used in interview creation as 'hrId' is not stored in schema
     // const hrId = userId || createInterviewDto['hrId'];
@@ -2117,30 +2126,56 @@ export class RecruitmentService {
       // Send notification to first panel member about pending assessment
       await this.sendInterviewNotification(savedInterview, application, 'scheduled');
 
-      // Resolve candidate number for a clearer notification message (fallback to id)
-      let candidateNumberForMsg: string = application.candidateId?.toString();
+      // Resolve limited candidate info for notification (only the fields requested)
+      const candidateInfo: {
+        candidateNumber?: string;
+        mobilePhone?: string;
+        personalEmail?: string;
+        firstName?: string;
+        lastName?: string;
+      } = {};
+
+      // application.candidateId may be a populated Candidate document or an ObjectId.
+      // Prefer populated data; if not populated, fetch candidate by id.
       try {
-        const candidate = await this.candidateRepository.findById(application.candidateId?.toString());
-        if (candidate && (candidate as any).candidateNumber) {
-          candidateNumberForMsg = (candidate as any).candidateNumber;
+        let candidateObj: any = null;
+
+        candidateObj = application.candidateId as any;
+
+
+        if (candidateObj) {
+          candidateInfo.candidateNumber = candidateObj.candidateNumber || candidateObj.candidateId || undefined;
+          candidateInfo.mobilePhone = candidateObj.mobilePhone || candidateObj.personalMobile || undefined;
+          candidateInfo.personalEmail = candidateObj.personalEmail || candidateObj.email || undefined;
+          candidateInfo.firstName = candidateObj.firstName || undefined;
+          candidateInfo.lastName = candidateObj.lastName || undefined;
         }
       } catch (err) {
-        // ignore and fall back to id
+        console.error('Failed resolving candidate for panel notification:', err);
       }
+
+      console.log('Candidate Info for Notification:', candidateInfo);
+
+      const panelNotifParts = [] as string[];
+      panelNotifParts.push(`Candidate Number: ${candidateInfo.candidateNumber || 'N/A'}`);
+      panelNotifParts.push(`Name: ${candidateInfo.firstName || ''} ${candidateInfo.lastName || ''}`.trim());
+      panelNotifParts.push(`Email: ${candidateInfo.personalEmail || 'N/A'}`);
+      panelNotifParts.push(`Mobile: ${candidateInfo.mobilePhone || 'N/A'}`);
 
       await this.notificationService.create({
         recipientId: [firstPanelMemberId],
         type: 'Info',
         deliveryType: 'MULTICAST',
         title: 'Assessment Pending',
-        message: `You have been assigned to assess an interview for candidate ${candidateNumberForMsg}. Please submit your feedback after the interview.`,
+        message: `You have been assigned to assess an interview for the following candidate:\n\n${panelNotifParts.join('\n')}\n\nPlease submit your feedback after the interview.`,
         relatedEntityId: savedInterview._id.toString(),
         relatedModule: 'Recruitment',
         isRead: false,
       });
     }
 
-    // Send notification about interview scheduling
+    // Send detailed notifications to candidate and panel members
+    await this.sendDetailedInterviewNotifications(savedInterview, application, createInterviewDto.panel);
 
     return savedInterview;
   }
@@ -2191,6 +2226,109 @@ export class RecruitmentService {
     await this.sendInterviewNotification(updatedInterview, application, updateInterviewDto.status || 'updated');
 
     return updatedInterview;
+  }
+
+  /**
+   * Send detailed interview notifications to candidate and panel members with method-specific info
+   */
+  private async sendDetailedInterviewNotifications(
+    interview: InterviewDocument,
+    application: ApplicationDocument,
+    panelIds: string[]
+  ): Promise<void> {
+    const scheduledDate = new Date(interview.scheduledDate);
+    const dateStr = scheduledDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const stageLabel = interview.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    // Get first panel member details for phone interviews
+    let firstPanelMemberPhone = '';
+    let firstPanelMemberName = '';
+    if (interview.method === InterviewMethod.PHONE && panelIds.length > 0) {
+      try {
+        const firstPanelMember = await this.employeeService.findById(panelIds[0]);
+        if (firstPanelMember) {
+          firstPanelMemberPhone = (firstPanelMember as any).mobilePhone || (firstPanelMember as any).homePhone || 'N/A';
+          firstPanelMemberName = `${(firstPanelMember as any).firstName || ''} ${(firstPanelMember as any).lastName || ''}`.trim();
+        }
+      } catch (error) {
+        console.error('Failed to fetch panel member details:', error);
+      }
+    }
+
+    // Send notification to candidate
+    let candidateMessage = `Your ${stageLabel} interview has been scheduled for ${dateStr} at ${timeStr}.\n\n`;
+    candidateMessage += `Interview Method: ${interview.method.toUpperCase()}\n`;
+
+    if (interview.method === InterviewMethod.VIDEO && interview.videoLink) {
+      candidateMessage += `\nVideo Link: ${interview.videoLink}\n\nPlease ensure you have a stable internet connection and join the meeting 5 minutes early.`;
+    } else if (interview.method === InterviewMethod.PHONE && firstPanelMemberPhone) {
+      candidateMessage += `\nYou will be contacted at your registered phone number by ${firstPanelMemberName || 'the interviewer'}.\nInterviewer Contact: ${firstPanelMemberPhone}\n\nPlease ensure your phone is accessible at the scheduled time.`;
+    } else if (interview.method === InterviewMethod.ONSITE) {
+      candidateMessage += `\nPlease arrive at the office location 15 minutes before the scheduled time. Bring a valid ID and any required documents.`;
+    }
+
+    try {
+      // Resolve candidate id whether populated or plain id
+      let candidateIdStr = '';
+      if (!application.candidateId) {
+        console.error('Application has no candidateId:', application._id?.toString());
+      } else if (typeof application.candidateId === 'string') {
+        candidateIdStr = application.candidateId;
+      } else if ((application.candidateId as any)._id) {
+        candidateIdStr = (application.candidateId as any)._id.toString();
+      } else if (application.candidateId.toString) {
+        // fallback: try toString (may result in [object Object] so validate length)
+        const s = application.candidateId.toString();
+        if (/^[a-fA-F0-9]{24}$/.test(s)) candidateIdStr = s;
+      }
+
+      if (!candidateIdStr) {
+        console.error('Unable to resolve candidate id for notification, skipping candidate notify for interview', interview._id?.toString());
+      } else {
+        await this.notificationService.create({
+          recipientId: [candidateIdStr],
+          type: 'Info',
+          deliveryType: 'MULTICAST',
+          title: `${stageLabel} Interview Scheduled`,
+          message: candidateMessage,
+          relatedEntityId: interview._id.toString(),
+          relatedModule: 'Recruitment',
+          isRead: false,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send candidate notification:', error);
+    }
+
+    // Send notifications to all panel members
+    if (panelIds && panelIds.length > 0) {
+      let panelMessage = `You have been assigned to conduct a ${stageLabel} on ${dateStr} at ${timeStr}.\n\n`;
+      panelMessage += `Interview Method: ${interview.method.toUpperCase()}\n`;
+
+      if (interview.method === InterviewMethod.VIDEO && interview.videoLink) {
+        panelMessage += `\nVideo Link: ${interview.videoLink}\n\nPlease join the meeting 5 minutes early.`;
+      } else if (interview.method === InterviewMethod.PHONE) {
+        panelMessage += `\nPlease call the candidate at their registered phone number at the scheduled time.`;
+      } else if (interview.method === InterviewMethod.ONSITE) {
+        panelMessage += `\nThe interview will be conducted at the office. Please be present in the designated interview room.`;
+      }
+
+      try {
+        await this.notificationService.create({
+          recipientId: panelIds,
+          type: 'Info',
+          deliveryType: 'MULTICAST',
+          title: `${stageLabel} Assigned`,
+          message: panelMessage,
+          relatedEntityId: interview._id.toString(),
+          relatedModule: 'Recruitment',
+          isRead: false,
+        });
+      } catch (error) {
+        console.error('Failed to send panel member notifications:', error);
+      }
+    }
   }
 
   /**

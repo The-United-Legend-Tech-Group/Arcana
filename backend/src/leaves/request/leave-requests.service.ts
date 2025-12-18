@@ -575,14 +575,14 @@ export class LeavesRequestService {
       }
 
       await this.notificationService.create({
-        recipientId: [request.employeeId.toString()],
-        type,
-        deliveryType: 'UNICAST',
-        title,
-        message,
+      recipientId: [request.employeeId.toString()],
+      type,
+      deliveryType: 'UNICAST',
+      title,
+      message,
         relatedEntityId: request._id.toString(),
-        relatedModule: 'Leaves',
-      });
+      relatedModule: 'Leaves',
+    });
     } catch (error) {
       // Log error but don't throw - notification failures shouldn't break the main flow
       console.error(

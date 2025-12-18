@@ -165,12 +165,12 @@ async viewBalance(@Param('managerId') managerId: string) {
 @ApiResponse({ status: 201, description: 'Post-leave feedback submitted successfully' })
 @ApiResponse({ status: 400, description: 'Invalid input data' })
 @ApiResponse({ status: 404, description: 'Employee not found' })
-  async submitPostLeave(
-    @Param('employeeId') employeeId: string,
-    @Body() body: SubmitPostLeaveDto,
-  ) {
-    return this.leavesReportService.submitPostLeave(employeeId, body);
-  }
+async submitPostLeave(
+  @Param('employeeId') employeeId: string,
+  @Body() body: SubmitPostLeaveDto,
+) {
+  return this.leavesReportService.submitPostLeave(employeeId, body);
+}
 
   // =============================
   // REQ-040, REQ-041, REQ-042 — Leave Automation

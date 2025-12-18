@@ -60,8 +60,8 @@ export class authorizationGuard implements CanActivate {
       // If DB lookup fails or roles are empty, fall back to JWT roles rather than hard-denying.
       if (employeeRoles?.roles?.length) {
         const hasRoleFromDb = requiredRoles.some((role) =>
-          employeeRoles.roles.includes(role),
-        );
+        employeeRoles.roles.includes(role),
+      );
         if (hasRoleFromDb) {
           return true;
         }

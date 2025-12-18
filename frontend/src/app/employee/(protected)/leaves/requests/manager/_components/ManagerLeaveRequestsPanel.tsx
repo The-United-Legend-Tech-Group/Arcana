@@ -177,7 +177,7 @@ export default function ManagerLeaveRequestsPanel() {
 
   useEffect(() => {
     if (viewTab === 'requests') {
-      loadRequests();
+    loadRequests();
     }
   }, [loadRequests, viewTab]);
 
@@ -452,11 +452,11 @@ export default function ManagerLeaveRequestsPanel() {
             <Tab value="balances" label="Team Balances" />
             <Tab value="analytics" label="Employee History" />
           </Tabs>
-
+          
           {viewTab === 'requests' && (
-            <IconButton onClick={loadRequests} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
+          <IconButton onClick={loadRequests} disabled={loading}>
+            <RefreshIcon />
+          </IconButton>
           )}
           {viewTab === 'balances' && (
             <IconButton onClick={loadTeamBalances} disabled={balancesLoading}>
@@ -501,39 +501,39 @@ export default function ManagerLeaveRequestsPanel() {
                   })`}
                 />
               </Tabs>
-            </Stack>
+        </Stack>
 
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Employee</TableCell>
-                      <TableCell>Leave Type</TableCell>
-                      <TableCell>From</TableCell>
-                      <TableCell>To</TableCell>
-                      <TableCell>Duration</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Justification</TableCell>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Employee</TableCell>
+                  <TableCell>Leave Type</TableCell>
+                  <TableCell>From</TableCell>
+                  <TableCell>To</TableCell>
+                  <TableCell>Duration</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Justification</TableCell>
                       <TableCell>Irregular</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredRequests.map((request) => (
-                      <TableRow key={request._id} hover>
-                        <TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredRequests.map((request) => (
+                  <TableRow key={request._id} hover>
+                    <TableCell>
                           {(() => {
                             const emp = getEmployeeProfile(
                               request.employeeId as any,
                             );
                             if (!emp) {
                               return typeof request.employeeId === 'string'
-                                ? `Employee: ${request.employeeId.slice(-8)}`
+                        ? `Employee: ${request.employeeId.slice(-8)}`
                                 : 'N/A';
                             }
                             return (
@@ -545,40 +545,40 @@ export default function ManagerLeaveRequestsPanel() {
                               'N/A'
                             );
                           })()}
-                        </TableCell>
-                        <TableCell>
+                    </TableCell>
+                    <TableCell>
                           {typeof request.leaveTypeId === 'object' &&
                           request.leaveTypeId
                             ? `${request.leaveTypeId.code || ''} ${
                                 request.leaveTypeId.name || ''
                               }`.trim() || 'N/A'
-                            : typeof request.leaveTypeId === 'string'
-                            ? `Type: ${request.leaveTypeId.slice(-8)}`
-                            : 'N/A'}
-                        </TableCell>
+                        : typeof request.leaveTypeId === 'string'
+                        ? `Type: ${request.leaveTypeId.slice(-8)}`
+                        : 'N/A'}
+                    </TableCell>
                         <TableCell>
                           {formatDate(request.dates?.from)}
                         </TableCell>
                         <TableCell>
                           {formatDate(request.dates?.to)}
                         </TableCell>
-                        <TableCell>{request.durationDays || 0} days</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={request.status || 'N/A'}
-                            color={getStatusColor(request.status) as any}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
+                    <TableCell>{request.durationDays || 0} days</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={request.status || 'N/A'}
+                        color={getStatusColor(request.status) as any}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
                           <Typography
                             variant="body2"
                             noWrap
                             sx={{ maxWidth: 200 }}
                           >
-                            {request.justification || 'N/A'}
-                          </Typography>
-                        </TableCell>
+                        {request.justification || 'N/A'}
+                      </Typography>
+                    </TableCell>
                         <TableCell>
                           <Tooltip
                             title={
@@ -601,44 +601,44 @@ export default function ManagerLeaveRequestsPanel() {
                             </IconButton>
                           </Tooltip>
                         </TableCell>
-                        <TableCell>
-                          {request.status === 'pending' && (
-                            <Stack direction="row" spacing={0.5}>
-                              <Tooltip title="Approve">
-                                <IconButton
-                                  size="small"
-                                  color="success"
+                    <TableCell>
+                      {request.status === 'pending' && (
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title="Approve">
+                            <IconButton
+                              size="small"
+                              color="success"
                                   onClick={() =>
                                     setApproveDialog({
                                       open: true,
                                       requestId: request._id,
                                     })
                                   }
-                                >
-                                  <CheckCircleIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Reject">
-                                <IconButton
-                                  size="small"
-                                  color="error"
+                            >
+                              <CheckCircleIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Reject">
+                            <IconButton
+                              size="small"
+                              color="error"
                                   onClick={() =>
                                     setRejectDialog({
                                       open: true,
                                       requestId: request._id,
                                     })
                                   }
-                                >
-                                  <CancelIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredRequests.length === 0 && (
-                      <TableRow>
+                            >
+                              <CancelIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredRequests.length === 0 && (
+                  <TableRow>
                         <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                           <Typography color="text.secondary">
                             No leave requests found
@@ -733,12 +733,12 @@ export default function ManagerLeaveRequestsPanel() {
                           <Typography color="text.secondary">
                             No team balances found
                           </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
             )}
           </>
         )}

@@ -263,7 +263,7 @@ export class LeavesReportService {
         const ltId = req.leaveTypeId?.toString?.();
         return {
           type: 'REQUEST' as const,
-          id: req._id,
+        id: req._id,
           employee: empId && employeeMap.has(empId)
             ? employeeMap.get(empId)
             : empId,
@@ -272,9 +272,9 @@ export class LeavesReportService {
             : ltId,
           startDate: req.dates?.from,
           endDate: req.dates?.to,
-          durationDays: req.durationDays,
-          justification: req.justification,
-          status: req.status,
+        durationDays: req.durationDays,
+        justification: req.justification,
+        status: req.status,
         };
       }),
 
@@ -283,17 +283,17 @@ export class LeavesReportService {
         const ltId = adj.leaveTypeId?.toString?.();
         return {
           type: 'ADJUSTMENT' as const,
-          id: adj._id,
+        id: adj._id,
           employee: empId && employeeMap.has(empId)
             ? employeeMap.get(empId)
             : empId,
           leaveType: ltId && leaveTypeMap.has(ltId)
             ? leaveTypeMap.get(ltId)
             : ltId,
-          adjustmentType: adj.adjustmentType,
-          amount: adj.amount,
-          reason: adj.reason,
-          hrUser: adj.hrUserId,
+        adjustmentType: adj.adjustmentType,
+        amount: adj.amount,
+        reason: adj.reason,
+        hrUser: adj.hrUserId,
         };
       }),
     ];

@@ -35,8 +35,9 @@ type PolicyInput = {
   yearlyRate?: number;
   carryForwardAllowed?: boolean;
   maxCarryForward?: number;
+  maxConsecutiveDays?: number;
   minNoticeDays?: number;
-  roundingRule?: string;
+  roundingRule?: string;  
   expiryAfterMonths?: number;
 };
 
@@ -55,6 +56,7 @@ export default function ConfigurePolicySettingsForm(props: Props) {
     yearlyRate: policy?.yearlyRate?.toString() ?? '0',
     carryForwardAllowed: !!policy?.carryForwardAllowed,
     maxCarryForward: policy?.maxCarryForward?.toString() ?? '0',
+    maxConsecutiveDays: policy?.maxConsecutiveDays?.toString() ?? '0',
     minNoticeDays: policy?.minNoticeDays?.toString() ?? '0',
     roundingRule: policy?.roundingRule ?? 'none',
     expiryAfterMonths: policy?.expiryAfterMonths?.toString() ?? '0',
@@ -72,6 +74,7 @@ export default function ConfigurePolicySettingsForm(props: Props) {
       yearlyRate: policy.yearlyRate?.toString() ?? '0',
       carryForwardAllowed: !!policy.carryForwardAllowed,
       maxCarryForward: policy.maxCarryForward?.toString() ?? '0',
+      maxConsecutiveDays: policy.maxConsecutiveDays?.toString() ?? '0',
       minNoticeDays: policy.minNoticeDays?.toString() ?? '0',
       roundingRule: policy.roundingRule ?? 'none',
       expiryAfterMonths: policy.expiryAfterMonths?.toString() ?? '0',
@@ -100,6 +103,7 @@ export default function ConfigurePolicySettingsForm(props: Props) {
         monthlyRate: toNumber(settings.monthlyRate),
         yearlyRate: toNumber(settings.yearlyRate),
         carryForwardAllowed: settings.carryForwardAllowed,
+        maxConsecutiveDays: toNumber(settings.maxConsecutiveDays),
         maxCarryForward: toNumber(settings.maxCarryForward),
         minNoticeDays: toNumber(settings.minNoticeDays),
         roundingRule: settings.roundingRule,
@@ -206,7 +210,7 @@ export default function ConfigurePolicySettingsForm(props: Props) {
             onChange={(e) => onChange('minNoticeDays', e.target.value)}
           />
         </Stack>
-
+        
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField
             select
@@ -229,6 +233,17 @@ export default function ConfigurePolicySettingsForm(props: Props) {
             size="small"
             value={form.expiryAfterMonths}
             onChange={(e) => onChange('expiryAfterMonths', e.target.value)}
+          />
+        </Stack>
+        
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            label="Max Consecutive Days"
+            type="number"
+            fullWidth
+            size="small"
+            value={form.maxConsecutiveDays}
+            onChange={(e) => onChange('maxConsecutiveDays', e.target.value)}
           />
         </Stack>
 

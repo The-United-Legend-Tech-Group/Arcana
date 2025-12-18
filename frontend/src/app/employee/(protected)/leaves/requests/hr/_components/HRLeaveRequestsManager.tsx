@@ -569,14 +569,14 @@ export default function HRLeaveRequestsManager() {
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Verify Medical">
-                              <IconButton
-                                size="small"
-                                onClick={() => setVerifyDialog({ open: true, requestId: request._id })}
-                              >
+                          <Tooltip title="Verify Medical">
+                            <IconButton
+                              size="small"
+                              onClick={() => setVerifyDialog({ open: true, requestId: request._id })}
+                            >
                                 <CheckCircleIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            </IconButton>
+                          </Tooltip>
                           </>
                         )}
                       </Stack>

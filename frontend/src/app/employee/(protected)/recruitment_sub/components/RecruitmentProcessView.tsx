@@ -431,8 +431,8 @@ export function RecruitmentProcessView() {
                     const acceptedForJob = (job.applications || []).filter(a => a.status === 'accepted' || a.status === 'offer_made').length;
                     const fillPercent = totalOpenings > 0 ? Math.round((acceptedForJob / totalOpenings) * 100) : 0;
                     const lastApp = (job.applications || []).reduce((acc: string | undefined, a) => {
-                      if (!acc) return a.createdAt;
-                      return new Date(acc) < new Date(a.createdAt) ? a.createdAt : acc;
+                      if (!acc) return a.updatedAt;
+                      return new Date(acc) < new Date(a.updatedAt) ? a.updatedAt : acc;
                     }, undefined as string | undefined);
 
                     return (
@@ -506,7 +506,7 @@ export function RecruitmentProcessView() {
                                         {getStatusBadge(application.status)}
                                       </Stack>
                                       <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
-                                        <Typography variant="body2" color="text.secondary">{application.candidateId?.email || 'N/A'}</Typography>
+                                        <Typography variant="body2" color="text.secondary">{(application.candidateId as any)?.personalEmail || 'N/A'}</Typography>
                                         <Stack direction="row" spacing={0.5} alignItems="center">
                                           <AccessTimeIcon sx={{ fontSize: 12 }} />
                                           <Typography variant="body2" color="text.secondary">
@@ -562,7 +562,7 @@ export function RecruitmentProcessView() {
                 <Typography variant="body1">
                   {selectedApplication.candidateId ? `${selectedApplication.candidateId.firstName} ${selectedApplication.candidateId.lastName}` : 'Candidate'}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">{selectedApplication.candidateId?.email || 'N/A'}</Typography>
+                <Typography variant="body2" color="text.secondary">{(selectedApplication.candidateId as any)?.personalEmail || 'N/A'}</Typography>
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>Current Stage</Typography>

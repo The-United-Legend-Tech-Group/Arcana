@@ -55,16 +55,6 @@ function AssessmentRow({ assessment, employeeMap }: { assessment: Assessment; em
                 </TableCell>
                 <TableCell>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                        {assessment._id.slice(-8)}
-                    </Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                        {assessment.interviewId.slice(-8)}
-                    </Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                         {empNumber ? `#${empNumber}` : assessment.interviewerId.slice(-8)}
                     </Typography>
                 </TableCell>
@@ -104,22 +94,7 @@ function AssessmentRow({ assessment, employeeMap }: { assessment: Assessment; em
                                 Assessment Details
                             </Typography>
                             <Stack spacing={2} sx={{ mt: 1 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Assessment ID
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                        {assessment._id}
-                                    </Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Interview ID
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                        {assessment.interviewId}
-                                    </Typography>
-                                </Box>
+                                {/* Assessment ID and Interview ID intentionally removed from details */}
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">
                                         Interviewer
@@ -289,8 +264,6 @@ export function AllAssessments() {
                         <TableHead>
                             <TableRow>
                                 <TableCell width={50} />
-                                <TableCell>Assessment ID</TableCell>
-                                <TableCell>Interview ID</TableCell>
                                 <TableCell>Interviewer (Employee #)</TableCell>
                                 <TableCell align="center">Status/Score</TableCell>
                                 <TableCell>Created</TableCell>

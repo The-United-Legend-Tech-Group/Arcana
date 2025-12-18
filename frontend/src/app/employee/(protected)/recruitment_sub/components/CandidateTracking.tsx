@@ -39,9 +39,10 @@ export function CandidateTracking() {
   const [showTagModal, setShowTagModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [viewingReferrals, setViewingReferrals] = useState<any>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [referrals, setReferrals] = useState<Set<string>>(new Set());
-  const [referralData, setReferralData] = useState<Map<string, any>>(new Map());
+  const [referralData, setReferralData] = useState<Map<string, any[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [filterPosition, setFilterPosition] = useState('all');
   const [filterStage, setFilterStage] = useState('all');
@@ -66,17 +67,45 @@ export function CandidateTracking() {
 
       setCandidates(applicationsResponse.data || []);
 
-      // Build referrals set and map from backend data
+      // Build referrals set and map from backend data (multiple referrals per candidate)
       const referralCandidateIds = new Set<string>();
-      const referralMap = new Map<string, any>();
-      (referralsResponse.data || []).forEach((referral: any) => {
+      const referralMap = new Map<string, any[]>();
+      
+      // Fetch employee data for each referral
+      const referralsWithEmployees = await Promise.all(
+        (referralsResponse.data || []).map(async (referral: any) => {
+          const employeeId = referral.referringEmployeeId?._id || referral.referringEmployeeId;
+          if (employeeId && typeof employeeId === 'string') {
+            try {
+              // Fetch employee data using the employee ID
+              const allEmployees = await employeeApi.getAllEmployees();
+              const employee = allEmployees.find((emp: any) => emp._id === employeeId);
+              return {
+                ...referral,
+                referringEmployeeId: employee || referral.referringEmployeeId
+              };
+            } catch (error) {
+              console.error('Failed to fetch employee for referral:', error);
+              return referral;
+            }
+          }
+          return referral;
+        })
+      );
+      
+      referralsWithEmployees.forEach((referral: any) => {
         const candidateId = referral.candidateId?._id || referral.candidateId;
         if (candidateId) {
           const candidateIdStr = candidateId.toString();
           referralCandidateIds.add(candidateIdStr);
-          referralMap.set(candidateIdStr, referral);
+          
+          // Add referral to array for this candidate
+          const existing = referralMap.get(candidateIdStr) || [];
+          existing.push(referral);
+          referralMap.set(candidateIdStr, existing);
         }
       });
+      
       setReferrals(referralCandidateIds);
       setReferralData(referralMap);
     } catch (error: any) {
@@ -97,12 +126,26 @@ export function CandidateTracking() {
     try {
       setIsSubmitting(true);
       const candidateId = selectedCandidate.candidateId?._id || selectedCandidate.candidateId;
+      const candidateKey = candidateId?.toString();
 
       // Fetch employee by employee number
       const employee = await employeeApi.getEmployeeByEmployeeNumber(referrerName.trim());
 
       if (!employee || !employee._id) {
         toast.error('Employee not found with this number');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check for duplicate referral from same employee (normalize ids)
+      const existingReferrals = referralData.get(candidateKey) || [];
+      const isDuplicate = existingReferrals.some((ref: any) => {
+        const refEmployeeId = ref.referringEmployeeId?._id || ref.referringEmployeeId;
+        return (refEmployeeId && refEmployeeId.toString()) === (employee._id && employee._id.toString());
+      });
+
+      if (isDuplicate) {
+        toast.error(`This candidate is already referred by employee ${employee.employeeNumber}`);
         setIsSubmitting(false);
         return;
       }
@@ -114,16 +157,29 @@ export function CandidateTracking() {
         level: referralNotes || 'Standard',
       });
 
-      // Add to referrals set and map
+      // Add to referrals set and map (append to array) using normalized key
       setReferrals(prev => {
-        const next = new Set<string>();
-        prev.forEach(v => next.add(v));
-        next.add(candidateId);
+        const next = new Set<string>(prev);
+        if (candidateKey) next.add(candidateKey);
         return next;
       });
       setReferralData(prev => {
         const next = new Map(prev);
-        next.set(candidateId, { ...newReferral.data, referringEmployeeId: employee });
+        const existing = next.get(candidateKey) || [];
+        // Prevent accidental duplicates by checking referring employee id or referral _id
+        const newRef = { ...newReferral.data, referringEmployeeId: employee };
+        const already = existing.some((r: any) => {
+          const a = r._id ? r._id.toString() : null;
+          const b = newRef._id ? newRef._id.toString() : null;
+          if (a && b) return a === b;
+          const ra = r.referringEmployeeId?._id || r.referringEmployeeId;
+          const rb = newRef.referringEmployeeId?._id || newRef.referringEmployeeId;
+          return ra && rb && ra.toString() === rb.toString();
+        });
+        if (!already) {
+          existing.push(newRef);
+        }
+        next.set(candidateKey, existing);
         return next;
       });
       toast.success(`Candidate tagged as referral by ${employee.employeeNumber ?? employee._id}`);
@@ -191,7 +247,8 @@ export function CandidateTracking() {
   // Check if a candidate is a referral
   const isReferral = (candidate: any) => {
     const candidateId = candidate.candidateId?._id || candidate.candidateId;
-    return referrals.has(candidateId);
+    const candidateKey = candidateId?.toString();
+    return candidateKey ? referrals.has(candidateKey) : false;
   };
 
   // Check if a candidate is rejected
@@ -438,14 +495,27 @@ export function CandidateTracking() {
                             />
                             {isReferral(candidate) && (() => {
                               const candidateId = candidate.candidateId?._id || candidate.candidateId;
-                              const referralInfo = referralData.get(candidateId);
-                              const employeeNumber = referralInfo?.referringEmployeeId?.employeeNumber;
+                              const candidateKey = candidateId?.toString();
+                              const referralsData = referralData.get(candidateKey);
+                              // Ensure referralsList is always an array
+                              const referralsList = Array.isArray(referralsData) ? referralsData : (referralsData ? [referralsData] : []);
+                              const count = referralsList.length;
                               return (
                                 <Chip
                                   icon={<LabelIcon />}
-                                  label={employeeNumber ? `Referral by ${employeeNumber}` : 'Referral'}
+                                  label={count > 1 ? `${count} Referrals` : `Referral by ${referralsList[0]?.referringEmployeeId?.employeeNumber || 'Unknown'}`}
                                   size="small"
                                   color="secondary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingReferrals(candidate);
+                                  }}
+                                  sx={{
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                      opacity: 0.8
+                                    }
+                                  }}
                                 />
                               );
                             })()}
@@ -468,7 +538,7 @@ export function CandidateTracking() {
 
                       {/* Actions Row */}
                       <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                        {!rejected && !isReferral(candidate) && (
+                        {!rejected && (
                           <Button
                             size="small"
                             variant="outlined"
@@ -485,7 +555,7 @@ export function CandidateTracking() {
                               px: 2
                             }}
                           >
-                            Tag as Referral
+                            {isReferral(candidate) ? 'Add Another Referral' : 'Tag as Referral'}
                           </Button>
                         )}
 
@@ -647,6 +717,128 @@ export function CandidateTracking() {
             }}
           >
             {isSubmitting ? 'Tagging...' : 'Tag as Referral'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Referrals Modal */}
+      <Dialog
+        open={!!viewingReferrals}
+        onClose={() => setViewingReferrals(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            py: 3
+          }}
+        >
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <LabelIcon sx={{ fontSize: 28 }} />
+              <Typography variant="h5" fontWeight={600}>Referrals</Typography>
+            </Stack>
+            <IconButton
+              onClick={() => setViewingReferrals(null)}
+              size="small"
+              sx={{ color: 'white' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers sx={{ py: 4, px: 3 }}>
+          {viewingReferrals && (() => {
+            const candidateId = viewingReferrals.candidateId?._id || viewingReferrals.candidateId;
+            const candidateKey = candidateId?.toString();
+            const referralsData = referralData.get(candidateKey);
+            const referralsList = Array.isArray(referralsData) ? referralsData : (referralsData ? [referralsData] : []);
+            
+            return (
+              <Stack spacing={3}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Candidate
+                  </Typography>
+                  <Typography variant="h6" fontWeight={600}>
+                    {viewingReferrals.candidateId?.firstName || ''} {viewingReferrals.candidateId?.lastName || ''}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {viewingReferrals.candidateId?.email || ''}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
+                    Referred by ({referralsList.length})
+                  </Typography>
+                  <Stack spacing={2}>
+                    {referralsList.map((referral: any, index: number) => {
+                      const employee = referral.referringEmployeeId;
+                      return (
+                        <Card key={index} variant="outlined" sx={{ borderLeft: '4px solid', borderLeftColor: 'secondary.main' }}>
+                          <CardContent>
+                            <Stack spacing={1}>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Chip
+                                  label={`#${employee?.employeeNumber || 'Unknown'}`}
+                                  size="small"
+                                  color="secondary"
+                                  variant="outlined"
+                                />
+                                <Typography variant="body1" fontWeight={600}>
+                                  {employee?.firstName || ''} {employee?.lastName || ''}
+                                </Typography>
+                              </Stack>
+                              {employee?.email && (
+                                <Typography variant="body2" color="text.secondary">
+                                  {employee.email}
+                                </Typography>
+                              )}
+                              {referral.level && referral.level !== 'Standard' && (
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Level/Notes:
+                                  </Typography>
+                                  <Typography variant="body2">
+                                    {referral.level}
+                                  </Typography>
+                                </Box>
+                              )}
+                              <Typography variant="caption" color="text.secondary">
+                                Referred on {new Date(referral.createdAt || Date.now()).toLocaleDateString()}
+                              </Typography>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              </Stack>
+            );
+          })()}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2.5, bgcolor: 'action.hover' }}>
+          <Button
+            onClick={() => setViewingReferrals(null)}
+            variant="contained"
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 4,
+              borderRadius: 2
+            }}
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>

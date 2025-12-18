@@ -102,7 +102,7 @@ export class OrganizationStructureController {
 
   @Get('requests/user/:employeeId')
   @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.SYSTEM_ADMIN, SystemRole.DEPARTMENT_HEAD)
   @ApiOperation({
     summary: 'List structure change requests submitted by a specific employee',
   })

@@ -42,7 +42,7 @@ export class AppraisalTemplateController {
 
     @Get(':id')
     @UseGuards(AuthGuard, authorizationGuard)
-    @Roles(SystemRole.HR_MANAGER)
+    @Roles(SystemRole.HR_MANAGER, SystemRole.DEPARTMENT_HEAD)
     @ApiOperation({ summary: 'Get an appraisal template by id' })
     @ApiResponse({ status: 200, description: 'Return the appraisal template.' })
     @ApiResponse({ status: 404, description: 'Template not found.' })

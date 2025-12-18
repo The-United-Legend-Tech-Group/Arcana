@@ -85,7 +85,7 @@ export class AppraisalRecordController {
 
     @Post(':id/publish')
     @UseGuards(AuthGuard, authorizationGuard)
-    @Roles(SystemRole.HR_MANAGER)
+    @Roles(SystemRole.HR_EMPLOYEE)
     @ApiOperation({ summary: 'Publish an appraisal record (HR action)' })
     @ApiResponse({
         status: 200,

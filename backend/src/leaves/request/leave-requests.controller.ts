@@ -19,9 +19,9 @@ import { LeaveRequest } from '../models/leave-request.schema';
 import { Attachment } from '../models/attachment.schema';
 import { Types } from 'mongoose';
 import { AuthGuard } from '../../common/guards/authentication.guard';
-
 @ApiTags('Leaves Requests')
 @Controller('leaves')
+@UseGuards(AuthGuard)
 export class LeavesRequestController {
   constructor(
     private readonly leavesRequestService: LeavesRequestService,
@@ -91,7 +91,6 @@ export class LeavesRequestController {
 
   // ---------- My Requests (for current employee) ----------
   @Get('my-requests')
-  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get all leave requests for the current employee' })
   @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
   async getMyRequests(@Req() req: any): Promise<LeaveRequest[]> {
@@ -103,7 +102,6 @@ export class LeavesRequestController {
   }
 
   @Get('my-pending-requests')
-  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get pending leave requests for the current employee' })
   @ApiResponse({ status: 200, description: 'Pending leave requests retrieved successfully' })
   async getMyPendingRequests(@Req() req: any): Promise<LeaveRequest[]> {
@@ -127,7 +125,6 @@ async getLeaveRequestsForManager(@Param('managerId') managerId: string): Promise
 
 // Get leave requests for current authenticated manager
 @Get('my-team-requests')
-@UseGuards(AuthGuard)
 @ApiOperation({ summary: 'Get leave requests for current manager\'s team' })
 @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
 async getMyTeamRequests(@Req() req: any): Promise<LeaveRequest[]> {
@@ -142,7 +139,6 @@ async getMyTeamRequests(@Req() req: any): Promise<LeaveRequest[]> {
 // HR Manager: Get All Leave Requests
 // ------------------------------
 @Get('hr/all-requests')
-@UseGuards(AuthGuard)
 @ApiOperation({ summary: 'Get all leave requests for HR manager review' })
 @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
 async getAllLeaveRequestsForHR(): Promise<LeaveRequest[]> {

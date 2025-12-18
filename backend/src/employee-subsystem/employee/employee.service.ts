@@ -396,6 +396,27 @@ export class EmployeeService {
     return { managerId, items };
   }
 
+  /**
+   * Get the manager (direct supervisor) for an employee
+   * Returns the employee who holds the position specified in employee's supervisorPositionId
+   */
+  async getManagerForEmployee(employeeId: string): Promise<any | null> {
+    const employee = await this.employeeProfileRepository.findById(employeeId);
+    if (!employee || !employee.supervisorPositionId) {
+      return null;
+    }
+
+    // Find the employee who has this supervisor position as their primary position
+    const manager = await this.employeeProfileModel
+      .findOne({
+        primaryPositionId: employee.supervisorPositionId,
+      })
+      .lean()
+      .exec();
+
+    return manager;
+  }
+
   async updateStatus(
     id: string,
     updateEmployeeStatusDto: UpdateEmployeeStatusDto,

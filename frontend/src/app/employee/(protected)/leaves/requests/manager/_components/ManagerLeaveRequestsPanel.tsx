@@ -37,10 +37,18 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 type LeaveRequest = {
   _id: string;
   employeeId?: string | {
-    _id: string;
+    _id?: string;
+    profile?: {
+      _id?: string;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      employeeNumber?: string;
+    };
     firstName?: string;
     lastName?: string;
     email?: string;
+    employeeNumber?: string;
   };
   leaveTypeId?: string | {
     _id: string;
@@ -63,6 +71,15 @@ type LeaveRequest = {
   }>;
   createdAt?: string | Date;
 };
+
+// Helper function to extract employee profile from various data structures
+function getEmployeeProfile(employee: any): any | null {
+  if (!employee || typeof employee !== 'object') return null;
+  if (employee.profile && typeof employee.profile === 'object') {
+    return employee.profile;
+  }
+  return employee;
+}
 
 function getCurrentUserId() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -265,11 +282,20 @@ export default function ManagerLeaveRequestsPanel() {
                 {filteredRequests.map((request) => (
                   <TableRow key={request._id} hover>
                     <TableCell>
-                      {typeof request.employeeId === 'object' && request.employeeId
-                        ? `${request.employeeId.firstName || ''} ${request.employeeId.lastName || ''}`.trim() || request.employeeId.email || 'N/A'
-                        : typeof request.employeeId === 'string'
-                        ? `Employee: ${request.employeeId.slice(-8)}`
-                        : 'N/A'}
+                      {(() => {
+                        const emp = getEmployeeProfile(request.employeeId as any);
+                        if (!emp) {
+                          return typeof request.employeeId === 'string'
+                            ? `Employee: ${request.employeeId.slice(-8)}`
+                            : 'N/A';
+                        }
+                        return (
+                          emp.employeeNumber ||
+                          `${emp.firstName || ''} ${emp.lastName || ''}`.trim() ||
+                          emp.email ||
+                          'N/A'
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {typeof request.leaveTypeId === 'object' && request.leaveTypeId

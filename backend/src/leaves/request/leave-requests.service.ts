@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  UseGuards,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { LeaveRequest, LeaveRequestDocument } from '../models/leave-request.schema';
@@ -20,10 +19,6 @@ import {
   AttachmentRepository,
   LeaveEntitlementRepository,
 } from '../repository';
-import { AuthGuard } from '../../common/guards/authentication.guard';
-import { authorizationGuard } from '../../common/guards/authorization.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
 
 @Injectable()
 export class LeavesRequestService {
@@ -37,8 +32,6 @@ export class LeavesRequestService {
   ) {}
 
   // ---------- REQ-015: Submit Leave Request ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_EMPLOYEE)
   async submitLeaveRequest(dto: CreateLeaveRequestDto): Promise<LeaveRequest> {
     // Validate leave type
     const leaveType = await this.leaveTypeRepository.findById(dto.leaveTypeId);
@@ -60,7 +53,7 @@ export class LeavesRequestService {
       throw new BadRequestException('Duration days exceeds the maximum duration days for this leave type');
     }
 
-    return await this.leaveRequestRepository.create({
+    const createdRequest = await this.leaveRequestRepository.create({
       employeeId: new Types.ObjectId(dto.employeeId),
       leaveTypeId: new Types.ObjectId(dto.leaveTypeId),
       dates: dto.dates,
@@ -68,11 +61,14 @@ export class LeavesRequestService {
       justification: dto.justification,
       ...(attachmentId && { attachmentId }),
     });
+
+    // Notify manager when a new leave request is submitted
+    await this.notifyManagerOfNewRequest(createdRequest);
+
+    return createdRequest;
   }
 
   // ---------- REQ-016: Upload Supporting Document ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async uploadAttachment(dto: UploadAttachmentDto): Promise<Attachment> {
     return await this.attachmentRepository.create({
       originalName: dto.originalName,
@@ -83,8 +79,6 @@ export class LeavesRequestService {
   }
 
   // Optional: Attach existing uploaded document to a leave request
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async attachToLeaveRequest(
     leaveRequestId: string,
     attachmentId: string,
@@ -189,8 +183,6 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-017: Update Pending Leave Requests ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async modifyPendingRequest(
     id: string,
     dto: UpdateLeaveRequestDto,
@@ -218,14 +210,64 @@ export class LeavesRequestService {
         'modified',
         { modifiedFields },
       );
+
+      // Notify direct manager/HOD that the request was updated by the employee
+      await this.notifyManagerOfModifiedRequest(updatedRequest, modifiedFields);
     }
 
     return updatedRequest;
   }
 
+  /**
+   * Notify manager/HOD when an existing pending leave request is modified by the employee
+   */
+  private async notifyManagerOfModifiedRequest(
+    request: LeaveRequestDocument,
+    modifiedFields: string[],
+  ): Promise<void> {
+    try {
+      const manager = await this.employeeService.getManagerForEmployee(
+        request.employeeId.toString(),
+      );
+      if (!manager) return;
+
+      const employee = await this.employeeService.getProfile(
+        request.employeeId.toString(),
+      );
+      const employeeName = employee?.profile
+        ? `${employee.profile.firstName || ''} ${employee.profile.lastName || ''}`.trim() ||
+          employee.profile.email ||
+          'An employee'
+        : 'An employee';
+
+      const fromDate = request.dates?.from
+        ? new Date(request.dates.from).toLocaleDateString()
+        : 'N/A';
+      const toDate = request.dates?.to
+        ? new Date(request.dates.to).toLocaleDateString()
+        : 'N/A';
+
+      const fieldsText =
+        modifiedFields?.length ? ` Updated fields: ${modifiedFields.join(', ')}.` : '';
+
+      await this.notificationService.create({
+        recipientId: [manager._id.toString()],
+        type: 'Info',
+        deliveryType: 'UNICAST',
+        title: 'Leave Request Updated',
+        message: `${employeeName} updated a pending leave request (${fromDate} to ${toDate}).${fieldsText} Please re-review.`,
+        relatedEntityId: request._id.toString(),
+        relatedModule: 'Leaves',
+      });
+    } catch (error) {
+      console.error(
+        `Failed to send modification notification to manager for leave request ${request._id}:`,
+        error,
+      );
+    }
+  }
+
   // ---------- REQ-018: Cancel Pending Leave Requests ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async cancelPendingRequest(leaveRequestId: string): Promise<LeaveRequest> {
     const request = await this.leaveRequestRepository.findById(leaveRequestId);
 
@@ -239,6 +281,59 @@ export class LeavesRequestService {
 
     request.status = LeaveStatus.CANCELLED;
     return request.save();
+  }
+
+  /**
+   * Notify manager when a new leave request is submitted by their team member
+   * REQ-XXX: As a direct manager, receive notifications when a new leave request is assigned to me
+   */
+  private async notifyManagerOfNewRequest(
+    request: LeaveRequestDocument,
+  ): Promise<void> {
+    try {
+      // Get the employee's manager
+      const manager = await this.employeeService.getManagerForEmployee(
+        request.employeeId.toString(),
+      );
+
+      if (!manager) {
+        // No manager found, skip notification
+        return;
+      }
+
+      // Get employee details for the notification
+      const employee = await this.employeeService.getProfile(
+        request.employeeId.toString(),
+      );
+      const employeeName = employee?.profile
+        ? `${employee.profile.firstName || ''} ${employee.profile.lastName || ''}`.trim() ||
+          employee.profile.email ||
+          'An employee'
+        : 'An employee';
+
+      const fromDate = request.dates?.from
+        ? new Date(request.dates.from).toLocaleDateString()
+        : 'N/A';
+      const toDate = request.dates?.to
+        ? new Date(request.dates.to).toLocaleDateString()
+        : 'N/A';
+
+      await this.notificationService.create({
+        recipientId: [manager._id.toString()],
+        type: 'Info',
+        deliveryType: 'UNICAST',
+        title: 'New Leave Request for Review',
+        message: `${employeeName} has submitted a leave request for ${request.durationDays} day(s) (${fromDate} to ${toDate}). Please review and approve or reject.`,
+        relatedEntityId: request._id.toString(),
+        relatedModule: 'Leaves',
+      });
+    } catch (error) {
+      // Log error but don't throw - notification failures shouldn't break the main flow
+      console.error(
+        `Failed to send notification to manager for leave request ${request._id}:`,
+        error,
+      );
+    }
   }
 
   /**
@@ -331,8 +426,6 @@ export class LeavesRequestService {
   }
 
   // REQ-019: Legacy method - kept for backward compatibility
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.DEPARTMENT_HEAD)
   async notifyEmployee(status: LeaveStatus, r: string) {
     const request = await this.leaveRequestRepository.findById(r);
     if (!request) throw new NotFoundException('No Request Found');
@@ -349,30 +442,98 @@ export class LeavesRequestService {
   // =============================
   // REQ-020: Manager Review Request
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_HEAD)
   async getLeaveRequestsForManager(managerId: string): Promise<LeaveRequest[]> {
     
     const team = await this.employeeService.getTeamProfiles(managerId);
     if(!team) throw new NotFoundException("No teams for this Manager");
 
-    const employeeIds = team.items.map(member => member._id);
+    const employeeIds = team.items.map((member: any) => member._id?.toString?.() || member._id);
     const leaveRequests = await this.leaveRequestRepository.find({
-      employeeId: { $in: employeeIds },
+      employeeId: { $in: employeeIds.map((id: string) => new Types.ObjectId(id)) },
     });
     
+    // Enrich with employee and leave type data (similar to HR requests)
+    const enrichedRequests = await this.enrichLeaveRequests(leaveRequests);
+    
     // Sort by createdAt descending (most recent first)
-    // createdAt is added by Mongoose timestamps but not in TypeScript type
-    return leaveRequests.sort((a, b) => {
-      const aDate = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
-      const bDate = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
+    return enrichedRequests.sort((a: any, b: any) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bDate - aDate;
     });
   }
 
+  /**
+   * Helper method to enrich leave requests with employee and leave type data
+   */
+  private async enrichLeaveRequests(requests: LeaveRequest[]): Promise<any[]> {
+    // Collect unique employee and leave type IDs
+    const employeeIds = Array.from(
+      new Set(
+        requests
+          .map((r: any) => r.employeeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ),
+    );
+
+    const leaveTypeIds = Array.from(
+      new Set(
+        requests
+          .map((r: any) => r.leaveTypeId?.toString?.())
+          .filter((id): id is string => !!id),
+      ),
+    );
+
+    // Fetch all related data in parallel; ignore failures for individual items
+    const [employeeResults, leaveTypeResults] = await Promise.all([
+      Promise.all(
+        employeeIds.map((id) =>
+          this.employeeService.getProfile(id).catch(() => null),
+        ),
+      ),
+      Promise.all(
+        leaveTypeIds.map((id) =>
+          this.leaveTypeRepository.findById(id).catch(() => null),
+        ),
+      ),
+    ]);
+
+    const employeeMap = new Map<string, any>();
+    employeeIds.forEach((id, idx) => {
+      const emp = employeeResults[idx];
+      if (emp) {
+        employeeMap.set(id, emp);
+      }
+    });
+
+    const leaveTypeMap = new Map<string, any>();
+    leaveTypeIds.forEach((id, idx) => {
+      const lt = leaveTypeResults[idx];
+      if (lt) {
+        leaveTypeMap.set(id, lt);
+      }
+    });
+
+    // Return plain objects with enriched fields where available
+    return requests.map((req: any) => {
+      const obj = req.toObject ? req.toObject() : { ...req };
+
+      const empId = req.employeeId?.toString?.();
+      const ltId = req.leaveTypeId?.toString?.();
+
+      if (empId && employeeMap.has(empId)) {
+        obj.employeeId = employeeMap.get(empId);
+      }
+
+      if (ltId && leaveTypeMap.has(ltId)) {
+        obj.leaveTypeId = leaveTypeMap.get(ltId);
+      }
+
+      return obj;
+    });
+  }
+
   // ---------- REQ-021: Manager Approves a request ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_HEAD)
   async approveRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
     const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.APPROVED,
@@ -395,8 +556,6 @@ export class LeavesRequestService {
   }
 
   // ---------- REQ-022: Manager Rejects a request ----------
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_HEAD)
   async rejectRequest(leaveRequestId: string, dto: ManagerApprovalDto): Promise<LeaveRequest | null> {
     const updatedRequest = await this.leaveRequestRepository.updateWithApprovalFlow(leaveRequestId, {
       status: LeaveStatus.REJECTED,
@@ -421,8 +580,6 @@ export class LeavesRequestService {
     return updatedRequest;
   }
 
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.DEPARTMENT_HEAD)
   async notifyManager(status: LeaveStatus, r: string) {
     const request = await this.leaveRequestRepository.findById(r);
     if(!request) throw new NotFoundException("No Request Found");
@@ -448,8 +605,6 @@ export class LeavesRequestService {
   // =============================
   // REQ-025: HR Finalization
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.HR_MANAGER)
   async finalizeLeaveRequest(
     leaveRequestId: string,
     hrUserId: string,
@@ -504,8 +659,6 @@ export class LeavesRequestService {
   // =============================
   // REQ-026: HR Override
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.HR_MANAGER)
   async hrOverrideRequest(
     leaveRequestId: string,
     hrUserId: string,
@@ -558,8 +711,6 @@ export class LeavesRequestService {
   // =============================
   // REQ-027: Bulk Processing
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.HR_MANAGER)
   async bulkProcessRequests(
     leaveRequestIds: string[],
     action: string,
@@ -634,8 +785,6 @@ export class LeavesRequestService {
   // =============================
   // REQ-028: Verify Medical Documents
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.HR_MANAGER)
   async verifyMedicalDocuments(
     leaveRequestId: string,
     hrUserId: string,
@@ -672,8 +821,6 @@ export class LeavesRequestService {
   // =============================
   // REQ-029: Auto Update Balance After Approval
   // =============================
-  @UseGuards(AuthGuard, authorizationGuard)
-  @Roles(SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
   async autoUpdateBalancesForApprovedRequests(): Promise<{ updated: number }> {
     const approvedRequests = await this.leaveRequestRepository.find({
       status: LeaveStatus.APPROVED,

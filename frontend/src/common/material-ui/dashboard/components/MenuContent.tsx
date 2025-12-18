@@ -125,22 +125,22 @@ export const performanceSubItems: MenuItem[] = [
 
 export const leavesSubItems: MenuItem[] = [
   {
-    text: "Dashboard",
+    text: "Requests Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/leaves/requests/hr",
     roles: ["HR Manager"],
+  },
+  {
+    text: "Requests Dashboard",
+    icon: <DashboardRoundedIcon />,
+    path: "/employee/leaves/requests/manager",
+    roles: ["head of department"],
   },
   {
     text: "Automation",
     icon: <AutoAwesomeRoundedIcon   />,
     path: "/employee/leaves/automation",
     roles: ["HR Manager"],
-  },
-  {
-    text: "Dashboard",
-    icon: <DashboardRoundedIcon />,
-    path: "/employee/leaves/requests/manager",
-    roles: ["head of department"],
   },
   {
     text: "Leave Types",
@@ -250,7 +250,7 @@ export default function MenuContent() {
     if (text === 'Entitlements' && pathname === '/employee/leaves/entitlement') return true;
     if (text === 'Leave Types' && (pathname === '/employee/leaves/type' || pathname === '/employee/leaves/type/special')) return true;
     if (text === 'Calendar' && pathname === '/employee/leaves/calendar') return true;
-    if (text === 'Dashboard' && pathname === '/employee/leaves/requests/hr') return true;
+    if (text === 'Dashboard' && pathname === '/employee/leaves/requests/hr' ) return true;
     if (text === 'Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
     if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
     if (text === 'History' && pathname === '/employee/leaves/history') return true;

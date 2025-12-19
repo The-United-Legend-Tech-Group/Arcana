@@ -199,6 +199,8 @@ export const recruitmentSubItems: MenuItem[] = [
 
 export const candidateRecruitmentSubItems: MenuItem[] = [
   { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/candidate/recruitment_sub' },
+];
+
 export const leavesSubItems: MenuItem[] = [
   {
     text: "Requests Dashboard",

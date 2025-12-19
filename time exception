@@ -1,0 +1,512 @@
+[33mda1ff6b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mattendanceRej-Apr[m[33m, [m[1;31morigin/timeExceptionPolish[m[33m, [m[1;32mtimeExceptionPolish[m[33m)[m time exception done
+[33m7837f7a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m fix tany
+[33m2665dd8[m fix build error
+[33mb14a9f4[m Merge pull request #29 from The-United-Legend-Tech-Group/attendanceCorrectionAprOrRej
+[33m69baa24[m feh 7aga broken
+[33mf5d85c0[m FUCK GIU
+[33mc89d837[m[33m ([m[1;31morigin/attendanceCorrectionAprOrRej[m[33m, [m[1;32mattendanceCorrectionAprOrRej[m[33m)[m added the option as an employee to make a correction request through a form
+[33m3618fc6[m[33m ([m[1;31morigin/ATS-prototype[m[33m, [m[1;32mATS-prototype[m[33m)[m pretteri
+[33m39b9367[m ATS base
+[33m3ac4bc7[m Merge pull request #27 from The-United-Legend-Tech-Group/Update_Shaw
+[33md377fca[m[33m ([m[1;31morigin/Update_Shaw[m[33m)[m add additional fetches
+[33m7844b3d[m backend +frontend punch update
+[33m33f217b[m Merge pull request #25 from The-United-Legend-Tech-Group/Update_Shaw
+[33m51dbb27[m feh 5ara schedule rule
+[33m82f215c[m remove errors
+[33m9e13b24[m b
+[33m7303cb2[m m
+[33mcbc178f[m[33m ([m[1;31morigin/Shawk_Update[m[33m)[m hotfix data encryption and decryption update
+[33mc04f7ed[m[33m ([m[1;31morigin/Update_tm[m[33m)[m 7abet icons 7elwa
+[33mc23f04f[m update el components el zebala
+[33mb7d7802[m update el shift types backend
+[33mb73db2d[m Merge branch 'main' of https://github.com/The-United-Legend-Tech-Group/timemanagmet-subsystem
+[33m6d7df8c[m zabat el credits w el about us
+[33m5c0393f[m remove payroll and fix build issue in the policy
+[33m0eac3e1[m remove payroll and fix build issue in the policy
+[33m5824850[m Merge pull request #55 from The-United-Legend-Tech-Group/subsystem/employee
+[33md960c05[m feat: Add auto-zoom functionality to the organization hierarchy and dynamically squarify tree compaction.
+[33m75490ff[m Merge pull request #54 from The-United-Legend-Tech-Group/subsystem/employee
+[33ma4004f9[m Restore Policy file
+[33m5936916[m remove old log
+[33m0bce59e[m fix: Minor fix
+[33mee3f1b6[m feat: Optimize organization hierarchy loading by using lean queries on the backend and prioritizing hierarchy display on the frontend.
+[33md100067[m Merge branch 'dev' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into dev
+[33m438f765[m refactor: add email type validation and use explicit $eq operator in findByEmail query.
+[33m72ecf15[m Potential fix for code scanning alert no. 49: Database query built from user-controlled sources
+[33m72b0153[m Potential fix for code scanning alert no. 50: Regular expression injection
+[33m2045218[m feat: Enhance organization hierarchy with tree compaction, current user position highlighting, and expandable nodes.
+[33m6af83b9[m feat: Implement employee assignment to position with a new frontend form and backend endpoint.
+[33m23ab124[m feat: Add employee role management and department creation forms, and enhance department details with head selection.
+[33maa2c65b[m feat: Implement comprehensive employee profile editing with dedicated forms and backend schema adjustments.
+[33m423b99c[m refactor: Rework employee details page layout, integrate dialogs/notifications, and extract edit functionality to a dedicated route.
+[33m9c6089f[m feat: Implement a generic Material-UI CRUD dashboard with integration for employee management.
+[33m31c3518[m fix: Manually populate position and department fields in employee profile service.
+[33mcca4e8e[m feat: Implement employee listing and detail pages with pagination and search, supported by new backend APIs.
+[33m0b35bc2[m feat: Add position creation form and integrate it into the organization management page.
+[33m2dce3cc[m feat: add team summary page displaying key metrics and charts for team composition and modify team page.
+[33m837b914[m refactor: remove hardcoded default avatar image paths from UI components.
+[33m41c06fa[m feat: add team member details page to display individual employee profiles with contact and employment information.
+[33m43ac553[m fix: Improve button visuals and fix time management navigation
+[33m19051a7[m Merge remote-tracking branch 'upstream/main' into frontend/employee
+[33m7d61cf4[m HOTFIX remove code duplication
+[33mfbc81de[m Merge pull request #53 from The-United-Legend-Tech-Group/design/time-mangment-designV2
+[33m636cc3e[m Merge branch 'main' into design/time-mangment-designV2
+[33mbeb87ec[m Merge pull request #52 from The-United-Legend-Tech-Group/design/time-mangment+dark-mode
+[33me591afa[m feat: add Manage Requests page and integrate it into the navigation menu
+[33m1f7d610[m Merge branch 'main' into design/time-mangment+dark-mode
+[33meec0ab3[m Merge pull request #51 from The-United-Legend-Tech-Group/subsystem/employee
+[33m3527929[m Merge pull request #16 from The-United-Legend-Tech-Group/time-mangment-design
+[33m38fb465[m[33m ([m[1;31morigin/time-mangment-design[m[33m)[m clean doc
+[33m9a4131f[m fixing records bug in the punches
+[33m9d2fac7[m enhance PolicyRulesSection and ShiftTemplateCard components with new functionality and improved UI interactions
+[33m5142a49[m zabat el styling to be conisistent
+[33m3adee16[m enhance the ploicy rules
+[33m7155c46[m redesigned the policy rules
+[33m0bc633b[m enhanced time-mangment page divided into sections
+[33m8dfbaff[m creating time-mangment page inside the dashbord
+[33m5133279[m feat: enhance candidate status color mapping and improve profile fetching error handling in protected layouts.
+[33m62dd38f[m Remove unused import
+[33m5f03793[m hotfix: Fix bad import
+[33m90cf623[m refactor: Clean up unused imports and variables and refine error messages across protected employee pages.
+[33m2f02510[m feat: Add employee profile change request page and remove unused Material-UI imports from candidate dashboard and login pages.
+[33m2c046c6[m feat: Encrypt and decrypt user IDs stored in local storage using a new encryption utility.
+[33meb3c0de[m feat: Implement logout functionality clearing tokens and redirecting to login, and remove user email display from side menu.
+[33m5d43fcf[m feat: Implement candidate to employee conversion, add candidate retrieval endpoints, and increase request payload limit.
+[33mf214f44[m Merge remote-tracking branch 'origin/dev' into frontend/employee
+[33m8b2695b[m Merge remote-tracking branch 'upstream/main' into dev
+[33m1c367ff[m Merge pull request #14 from The-United-Legend-Tech-Group/animated-sign-in
+[33m1ff7084[m[33m ([m[1;31morigin/animated-sign-in[m[33m)[m adding a bit of animation
+[33mac297ac[m adding consistent dark mode button
+[33mcf395fa[m updated the dark mode button
+[33md3976b1[m animated sign in page
+[33m0496cfb[m sync
+[33mb1b9139[m Merge remote-tracking branch 'upstream/main'
+[33me829951[m Merge branch 'main' of https://github.com/The-United-Legend-Tech-Group/Arcana
+[33md66559a[m update gitignore
+[33m74a20ff[m feat: Return access token and employee ID on login, and refine authentication guard token extraction and application.
+[33m2404adb[m refactor: extract and expand breadcrumb title determination into a dedicated helper function.
+[33m7924e8d[m feat: Add PositionDetails component for viewing and editing organization positions.
+[33m94f04a7[m feat: Implement department details management page and refine organization hierarchy display.
+[33m4849780[m Merge pull request #50 from The-United-Legend-Tech-Group/subsystem/employee
+[33mca165ac[m fix conflicts
+[33ma1987ff[m Revert "Merge pull request #49 from The-United-Legend-Tech-Group/subsystem/employee"
+[33maf39492[m gitignore
+[33m452c5fc[m refactor: Remove org struct page
+[33m407ce31[m Merge branch 'main' into subsystem/employee
+[33m0002bb8[m refactor:Rename frontend folder
+[33m936cc50[m Merge pull request #49 from The-United-Legend-Tech-Group/subsystem/employee
+[33ma556300[m fix: update email validation regex in login pages and remove unused Divider import
+[33m7ddc0bf[m fix: Fixed light flash when dark mode is set
+[33mdcc07aa[m feat: Implement dark/light mode functionality and integrate color mode selection UI components.
+[33m70fa7b7[m refactor: Reorganize common UI components and theme, and add environment example.
+[33mfe68935[m feat: Implement functionality to mark notifications as read, individually and all at once.
+[33m828724e[m feat: Add calendar page to display notification deadlines, replacing the dedicated notifications page and updating backend notification logic.
+[33mffcddac[m refactor: Remove Material-UI shared theme customization files.
+[33mdd30347[m update next js package
+[33md0c6bc7[m refactor: adjust ProfileCard layout and biography text field properties for improved styling
+[33mfd6ccac[m refactor: Update settings page layout, standardize text field sizes, and refine card component designs.
+[33m5b29bc5[m refactor: extract settings page UI into new ContactCard and ProfileCard components.
+[33m161a03e[m feat: added settings navigation and update selection logic in MenuContent
+[33me528470[m refactor: disable color mode switching and set default light theme
+[33m13539a7[m Merge branch 'dev' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into dev
+[33mbd434a9[m feat: Introduce organizational hierarchy display on the employee dashboard and refactor employee details layout.
+[33m2afc7ba[m feat: added analytics page and enhance navigation for Analytics menu item
+[33m3dc422e[m refactor: update Grid item responsive sizing syntax from individual props to a single `size` prop
+[33mad0423c[m Merge branch 'dev' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into dev
+[33m7bf43a2[m feat: enhance employee profile retrieval by populating position and department fields
+[33m06ab41d[m fix: Fixed a test case
+[33m9a05615[m feat: Implement auto-generation of employee numbers during onboarding and disable authorization for employee status updates.
+[33m80a0b10[m fix: update text color for ON_LEAVE status in EmployeeDashboard to improve visibility
+[33m316ea55[m feat: add Arcana logo component and integrate it into the SideMenu.
+[33ma0f5d5a[m Merge branch 'dev' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into dev
+[33m075a099[m refactor: Migrate AppTheme to TypeScript and introduce new granular theme customizations for table components.
+[33mdd9c94e[m feat: Update Avatar components in TeamPage to include default icons and improve styling for missing profile pictures
+[33m640f333[m feat: Update Avatar component in EmployeeDashboard to handle missing profile pictures and improve status badge styling
+[33m7a936ac[m feat: Enhance employee dashboard layout with improved profile and employment details sections
+[33m82f8af6[m fix: Initialize CustomDatePicker with the current date instead of a hardcoded value.
+[33me0cd5e2[m feat: Add view mode toggle for team page to switch between orbit and table layouts.
+[33m9b50d68[m refactor: Rework team member avatar hover effect to use distinct default and expanded card layers with new animations and improved styling.
+[33m0e4b3c6[m feat: Introduce protected candidate dashboard with dedicated layout and updated navigation components.
+[33m590ad45[m feat: Introduce protected employee dashboard and team pages, enhance notification popover UI, and update team endpoint access roles.
+[33me73d100[m feat: Implement new employee and candidate dashboards, update backend APIs for employee and notifications, and remove legacy signup components.
+[33m752c4a5[m feat: Add new example frontend with candidate registeration and login
+[33mfb002df[m Merge pull request #15 from The-United-Legend-Tech-Group/dependabot/npm_and_yarn/frontend/next-16.0.7
+[33m066e91f[m build(deps): bump next from 16.0.6 to 16.0.7 in /frontend
+[33mcfb0a7d[m Merge pull request #14 from The-United-Legend-Tech-Group/dev
+[33mb36c97e[m Merge remote-tracking branch 'upstream/main' into dev
+[33mdfc537a[m frontend base
+[33m72407b1[m hotfix
+[33mfbb145e[m Merge pull request #44 from The-United-Legend-Tech-Group/subsystem/employee
+[33maf13c60[m Merge pull request #45 from The-United-Legend-Tech-Group/LeavesII
+[33md15f7be[m Merge pull request #48 from The-United-Legend-Tech-Group/intgreation-payroll-rec
+[33m586bd9d[m Merge pull request #47 from The-United-Legend-Tech-Group/Payroll-final
+[33m8fceced[m added last payroll
+[33mf47d287[m Merge pull request #46 from The-United-Legend-Tech-Group/reruitment-RepoII
+[33m0d54df4[m added some stuff
+[33m4f67c5d[m Merge pull request #42 from The-United-Legend-Tech-Group/analytics
+[33m6d6856d[m refactor: update AttendanceService import path in performance tests
+[33ma4ad857[m feat: implement JWT authentication and role-based authorization for leave policy endpoints.
+[33m9ae46cb[m Merge pull request #43 from The-United-Legend-Tech-Group/LeavesII
+[33m43d9932[m Report Done
+[33m4dfd90a[m Req done
+[33ma86223c[m anaylsis and compliance added
+[33m82e16fa[m HOTFIX leaves remove duplicate imports and methods
+[33m04a2f0c[m Merge pull request #41 from The-United-Legend-Tech-Group/LeavesII
+[33m2e34270[m Merge branch 'main' into LeavesII
+[33mad8ef2b[m Merge branch 'main' of https://github.com/The-United-Legend-Tech-Group/Arcana
+[33mcbeec44[m payroll-exe-TM
+[33m3e24f30[m added some missing methods
+[33m7fb291c[m fixed Conflicts
+[33mfe44c9e[m Merged
+[33m5fe66ba[m Merge pull request #40 from The-United-Legend-Tech-Group/subsystem/employee
+[33m8abfbdb[m feat: add bank name and account number fields to employee profile schema
+[33mf01414d[m Merge pull request #39 from The-United-Legend-Tech-Group/time-mangment-sync-payroll
+[33mba38468[m Policy Done missing one
+[33m5c7d6ed[m intgreated hoildays and TM
+[33mae71d21[m payroll-synced with the TM
+[33md74ee34[m refactor the service
+[33m6ed067a[m Merge pull request #33 from The-United-Legend-Tech-Group/LeavesII
+[33m3786178[m fix again
+[33m38f87e7[m temp fix
+[33mdc4040c[m saving
+[33me1f35fd[m Merge pull request #36 from The-United-Legend-Tech-Group/subsystem/employee
+[33m2640ae8[m feat: Add JWT configuration and EmployeeSystemRole schema to organization and performance modules, and delete .env.example.
+[33m02b9f66[m Merge pull request #34 from The-United-Legend-Tech-Group/subsystem/employee
+[33m28c62ec[m Merge remote-tracking branch 'upstream/main' into subsystem/employee
+[33m2e42945[m feat: Implement authentication and role-based authorization for Employee-subsystem module controllers and update related tests.
+[33m681c12e[m Hamza 5ef sya7
+[33m8859438[m Merge pull request #32 from The-United-Legend-Tech-Group/subsystem/employee
+[33m266f332[m feat: Add functionality to update candidate status.
+[33m93a7678[m Merge pull request #31 from The-United-Legend-Tech-Group/subsystem/employee
+[33m2e49913[m Merge remote-tracking branch 'upstream/main' into subsystem/employee
+[33mfc86457[m refactor: Remove unused service declarations from test files.
+[33m004974a[m Merge pull request #30 from The-United-Legend-Tech-Group/LeavesII
+[33m800e1fe[m Refactored to match Still Logic Checking
+[33m5109c90[m Merge pull request #28 from The-United-Legend-Tech-Group/login-enhancment
+[33m5b637e2[m feat: Implement employee login functionality with new endpoint, service method, and unit tests.
+[33ma7d6006[m feat: Implement database-backed role authorization for employees and enhance token extraction from cookies.
+[33m2e57023[m Test fixes after guard changes
+[33ma518696[m feat: Implement candidate-specific login and registration, and remove generic authentication endpoints.
+[33mf3982e2[m add cookie-parser
+[33m6599b43[m fix compile error
+[33md5916fe[m refactor the common file and removed unnessary files
+[33m7a8b69b[m pr
+[33m0c477eb[m HOTFIX
+[33m39a39ab[m Source Code has been done
+[33m8c0ca2b[m Merge pull request #26 from The-United-Legend-Tech-Group/subsystem/employee
+[33mabec464[m enhanced notification
+[33ma2e92c1[m[33m ([m[1;31morigin/frontendUpdate_TM[m[33m, [m[1;32mattendanceToPayroll[m[33m)[m add defensive prog validation
+[33m2375ecc[m Hotfix late attendacne
+[33m5c26a8f[m Merge branch 'main' into subsystem/employee
+[33m60a3d79[m Merge pull request #27 from The-United-Legend-Tech-Group/payroll-config
+[33mf3fc777[m refactor: remove unused DatabaseModule import from tracking module
+[33m7238e64[m fix: Check for position status before assigning
+[33m0d32267[m Merge updated Employee subsystem code
+[33m1c9d5f5[m Merge remote-tracking branch 'upstream/subsystem/employee' into dev
+[33m759b143[m feat: Implement position assignment and status updates when an employee's position changes, adding a new repository and tests.
+[33m9127912[m feat: update getPosition to handle duplicates, automatically assign head department ID
+[33m652c9fb[m Merge remote-tracking branch 'upstream/main' into subsystem/employee
+[33mb417fe7[m refactor: Remove authentication guards, integrate NestJS Logger, and streamline DTOs and service methods.
+[33me6e4216[m Merge pull request #13 from The-United-Legend-Tech-Group/Missed-punch-notify
+[33mb232d00[m[33m ([m[1;31morigin/Missed-punch-notify[m[33m)[m shift expiry notify
+[33m1098916[m Merge pull request #12 from The-United-Legend-Tech-Group/Missed-punch-notify
+[33m92af4f3[m formatter
+[33mab67337[m intgreated with the notification system
+[33m0f7f9dd[m Merge pull request #25 from The-United-Legend-Tech-Group/Hotfix/Time-modules
+[33mb621dc7[m HOTFIX IMPORTS ISSUES
+[33m302cd7b[m Merge pull request #24 from The-United-Legend-Tech-Group/Improve-Attendance-engine
+[33m6a76077[m HOTFIX:MISSED ATTENDANCE CLOCKOUT WITH OUT IN
+[33m448f660[m Merge branch 'main' of https://github.com/The-United-Legend-Tech-Group/timemanagmet-subsystem
+[33m7413384[m HOTFIX attendacne late I HATE GIU
+[33mf20fe44[m Merge pull request #10 from The-United-Legend-Tech-Group/PermissionValidationRules
+[33m270fc5c[m[33m ([m[1;31morigin/PermissionValidationRules[m[33m)[m Merge branch 'main' into PermissionValidationRules
+[33me0df892[m adding additional logic and mitigatiions
+[33m095c576[m FIX: Resolve TypeScript compilation errors
+[33meed2c48[m ADD: ESS correction endpoints to TimeController
+[33m93c294f[m ENHANCE: Integrate Approval Workflow into AttendanceService
+[33m424a131[m ADD: Create Approval Workflow Service
+[33m93e1d42[m ADD: Create Permission Duration Config Service
+[33me96a53f[m ADD: Create DTOs for correction submission, approval, and permission config
+[33m0ca846c[m ADD: Create Approval Workflow Repository
+[33m4484f33[m ADD: Create Permission Duration Config Repository
+[33m6196129[m Merge pull request #8 from The-United-Legend-Tech-Group/LatenessAndPenaltyRules
+[33m07491c5[m defensive methdoloy added
+[33mc3cb7d2[m Merge all backend into main
+[33mfb62564[m removed unused var
+[33m3e0b7e9[m Merge remote-tracking branch 'upstream/main'
+[33m7ecaad8[m Merge pull request #9 from The-United-Legend-Tech-Group:hotfix
+[33me82202c[m[33m ([m[1;31morigin/hotfix[m[33m)[m changing the patch logic of the schedulre rule and assigments
+[33mbb21412[m enable CORS
+[33m92144da[m docs: Add documentation for notification service usage.
+[33mb225d43[m Merge remote-tracking branch 'upstream/main' into subsystem/employee
+[33mb51ff1c[m chore: Remove commented-out security decorators and `ApiKeyGuard` import.
+[33mbfb18bd[m Merge pull request #22 from The-United-Legend-Tech-Group/OPTMIZATION
+[33me3d18c9[m Merge branch 'main' into OPTMIZATION
+[33m2d9711c[m OPTMIZATION
+[33mca08f4b[m test: enhance mocking for `changeRequestModel.findById` and introduce constructor mocks for `StructureApproval` and `ChangeLog` models.
+[33ma9f822d[m Merge remote-tracking branch 'origin/feature/organization-structure' into arcana-integration
+[33m9ea4259[m feat: Integrate StructureChangeLog model and implement logging for change request approvals and rejections --modified the schema for structure-approval and structure-change-log (removed the _id in both)
+[33m8a28336[m Merge remote-tracking branch 'upstream/main'
+[33mbeec18c[m feat: Enhanced notification system to include rejection notifications for structure change requests
+[33mffbfdac[m Merge branch 'arcana-integration' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into arcana-integration
+[33m3089cb1[m Merge remote-tracking branch 'origin/feature/organization-structure' into arcana-integration
+[33ma10ba7c[m feat: Added functionality to create appraisal records with validation and rating calculations
+[33m87154d4[m fix: Remove auto-generated _id from StructureApproval schema and update approverEmployeeId assignment in approval record creation
+[33m013afa6[m feat: Added StructureApproval model and integrate approval process in change request handling
+[33m45dd957[m fix: Correctly match `supervisorPositionId` as `ObjectId` or string in team queries and add MongoDB verification scripts.
+[33m2be2fb8[m feat: Resolve employee supervisor position from department head when not explicitly defined.
+[33m2c7d284[m fix: Ensure correct team fetching by updating repository queries and providing data migration scripts for supervisor/manager positions.
+[33m6323255[m feat: implement employee department and position update functionality, and remove profile picture URL validation.
+[33m6dc5f9c[m feat: integrate attendance summary into appraisal records and add new attendance summary service
+[33m2faf432[m fix: add `Matches` validator import to `CreateScheduleRuleDto` for regex validation.
+[33m7ba2d80[m Merge remote-tracking branch 'upstream/main' into arcana-integration
+[33ma5f326d[m Merge pull request #18 from The-United-Legend-Tech-Group/feature/Time-mangment2.0
+[33mb0218b0[m Merge remote-tracking branch 'upstream/main' into arcana-integration
+[33mb23941a[m Merge remote-tracking branch 'origin/feature/performance' into arcana-integration
+[33m056c5ae[m Merge pull request #20 from The-United-Legend-Tech-Group/Recruitment-Subsystem-Integration
+[33m819f9fe[m[33m ([m[1;31morigin/LatenessAndPenaltyRules[m[33m, [m[1;32mLatenessAndPenaltyRules[m[33m)[m editing few errors after testing apis
+[33m0caefba[m Editing on the lateness penalty rules
+[33mceba2d0[m cleaner format
+[33m816b679[m d
+[33me42e9de[m enhance the meta data
+[33mb35b2d8[m Merge pull request #7 from The-United-Legend-Tech-Group/Repeated-Lateness-Handling
+[33m6623a7b[m[33m ([m[1;31morigin/Repeated-Lateness-Handling[m[33m)[m Merge branch 'LatenessAndPenaltyRules' into Repeated-Lateness-Handling
+[33m85c738d[m Merge remote-tracking branch 'origin/intgreation-phase-3' into LatenessAndPenaltyRules
+[33m335777f[m lateness and penalty rule
+[33mc98bd48[m push repeated lattence
+[33m1cc6833[m Merge pull request #16 from The-United-Legend-Tech-Group/subsystem/employee
+[33mf72951a[m[33m ([m[1;31morigin/intgreation-phase-3[m[33m)[m init
+[33me9863a7[m overtime validation added
+[33me622321[m feat: Implemented notification system for structure change requests and added related tests
+[33m2ae5a33[m Merge branch 'main' into feature/Time-mangment2.0
+[33m1e0bb80[m Merge branch 'feature/performance' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/performance
+[33m856c5d0[m feat: Implement appraisal progress monitoring and reminder notification functionalities.
+[33mca12091[m CorrectionAuditRepository removed and audits are ephemeral (logges) placed
+[33med38a92[m refactor fager
+[33m902dfff[m feat: Add endpoint and service method to retrieve finalized appraisal records for an employee
+[33mf6dd56f[m feat: Enhanced appraisal dispute management with reviewer assignment and resolution features
+[33m9d43935[m refactor: make constructor-injected properties readonly
+[33m3f77aa1[m Merge pull request #5 from The-United-Legend-Tech-Group/ClockIN/OUT
+[33m6ab1a3d[m[33m ([m[1;31morigin/ClockIN/OUT[m[33m)[m Merge branch 'ClockIN/OUT' of https://github.com/The-United-Legend-Tech-Group/timemanagmet-subsystem into ClockIN/OUT
+[33m13c8e88[m Remove unused imports
+[33m41447b2[m attendance validation added
+[33mfe1c0e7[m remove the redudency in punch method
+[33m13e0628[m Update backend/src/time-mangement/time.service.ts
+[33mfd011ff[m Update backend/src/time-mangement/time.service.ts
+[33m65eb4b8[m Address security concerns
+[33md13cca5[m Update backend/src/time-mangement/repository/attendance.repository.ts
+[33mb8de4f5[m Update backend/src/time-mangement/dto/create-attendance-correction.dto.ts
+[33ma01db37[m optmize the import
+[33m0111e7d[m Merge remote-tracking branch 'origin/feature/organization-structure' into subsystem/employee
+[33m3dc7001[m Merge remote-tracking branch 'origin/feature/employee' into subsystem/employee
+[33m91a9068[m fix: Add validation decorators to `CreateStructureChangeRequestDto` and remove explicit `_id` from `StructureChangeRequest` schema.
+[33m421c885[m edge cases
+[33m7659ca1[m add more edge case
+[33m060d032[m manuel correction
+[33mb43e87e[m fix: add script to correct position index and update ObjectId comparison in position schema.
+[33mae68d8d[m feat: Implemented bulk assignment of appraisal templates with notification support
+[33mffdf947[m chore: Disable security guards and API security for organization structure request and manager team endpoints.
+[33m000886b[m Merge branch 'feature/organization-structure' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/organization-structure
+[33m77ce9a1[m fix: Fix admin-employee profile change
+[33m774098f[m Merge remote-tracking branch 'origin/feature/organization-structure' into feature/employee
+[33meca6550[m Merge branch 'feature/employee' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/employee
+[33mc6f0316[m feat: Add requested legal name and marital status fields to the employee profile change request schema.
+[33mcc478de[m feat: Add Swagger API documentation decorators to DTOs and employee controller + bug fixes.
+[33m92679ee[m feat: Add DTOs, service methods, and controller endpoints for creating and listing departments and positions (fix internal server error for create a position in swagger)
+[33m788ba8e[m feat: Implement update functionality for positions and departments with corresponding DTOs, service methods, and controller tests
+[33ma3a11f4[m feat: Integrate AppraisalRecord schema into Employee module and service for performance history retrieval
+[33m69d46f3[m feat: Add endpoints to deactivate and remove positions with corresponding service methods and tests
+[33m05e88e1[m Merge pull request #15 from The-United-Legend-Tech-Group/Enhance/assigment-shifts-logic
+[33m94f9523[m Update backend/src/time-mangement/time.service.ts
+[33m8ba6f88[m Update backend/src/time-mangement/time.service.ts
+[33mb5a8d7a[m Update backend/src/time-mangement/dto/create-schedule-rule.dto.ts
+[33m6ab4993[m clean code
+[33m44714b0[m hotfix assigment schedule ruleset
+[33m1eac9bf[m punch policy added
+[33mf813b8a[m feat: Implement candidate registration and unify login for both employees and candidates.
+[33md0d3614[m punch operation created with more edge cases
+[33mab16d74[m Merge remote-tracking branch 'origin/feature/notification' into feature/auth
+[33m8a90440[m refactor: Migrate authentication and authorization from middleware to guards and add employee notification retrieval.
+[33m1a1ff55[m Merge pull request #14 from The-United-Legend-Tech-Group/Enhance/holidayFixes
+[33m5d47df7[m Merge pull request #4 from The-United-Legend-Tech-Group:holiday-enhancments
+[33m92ea8c3[m[33m ([m[1;31morigin/holiday-enhancments[m[33m)[m add more edge cases
+[33m8cdb429[m Merge branch 'feature/performance' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/performance
+[33m69de7a2[m fix: Convert department IDs to Mongoose ObjectIds for employee queries and update related tests.
+[33mc5efb02[m add business rule in the Holiday
+[33m3b60532[m feat: Add appraisal dispute management functionality including controller, service, repository, and DTOs
+[33m2c9bd8e[m Merge remote-tracking branch 'origin/feature/notification' into feature/performance
+[33m9cb725d[m feat: Implement employee notification upon appraisal cycle creation..
+[33m55acc5e[m feat: Add PAYROLL_MANAGER role to EmployeeRole enum.
+[33m278ad00[m feat: Add endpoint for authenticated users to retrieve their notifications and enhance notification DTO.
+[33meda1273[m feat: introduce API for managing appraisal records.
+[33m159b0e1[m Merge pull request #13 from The-United-Legend-Tech-Group/holidays
+[33m3f3fab0[m prettier
+[33md0fc11c[m holdiays rules added
+[33mb394320[m feat: implement API to fetch manager's appraisal assignments with status filtering capabilities.
+[33m408eee9[m Merge pull request #12 from The-United-Legend-Tech-Group/sync/upstream-main-shifts-config
+[33m9395b87[m feat: Add performance dashboard to display appraisal completion statistics.
+[33mda469ec[m Merge pull request #3 from The-United-Legend-Tech-Group/custom-scheduling-rule-logic
+[33m37b0a26[m[33m ([m[1;31morigin/custom-scheduling-rule-logic[m[33m)[m adding buissness rule in the dto and change the testcase format
+[33ma1808fc[m feat: implement appraisal template management.
+[33m93d7cb1[m feat: Implement appraisal cycle management.
+[33mdcec74e[m removed unnessary imports and DTO
+[33m629a097[m jest docs added
+[33mebc20f5[m test cases added with DTO and reps and endpoint
+[33m7fda615[m refactor: move password field from employee profile to user schema.
+[33m493d94c[m Merge remote-tracking branch 'upstream/main'
+[33m88e889b[m Merge pull request #10 from The-United-Legend-Tech-Group/copilot/document-git-upstream-usage
+[33m7274959[m Update documentation for sub-system repo workflow with upstream push to new branch
+[33mfd2b6b8[m Add comprehensive Git Upstream Workflow documentation
+[33m7c23fa1[m Initial plan
+[33m94949c9[m Merge pull request #11 from The-United-Legend-Tech-Group/feature/organization-structure
+[33mf1536ca[m Merge remote-tracking branch 'origin/dev' into subsystem/employee
+[33mf226253[m feat: Added the test case for the getManagerTeam
+[33m9bbe22c[m feat: Add endpoint to retrieve manager's team structure and implement corresponding service method
+[33mb676846[m feat: Implemented structure change request submission with corresponding DTO and service method
+[33m8319577[m Merge branch 'feature/organization-structure' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/organization-structure
+[33m858f7a0[m feat: Add endpoint to retrieve organizational hierarchy and implement corresponding service method and tests
+[33m8e956ca[m Merge remote-tracking branch 'origin/feature/employee' into dev
+[33m3306814[m refactor: update SystemRole import path to relative
+[33m77233ea[m feat: Add broadcast delivery type, optional role-based notification delivery, and make recipientId optional.
+[33m1efb675[m feat: Implemented endpoint to fetch employee profile and add corresponding tests
+[33m0a1b364[m feat: Implemented for the system manager to be able to review and approve manager requests for changes and added its corresponding test case.
+[33m4b5fcc7[m feat: Added HR admin functionality to update employee profiles and corresponding tests
+[33m2ce6682[m feat: Added endpoint and service method to retrieve team profiles for department heads and added its test case.
+[33m2ce72d7[m feat: Added HR admin functionality for managing profile change requests and added a test case for it.
+[33m50d8039[m Merge pull request #2 from The-United-Legend-Tech-Group/shiftAssigment-service
+[33m3149919[m[33m ([m[1;31morigin/shiftAssigment-service[m[33m)[m shift-assigment-scoped added with the endpoints
+[33m48d7e1e[m seeds added
+[33m2cb533e[m feat: Implement endpoint and service to update employee status.
+[33m8cd75b7[m adding repo+logic+test for the shift assigment
+[33m204e3f3[m refactor: relocate notification schema files to models directory and update app service welcome message.
+[33m9b11d91[m Merge remote-tracking branch 'origin/feature/employee' into dev
+[33m0026c16[m refactor: Relocate password field to EmployeeProfile schema and update authentication to use EmployeeProfileRepository.
+[33mc3d7877[m feat: Implemented assign roles functionality in employee module with validation for the HR admin and added the test case for it.
+[33me6dc31b[m feat: Add tests for profile change request handling for legal name and marital status changes
+[33m1936b41[m feat: Enhance profile change request handling by validating requested legal name and marital status
+[33ma767f65[m feat: implement employee login functionality with JWT and password hashing
+[33m0aa3983[m feat: Implemented a team summary retrieval functionality in employee module for the manager and also added a test case for it.
+[33m52b8115[m feat: Added a test case for the request change.
+[33mec02a8b[m feat: Implement profile change request functionality in employee module
+[33m2ec8ffa[m Implement new endpoints for Employee creation and update, Notifications creation and get open positions. Merge #10
+[33mbd99082[m refactor: centralize BaseRepository to a common module and update all repository imports to fix code duplication
+[33m02ea2c6[m feat: Add endpoint and service to update employee profiles.
+[33m3c1599a[m feat: Add unit tests for employee controller, notification service, and notification controller.
+[33me4ed483[m feat: implement employee contact information update functionality
+[33mb329d53[m feat: Add notification creation endpoint
+[33m2fecd0e[m feat: Implement employee onboarding API
+[33m305733a[m feat: Add external route to get open positions
+[33m87c05bb[m feat: Implement generic repository pattern for notifications and refine employee role definitions.
+[33m5f85d2c[m Merge branch 'origin/arcana-integration' into dev with swagger implementation
+[33m5cb3259[m feat: add base repository and specific repositories for employee system roles, change requests, qualifications, candidates, and employee profiles.
+[33m24c5dd1[m feat: add Swagger API documentation and configure global validation pipe
+[33m3fd1e89[m Update main with new folder structure merging #9
+[33m21d1d7c[m Code cleanup
+[33mdfd560f[m Deployment fixes
+[33m22c8f89[m Merge remote-tracking branch 'upstream/main' into subsystem/employee
+[33ma6085e6[m Merge remote-tracking branch 'origin/arcana-integration' into subsystem/employee
+[33ma6cedbb[m Fix for deployment
+[33m4fea35b[m Update structure
+[33m49d0036[m clean work
+[33m4c2f56b[m remove the unessary folder
+[33m48dd038[m Merge remote-tracking branch 'upstream/main'
+[33m7a00453[m remove redeundent controller and service
+[33m31db06d[m refactor part 2
+[33mfb5ef38[m refactor completed
+[33m11a35a6[m swagger doc added
+[33mb6c78c3[m swagger doc added
+[33m833d2b4[m basic swagger template added
+[33mbd50052[m imports refactor
+[33mf855ce2[m refactor schemas to models and unifing the recrutiment system
+[33mc36d37f[m feat: Separate performance schemas and refactor for consistency with Arcana
+[33m2bb469d[m clean code
+[33m79cf9ce[m base repo template added
+[33me8374a4[m Merge branch 'subsystem/employee' of https://github.com/The-United-Legend-Tech-Group/Arcana into subsystem/employee
+[33m8c2097c[m Update Employee schema with new attributes
+[33m948fe83[m Merge branch 'main' of https://github.com/The-United-Legend-Tech-Group/Arcana
+[33md65b0ab[m packages updated
+[33ma5814ac[m collect all payroll subsystems into one folder
+[33mcf9e1a6[m Merge pull request #7 from The-United-Legend-Tech-Group/subsystem/employee
+[33m90d419e[m Merge branch 'main' into subsystem/employee
+[33mc9e6b96[m recruitment
+[33m8119741[m Resolved reviews
+[33m1818d31[m Merge branch 'subsystem/employee' of https://github.com/The-United-Legend-Tech-Group/Arcana into subsystem/employee
+[33m54a6d17[m Removed code to address reviews
+[33mbf56e87[m Merge branch 'main' into subsystem/employee
+[33m6c5c1f1[m Complete integration of Employee Subsystem
+[33mf2a6347[m Making sure it works
+[33m8cd6ac4[m Update employee-subsystem structure for integration
+[33mc6d26a8[m Connected to DB
+[33m90626b8[m Merge pull request #6 from The-United-Legend-Tech-Group/PayrollSubsystems
+[33mbc49244[m Merge remote-tracking branch 'origin/main' into subsystem/employee
+[33mc1cc1d0[m finalized payroll subsystems
+[33m8ccdbe0[m Merge pull request #5 from The-United-Legend-Tech-Group/time-mangment-database-intgreation-v2
+[33m28ab5ad[m modifications
+[33me7bb7a4[m added database connection + rest of subsystes in one app module as one system
+[33me81d123[m Added employee subsystem
+[33mccbc03d[m eneums added
+[33mcb01157[m basic schemas added
+[33m78a8bc7[m Create file structure for Arcana repository
+[33m398fb4d[m Implement new external Notifications/Employees routes for M2M CRUD operations with new Repository layers [Merge #8]
+[33m45923b0[m Merge branch 'main' into dev
+[33m7c79c1b[m Merge branch 'origin/feature/employee' into dev
+[33m9ce6015[m Update External employee routes to use new repository layer for CRUD operations
+[33m30fadc8[m Update auth to use Repository layer for CRUD operations
+[33m0cd393d[m Merge pull request #4 from The-United-Legend-Tech-Group/leavesI
+[33m0a03e1b[m Integrated Leaves
+[33m0b41096[m Refactoring process
+[33med0f691[m Remove useless file, add message on server start.
+[33m4a5c1cc[m Implemented external M2M route for employee details.
+[33m14e7ad3[m tip added
+[33m57ec690[m Merge pull request #1 from The-United-Legend-Tech-Group/time-mangment-intgreation
+[33m44c823d[m database modification
+[33mdcdc54b[m hotfix for both vairbales to connect to mongoose
+[33m126bc47[m fix employee subsystem connection to database
+[33m8ffaa1e[m time app added
+[33m6cd1280[m timemangment added
+[33m81f5445[m Added employee subsystem
+[33m9810270[m fix
+[33m3f838d0[m enhance eneum and logs
+[33ma81b2f5[m Merge new routes for Authentication, Notifications and Logs modules with routes for creation into Main branch (#7)
+[33m55b0fb5[m Address code quality suggestion
+[33m3a2cad0[m Merge #5: Implemented Notification machine to machine route for notification creation.
+[33m8e65d5a[m Merge pull request #1 from The-United-Legend-Tech-Group/attendanceRecordSchema
+[33m0b41b24[m[33m ([m[1;31morigin/attendanceRecordSchema[m[33m)[m enhancments
+[33m9454987[m Implemented Notification machine to machine route for notification creation with API key guard.
+[33mc978637[m Merge pull request #3 from The-United-Legend-Tech-Group/feature/auth
+[33m5ab50b6[m Added auth module for registeration and login with authentication, authorization middleware and guards.
+[33m20e23f5[m Update Notifications schema to accept multiple recepients
+[33mad212d0[m attendance record schema file
+[33m92a59f5[m[33m ([m[1;31morigin/shiftAssignmentSchema[m[33m)[m shift assignment schema file
+[33md16944d[m[33m ([m[1;31morigin/shiftTypeSchema[m[33m)[m shift type schema file
+[33m6638850[m[33m ([m[1;31morigin/configs[m[33m)[m The basic configs for starting a NestJS App
+[33m8f3d4b3[m databasse init
+[33m3ebd4f3[m Added notifications model documentation
+[33m65fcb4f[m Create attendance-repository.ts
+[33m1f5c739[m init
+[33mea0b38a[m Merge pull request #2 from The-United-Legend-Tech-Group/dev
+[33m2ccacc7[m Merge pull request #1 from The-United-Legend-Tech-Group/feature/profile-change-request
+[33m5c29f98[m Removed redundant index, updated imports.
+[33mf884c51[m Merge remote-tracking branch 'origin/feature/performance' into feature/profile-change-request
+[33m5848bb1[m Created profile-change-request module.
+[33m311f59f[m Merge remote-tracking branch 'origin/feature/employee' into feature/profile-change-request
+[33m110d6f8[m Folder rename for consistency
+[33m7a8959b[m Merge remote-tracking branch 'origin/dev' into feature/profile-change-request
+[33m69e565e[m Updated schema imports
+[33m86b22a2[m Merge branch 'feature/performance' of https://github.com/The-United-Legend-Tech-Group/employee-subsystem into feature/performance
+[33me30795a[m added performance template and cycle schemas
+[33m4859cc9[m Added the performance Schema
+[33m6b9f0f7[m Added the ProfileChange Schema
+[33m91a3719[m Update notification schema to accept multiple delivery types.
+[33m8b190de[m Added performance module
+[33m890096d[m Update unicast notification schema
+[33m78b65e4[m Created Organization module for Department and Positions. Added Notifications module
+[33mf29167c[m Combined departments and positions into organization module, added Notifications schema
+[33m25ab4bb[m Create payrol C1.pdf
+[33m9956728[m Create C1-Leaves-Subsystem-finalized.pdf
+[33m9f38355[m Added Employee, Department and Position initial schemas.
+[33ma547234[m Remove incorrectly-placed files
+[33m17e533d[m Added base Nest.js project
+[33mcae483f[m init
+[33m2dad55b[m Add new file ttt with test contentdd
+[33mb87c1f4[m Initial commit

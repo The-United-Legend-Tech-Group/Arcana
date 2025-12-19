@@ -1,6 +1,7 @@
 // Core NestJS modules
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Configuration
 import configuration from './config/configuration';
@@ -23,6 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     // Load configuration with structured config
     ConfigModule.forRoot({
       isGlobal: true,

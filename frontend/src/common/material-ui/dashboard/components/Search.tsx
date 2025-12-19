@@ -16,8 +16,8 @@ import Popper from '@mui/material/Popper';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import { mainListItems, performanceSubItems, payrollSubItems, MenuItem } from './MenuContent';
 import { useAuth } from '@/hooks/use-auth';
-import { mainListItems, performanceSubItems, MenuItem, leavesSubItems } from './MenuContent';
 
 export default function Search() {
   const router = useRouter();
@@ -50,9 +50,9 @@ export default function Search() {
       ...item,
       text: `Performance > ${item.text}`, // Prefix performance items
     })),
-    ...leavesSubItems.map(item => ({
+    ...payrollSubItems.map(item => ({
       ...item,
-      text: `Leaves > ${item.text}`, // Prefix leaves items
+      text: `Payroll > ${item.text}`, // Prefix payroll items
     })),
   ];
 

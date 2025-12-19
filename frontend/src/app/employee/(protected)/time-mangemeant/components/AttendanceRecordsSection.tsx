@@ -179,15 +179,29 @@ export default function AttendanceRecordsSection({
     [nameInput, domainInput, fetchEmployee]
   );
 
+  // Auto-import CSV on mount and fetch employee records
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const last = window.localStorage.getItem("last_employee_id");
-    if (last && last !== employeeInput) {
-      setEmployeeInput(last);
-      // fire and forget; don't await to keep UI responsive
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      fetchEmployee();
-    }
+
+    // Import CSV first, then fetch employee data
+    const initializeData = async () => {
+      try {
+        // Import CSV file automatically
+        await importCsv();
+
+        // Then fetch employee-specific records
+        const last = window.localStorage.getItem("last_employee_id");
+        if (last && last !== employeeInput) {
+          setEmployeeInput(last);
+          await fetchEmployee();
+        }
+      } catch (err) {
+        console.error("Failed to initialize attendance data:", err);
+      }
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    initializeData();
   }, []);
 
   React.useEffect(() => {
@@ -440,10 +454,11 @@ export default function AttendanceRecordsSection({
                   </Typography>
                   {(localRecords !== null || pagination) && (
                     <Chip
-                      label={`${localRecords !== null
-                        ? localRecords.length
-                        : pagination?.total ?? 0
-                        } total`}
+                      label={`${
+                        localRecords !== null
+                          ? localRecords.length
+                          : pagination?.total ?? 0
+                      } total`}
                       size="small"
                       color="primary"
                       variant="outlined"
@@ -1047,8 +1062,8 @@ function useAttendanceFetch(
       const rows = Array.isArray(payload?.data)
         ? payload.data
         : Array.isArray(payload)
-          ? payload
-          : payload?.data || [];
+        ? payload
+        : payload?.data || [];
       setLocalRecords(rows as AttendanceRecord[]);
       if (typeof window !== "undefined" && id) {
         window.localStorage.setItem("last_employee_id", id);
@@ -1139,8 +1154,8 @@ function useEmployeeSearch(
       let items: any[] = Array.isArray(payload?.items)
         ? payload.items
         : Array.isArray(payload)
-          ? payload
-          : [];
+        ? payload
+        : [];
       if (domain) {
         items = items.filter((e) => {
           const email = (e.email || "").toLowerCase();
@@ -1166,7 +1181,8 @@ function useEmployeeSearch(
         setEmployeeId(only._id);
         await fetchEmployee();
         setLocalInfo(
-          `Loaded attendance for ${only.firstName} ${only.lastName} (${only.employeeNumber || only._id
+          `Loaded attendance for ${only.firstName} ${only.lastName} (${
+            only.employeeNumber || only._id
           })`
         );
         return;

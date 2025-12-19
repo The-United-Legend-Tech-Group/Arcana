@@ -17,6 +17,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { alpha, useTheme } from "@mui/material/styles";
+import { SvgIconProps } from "@mui/material/SvgIcon";
 
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
@@ -32,11 +33,8 @@ import TablePagination from "@mui/material/TablePagination";
 import axios from "axios";
 import TextField from "@mui/material/TextField";
 
-
 import SectionHeading from "./SectionHeading";
 import { CorrectionRequest, SectionDefinition } from "./types";
-
-
 
 const STATUS_COLORS: Record<
   string,
@@ -72,6 +70,8 @@ type AttendanceSectionProps = {
   pending: CorrectionRequest[];
   loading: boolean;
   managerQueueEnabled: boolean;
+  lineManagerId?: string;
+  onRefresh?: () => void;
 };
 
 export default function AttendanceSection({
@@ -80,6 +80,8 @@ export default function AttendanceSection({
   pending,
   loading,
   managerQueueEnabled,
+  lineManagerId,
+  onRefresh,
 }: AttendanceSectionProps) {
   const recentHistory = React.useMemo(() => history.slice(0, 5), [history]);
 
@@ -144,61 +146,56 @@ export default function AttendanceSection({
   const paginatedHistory = React.useMemo(() => {
     const start = page * rowsPerPage;
     return history.slice(start, start + rowsPerPage);
-    }, [history, page]);
+  }, [history, page]);
 
+  const [reviewOpen, setReviewOpen] = React.useState(false);
+  const [selectedRequest, setSelectedRequest] = React.useState<any | null>(
+    null
+  );
+  const [decisionLoading, setDecisionLoading] = React.useState(false);
+  const [rejectReason, setRejectReason] = React.useState("");
+  const [decisionError, setDecisionError] = React.useState<string | null>(null);
 
-const [reviewOpen, setReviewOpen] = React.useState(false);
-const [selectedRequest, setSelectedRequest] = React.useState<any | null>(null);
-const [decisionLoading, setDecisionLoading] = React.useState(false);
-const [rejectReason, setRejectReason] = React.useState("");
-const [decisionError, setDecisionError] = React.useState<string | null>(null);
+  async function submitReviewDecision(decision: "APPROVED" | "REJECTED") {
+    if (!selectedRequest) return;
 
+    if (decision === "REJECTED" && !rejectReason.trim()) {
+      setDecisionError("Rejection reason is required");
+      return;
+    }
 
-async function submitReviewDecision(
-  decision: "APPROVED" | "REJECTED"
-) {
-  if (!selectedRequest) return;
+    try {
+      setDecisionLoading(true);
+      setDecisionError(null);
 
-  if (decision === "REJECTED" && !rejectReason.trim()) {
-    setDecisionError("Rejection reason is required");
-    return;
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
+      const employeeId = localStorage.getItem("employeeId");
+
+      await axios.patch(
+        `${apiUrl}/time/corrections/${selectedRequest._id}/review`,
+        {
+          approverId: employeeId,
+          decision,
+          approverRole: "HR_MANAGER",
+          rejectionReason: decision === "REJECTED" ? rejectReason : undefined,
+          applyToPayroll: true,
+        }
+      );
+
+      setReviewOpen(false);
+      setOpenAllDialog(false);
+
+      // You can later replace this with state update instead
+      window.location.reload();
+    } catch (err: any) {
+      setDecisionError(
+        err?.response?.data?.message || "Failed to submit decision"
+      );
+    } finally {
+      setDecisionLoading(false);
+    }
   }
-
-  try {
-    setDecisionLoading(true);
-    setDecisionError(null);
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
-    const employeeId = localStorage.getItem("employeeId");
-
-    await axios.patch(
-      `${apiUrl}/time/corrections/${selectedRequest._id}/review`,
-      {
-        approverId: employeeId,
-        decision,
-        approverRole: "HR_MANAGER",
-        rejectionReason:
-          decision === "REJECTED" ? rejectReason : undefined,
-        applyToPayroll: true,
-      }
-    );
-
-    setReviewOpen(false);
-    setOpenAllDialog(false);
-
-    // You can later replace this with state update instead
-    window.location.reload();
-
-  } catch (err: any) {
-    setDecisionError(
-      err?.response?.data?.message || "Failed to submit decision"
-    );
-  } finally {
-    setDecisionLoading(false);
-  }
-}
-
-
 
   return (
     <Box>
@@ -230,96 +227,108 @@ async function submitReviewDecision(
                 >
                   Recent correction activity
                 </Typography>
-                <Box sx={{ mb: 1, display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                  setPage(0);
-                  setOpenAllDialog(true);
-                 }}
+                <Box
+                  sx={{ mb: 1, display: "flex", justifyContent: "flex-end" }}
                 >
-                   View all corrections
-                </Button>
-                <Dialog
-  open={openAllDialog}
-  onClose={() => setOpenAllDialog(false)}
-  maxWidth="lg"
-  fullWidth
->
-  <DialogTitle>All Attendance Corrections</DialogTitle>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      setPage(0);
+                      setOpenAllDialog(true);
+                    }}
+                  >
+                    View all corrections
+                  </Button>
+                  <Dialog
+                    open={openAllDialog}
+                    onClose={() => setOpenAllDialog(false)}
+                    maxWidth="lg"
+                    fullWidth
+                  >
+                    <DialogTitle>All Attendance Corrections</DialogTitle>
 
-  <DialogContent dividers>
-    {history.length === 0 ? (
-      <Alert severity="info">No corrections found.</Alert>
-    ) : (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Submitted</TableCell>
-            <TableCell>Employee</TableCell>
-            <TableCell>Type</TableCell>
-            <TableCell>Duration</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Manager</TableCell>
-            <TableCell>Notes</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {paginatedHistory.map((row) => (
-            <TableRow key={row._id} hover
-            onClick={() => {
-              setSelectedRequest(row);
-              setRejectReason("");
-              setDecisionError(null);
-              setReviewOpen(true);
-            }}
-            >
-              <TableCell>
-                {formatDate(row.appliesFromDate || row.submittedAt)}
-              </TableCell>
-              <TableCell>{row.employeeId || "—"}</TableCell>
-              <TableCell sx={{ textTransform: "capitalize" }}>
-                {row.correctionType
-                  ? row.correctionType.toLowerCase()
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                {formatDuration(row.durationMinutes)}
-              </TableCell>
-              <TableCell>
-                <Chip
-                  size="small"
-                  label={row.status || "N/A"}
-                  color={STATUS_COLORS[row.status || ""] || "default"}
-                />
-              </TableCell>
-              <TableCell>{row.lineManagerId || "—"}</TableCell>
-              <TableCell sx={{ maxWidth: 240 }}>
-                <Typography variant="body2" noWrap>
-                  {row.rejectionReason || row.reason || "—"}
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    )}
-  </DialogContent>
+                    <DialogContent dividers>
+                      {history.length === 0 ? (
+                        <Alert severity="info">No corrections found.</Alert>
+                      ) : (
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Submitted</TableCell>
+                              <TableCell>Employee</TableCell>
+                              <TableCell>Type</TableCell>
+                              <TableCell>Duration</TableCell>
+                              <TableCell>Status</TableCell>
+                              <TableCell>Manager</TableCell>
+                              <TableCell>Notes</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {paginatedHistory.map((row) => (
+                              <TableRow
+                                key={row._id}
+                                hover
+                                onClick={() => {
+                                  setSelectedRequest(row);
+                                  setRejectReason("");
+                                  setDecisionError(null);
+                                  setReviewOpen(true);
+                                }}
+                              >
+                                <TableCell>
+                                  {formatDate(
+                                    row.appliesFromDate || row.submittedAt
+                                  )}
+                                </TableCell>
+                                <TableCell>{row.employeeId || "—"}</TableCell>
+                                <TableCell sx={{ textTransform: "capitalize" }}>
+                                  {row.correctionType
+                                    ? row.correctionType.toLowerCase()
+                                    : "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {formatDuration(row.durationMinutes)}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    size="small"
+                                    label={row.status || "N/A"}
+                                    color={
+                                      STATUS_COLORS[row.status || ""] ||
+                                      "default"
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {row.lineManagerId || "—"}
+                                </TableCell>
+                                <TableCell sx={{ maxWidth: 240 }}>
+                                  <Typography variant="body2" noWrap>
+                                    {row.rejectionReason || row.reason || "—"}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </DialogContent>
 
-  <DialogActions sx={{ justifyContent: "space-between" }}>
-    <TablePagination
-      component="div"
-      count={history.length}
-      page={page}
-      onPageChange={(_, newPage) => setPage(newPage)}
-      rowsPerPage={rowsPerPage}
-      rowsPerPageOptions={[25]}
-    />
-    <Button onClick={() => setOpenAllDialog(false)}>Close</Button>
-  </DialogActions>
-</Dialog>
-
+                    <DialogActions sx={{ justifyContent: "space-between" }}>
+                      <TablePagination
+                        component="div"
+                        count={history.length}
+                        page={page}
+                        onPageChange={(_, newPage) => setPage(newPage)}
+                        rowsPerPage={rowsPerPage}
+                        rowsPerPageOptions={[25]}
+                      />
+                      <Button onClick={() => setOpenAllDialog(false)}>
+                        Close
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                 </Box>
 
                 {recentHistory.length === 0 ? (
@@ -446,70 +455,72 @@ async function submitReviewDecision(
         </CardContent>
       </Card>
       <Dialog
-  open={reviewOpen}
-  onClose={() => setReviewOpen(false)}
-  maxWidth="sm"
-  fullWidth
->
-  <DialogTitle>Review Attendance Correction</DialogTitle>
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Review Attendance Correction</DialogTitle>
 
-  <DialogContent dividers>
-    {selectedRequest && (
-      <Stack spacing={2}>
-        <Typography><b>Employee:</b> {selectedRequest.employeeId}</Typography>
-        <Typography><b>Type:</b> {selectedRequest.correctionType}</Typography>
-        <Typography>
-          <b>Date:</b>{" "}
-          {formatDate(
-            selectedRequest.appliesFromDate || selectedRequest.submittedAt
+        <DialogContent dividers>
+          {selectedRequest && (
+            <Stack spacing={2}>
+              <Typography>
+                <b>Employee:</b> {selectedRequest.employeeId}
+              </Typography>
+              <Typography>
+                <b>Type:</b> {selectedRequest.correctionType}
+              </Typography>
+              <Typography>
+                <b>Date:</b>{" "}
+                {formatDate(
+                  selectedRequest.appliesFromDate || selectedRequest.submittedAt
+                )}
+              </Typography>
+              <Typography>
+                <b>Duration:</b>{" "}
+                {formatDuration(selectedRequest.durationMinutes)}
+              </Typography>
+              <Typography>
+                <b>Reason:</b> {selectedRequest.reason || "—"}
+              </Typography>
+
+              {decisionError && <Alert severity="error">{decisionError}</Alert>}
+
+              <TextField
+                label="Rejection Reason (required if rejecting)"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                fullWidth
+                multiline
+                minRows={3}
+              />
+            </Stack>
           )}
-        </Typography>
-        <Typography>
-          <b>Duration:</b>{" "}
-          {formatDuration(selectedRequest.durationMinutes)}
-        </Typography>
-        <Typography><b>Reason:</b> {selectedRequest.reason || "—"}</Typography>
+        </DialogContent>
 
-        {decisionError && (
-          <Alert severity="error">{decisionError}</Alert>
-        )}
+        <DialogActions>
+          <Button onClick={() => setReviewOpen(false)}>Cancel</Button>
 
-        <TextField
-          label="Rejection Reason (required if rejecting)"
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-          fullWidth
-          multiline
-          minRows={3}
-        />
-      </Stack>
-    )}
-  </DialogContent>
+          <Button
+            color="error"
+            variant="outlined"
+            disabled={decisionLoading}
+            onClick={() => submitReviewDecision("REJECTED")}
+          >
+            Reject
+          </Button>
 
-  <DialogActions>
-    <Button onClick={() => setReviewOpen(false)}>
-      Cancel
-    </Button>
-
-    <Button
-      color="error"
-      variant="outlined"
-      disabled={decisionLoading}
-      onClick={() => submitReviewDecision("REJECTED")}
-    >
-      Reject
-    </Button>
-
-    <Button
-      color="success"
-      variant="contained"
-      disabled={decisionLoading}
-      onClick={() => submitReviewDecision("APPROVED")}
-    >
-      Approve
-    </Button>
-  </DialogActions>
-</Dialog>
+          <Button
+            color="success"
+            variant="contained"
+            disabled={decisionLoading}
+            onClick={() => submitReviewDecision("APPROVED")}
+          >
+            Approve
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
@@ -519,7 +530,7 @@ type MetricCardProps = {
   value: number;
   denominator: number;
   color: "primary" | "success" | "warning" | "error" | "info";
-  icon: React.ElementType;
+  icon: React.ComponentType<SvgIconProps>;
   descriptor: string;
 };
 

@@ -39,6 +39,7 @@ import {
   TimeException,
 } from "./types";
 import { decryptData } from "@/common/utils/encryption";
+import { getAccessToken } from "@/lib/auth-utils";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
 const LINE_MANAGER_KEYS = ["lineManagerId", "managerId", "supervisorId"];
@@ -304,7 +305,7 @@ export default function TimeManagementClient({
 
     const loadStaticData = async () => {
       try {
-        const token = window.localStorage.getItem("access_token");
+        const token = getAccessToken();
         const fetchOptions: FetchOptions = { token: token || undefined };
 
         const [shiftsRes, rulesRes, holidaysRes] = await Promise.all([
@@ -341,7 +342,7 @@ export default function TimeManagementClient({
       if (raw && isHex24(raw)) return raw;
 
       // If looks like encrypted payload (JSON with iv/data), attempt decrypt using access token
-      const token = window.localStorage.getItem("access_token") || "";
+      const token = getAccessToken() || "";
       if (raw && token) {
         try {
           const maybeObj = JSON.parse(raw);
@@ -392,7 +393,7 @@ export default function TimeManagementClient({
 
     const loadDynamicData = async () => {
       try {
-        const token = window.localStorage.getItem("access_token");
+        const token = getAccessToken();
         const employeeId = await resolveEmployeeId();
 
         if (!employeeId) {
@@ -492,6 +493,7 @@ export default function TimeManagementClient({
             `${API_BASE}/time/attendance/records/${employeeId}?${attendanceParams}`,
             {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
+              credentials: "include",
             }
           ).then(async (res) => {
             if (!res.ok)
@@ -518,10 +520,10 @@ export default function TimeManagementClient({
           // ),
           managerId
             ? secureFetch<CorrectionRequest[]>(
-                `/time/corrections/pending/${managerId}`,
-                [],
-                fetchOptions
-              )
+              `/time/corrections/pending/${managerId}`,
+              [],
+              fetchOptions
+            )
             : Promise.resolve([]),
           secureFetch<CorrectionRequest[]>(
             `/time/corrections/approved/payroll`,
@@ -588,8 +590,7 @@ export default function TimeManagementClient({
         });
         if (isMounted) {
           setError(
-            `Unable to load time management data: ${
-              err instanceof Error ? err.message : String(err)
+            `Unable to load time management data: ${err instanceof Error ? err.message : String(err)
             }`
           );
         }
@@ -746,8 +747,9 @@ export default function TimeManagementClient({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
+        credentials: "include",
         body: JSON.stringify(requestBody),
       });
 
@@ -929,6 +931,7 @@ async function secureFetch<T>(
     console.log(`🌐 Fetching ${path}`, { hasToken: !!options?.token });
     const response = await fetch(`${API_BASE}${path}`, {
       headers,
+      credentials: "include",
       cache: "no-store",
     });
 

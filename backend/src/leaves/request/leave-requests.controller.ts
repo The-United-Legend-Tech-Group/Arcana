@@ -160,6 +160,7 @@ async getMyTeamRequests(@Req() req: any): Promise<LeaveRequest[]> {
 // HR Manager: Get All Leave Requests
 // ------------------------------
 @Get('hr/all-requests')
+@Roles(SystemRole.HR_MANAGER)
 @ApiOperation({ summary: 'Get all leave requests for HR manager review' })
 @ApiResponse({ status: 200, description: 'Leave requests retrieved successfully' })
 async getAllLeaveRequestsForHR(): Promise<LeaveRequest[]> {
@@ -345,7 +346,6 @@ async hrOverrideRequest(
 // REQ-027: Bulk Processing
 // ------------------------------
 @Post('bulk-process')
-@Roles(SystemRole.HR_MANAGER)
 @ApiOperation({ summary: 'Process multiple leave requests in bulk' })
 @ApiBody({
   schema: {

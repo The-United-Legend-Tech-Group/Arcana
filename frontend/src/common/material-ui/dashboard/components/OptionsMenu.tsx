@@ -1,5 +1,4 @@
 'use client';
-'use client';
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Divider, { dividerClasses } from '@mui/material/Divider';
@@ -34,10 +33,23 @@ export default function OptionsMenu() {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('employeeId');
-    localStorage.removeItem('candidateId'); // Clear all potential auth tokens
+  const handleLogout = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+      await fetch(`${apiUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (e) {
+      console.error('Logout request failed', e);
+    }
+
+    try {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('employeeId');
+      localStorage.removeItem('candidateId');
+    } catch {}
+
     handleClose();
     router.push(`${basePath}/login`);
   };

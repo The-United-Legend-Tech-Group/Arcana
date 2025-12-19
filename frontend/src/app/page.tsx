@@ -20,11 +20,21 @@ export default function Home() {
   }, [router])
 
   return (
-    <main className="min-h-screen">
+    <main
+      className="min-h-screen"
+      style={{
+        // Use CSS variable with safe fallback so text isn't black if the CSS file fails to load
+        color: 'var(--foreground, #ffffff)',
+        backgroundColor: 'var(--background, #0b1220)'
+      }}
+    >
       <Navigation />
-      <Hero3D />
-      <Features />
-      <Contact />
+      {/* Force white writing color for homepage content */}
+      <div style={{ color: '#ffffff' }}>
+        <Hero3D />
+        <Features />
+        <Contact />
+      </div>
     </main>
   )
 }

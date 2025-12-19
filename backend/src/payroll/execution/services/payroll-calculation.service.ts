@@ -64,6 +64,7 @@ export class PayrollCalculationService {
     private readonly attendanceService: AttendanceService,
   ) {}
 
+  //Leaves Ghoraba
   async getDailyRate(employeeId: string): Promise<number> {
     const empRole = await this.employeeSystemRoleModel
       .findOne({ employeeProfileId: employeeId })
@@ -77,6 +78,7 @@ export class PayrollCalculationService {
     return Number((payGrade.grossSalary / 30).toFixed(2));
   }
 
+  //Leaves Ghoraba
   async recordUnpaidLeavePenalty(
     employeeId: string,
     days: number,

@@ -39,7 +39,7 @@ import {
   TimeException,
 } from "./types";
 import { decryptData } from "@/common/utils/encryption";
-import { getAccessToken } from "@/lib/auth-utils";
+import { getAccessToken, getEmployeeIdFromCookie } from "@/lib/auth-utils";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
 const LINE_MANAGER_KEYS = ["lineManagerId", "managerId", "supervisorId"];
@@ -336,10 +336,21 @@ export default function TimeManagementClient({
     let isMounted = true;
 
     const resolveEmployeeId = async (): Promise<string | null> => {
-      // Try direct employeeId
-      const raw = window.localStorage.getItem("employeeId");
       const isHex24 = (v: string) => /^[a-fA-F0-9]{24}$/.test(v);
-      if (raw && isHex24(raw)) return raw;
+
+      // First priority: Try to get from cookie (set by backend auth)
+      const cookieEmployeeId = getEmployeeIdFromCookie();
+      if (cookieEmployeeId && isHex24(cookieEmployeeId)) {
+        console.log("✅ Got employeeId from cookie:", cookieEmployeeId);
+        return cookieEmployeeId;
+      }
+
+      // Fallback: Try direct employeeId from localStorage
+      const raw = window.localStorage.getItem("employeeId");
+      if (raw && isHex24(raw)) {
+        console.log("✅ Got employeeId from localStorage:", raw);
+        return raw;
+      }
 
       // If looks like encrypted payload (JSON with iv/data), attempt decrypt using access token
       const token = getAccessToken() || "";
@@ -353,7 +364,10 @@ export default function TimeManagementClient({
             "data" in maybeObj
           ) {
             const decrypted = await decryptData(raw, token);
-            if (decrypted && isHex24(decrypted)) return decrypted;
+            if (decrypted && isHex24(decrypted)) {
+              console.log("✅ Got employeeId from decrypted localStorage:", decrypted);
+              return decrypted;
+            }
           }
         } catch (_e) {
           // not JSON, skip
@@ -369,12 +383,15 @@ export default function TimeManagementClient({
           const obj = JSON.parse(val);
           if (obj && typeof obj === "object") {
             if (typeof obj.employeeId === "string" && isHex24(obj.employeeId)) {
+              console.log(`✅ Got employeeId from localStorage.${key}.employeeId:`, obj.employeeId);
               return obj.employeeId;
             }
             if (obj._id && typeof obj._id === "string" && isHex24(obj._id)) {
+              console.log(`✅ Got employeeId from localStorage.${key}._id:`, obj._id);
               return obj._id;
             }
             if (obj.id && typeof obj.id === "string" && isHex24(obj.id)) {
+              console.log(`✅ Got employeeId from localStorage.${key}.id:`, obj.id);
               return obj.id;
             }
           }
@@ -386,8 +403,17 @@ export default function TimeManagementClient({
       // Fallback: if raw exists and looks like quoted or wrapped, attempt to strip quotes
       if (raw) {
         const stripped = raw.replace(/[^a-fA-F0-9]/g, "");
-        if (isHex24(stripped)) return stripped;
+        if (isHex24(stripped)) {
+          console.log("✅ Got employeeId from stripped localStorage:", stripped);
+          return stripped;
+        }
       }
+
+      console.warn("❌ Could not resolve employeeId from any source", {
+        cookieEmployeeId,
+        localStorageEmployeeId: raw,
+        hasToken: !!token,
+      });
       return null;
     };
 
@@ -492,7 +518,7 @@ export default function TimeManagementClient({
           fetch(
             `${API_BASE}/time/attendance/records/${employeeId}?${attendanceParams}`,
             {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              headers: (token ? { Authorization: `Bearer ${token}` } : {}) as Record<string, string>,
               credentials: "include",
             }
           ).then(async (res) => {
@@ -747,7 +773,7 @@ export default function TimeManagementClient({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {} as Record<string, string>),
         },
         credentials: "include",
         body: JSON.stringify(requestBody),

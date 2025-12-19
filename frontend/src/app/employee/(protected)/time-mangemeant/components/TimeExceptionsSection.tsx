@@ -138,7 +138,7 @@ export default function TimeExceptionsSection({
       const res = await fetch(
         `${API_URL}/time/corrections/history/${employeeId}`,
         {
-          headers: getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {},
+          headers: (getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) as Record<string, string>,
           credentials: "include",
         }
       );
@@ -239,7 +239,7 @@ export default function TimeExceptionsSection({
           {
             headers: {
               "Content-Type": "application/json",
-              ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
+              ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {} as Record<string, string>),
             },
             credentials: "include",
           }
@@ -379,7 +379,7 @@ export default function TimeExceptionsSection({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {} as Record<string, string>),
         },
         credentials: "include",
         body: JSON.stringify(payload),
@@ -566,7 +566,7 @@ export default function TimeExceptionsSection({
                                                   headers: {
                                                     "Content-Type":
                                                       "application/json",
-                                                    ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
+                                                    ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {} as Record<string, string>),
                                                   },
                                                   credentials: "include",
                                                   body: JSON.stringify({
@@ -614,7 +614,7 @@ export default function TimeExceptionsSection({
                                                   headers: {
                                                     "Content-Type":
                                                       "application/json",
-                                                    ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
+                                                    ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {} as Record<string, string>),
                                                   },
                                                   credentials: "include",
                                                   body: JSON.stringify({

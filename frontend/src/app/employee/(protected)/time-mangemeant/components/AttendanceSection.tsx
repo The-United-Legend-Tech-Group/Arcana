@@ -184,7 +184,7 @@ export default function AttendanceSection({
           applyToPayroll: true,
         },
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: (token ? { Authorization: `Bearer ${token}` } : {}) as Record<string, string>,
           withCredentials: true,
         }
       );

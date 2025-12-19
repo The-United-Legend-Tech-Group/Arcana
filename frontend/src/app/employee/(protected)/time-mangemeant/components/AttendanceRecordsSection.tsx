@@ -1008,7 +1008,7 @@ export default function AttendanceRecordsSection({
   );
 }
 
-function getAuthHeader() {
+function getAuthHeader(): Record<string, string> {
   const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }

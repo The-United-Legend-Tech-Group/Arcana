@@ -108,7 +108,7 @@ export default function CreateScheduleRuleModal({
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    ...(token ? { Authorization: `Bearer ${token}` } : {} as Record<string, string>),
                 },
                 credentials: "include",
                 body: JSON.stringify(payload),

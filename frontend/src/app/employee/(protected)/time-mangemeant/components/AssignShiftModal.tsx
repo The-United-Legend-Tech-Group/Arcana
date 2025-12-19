@@ -64,7 +64,7 @@ export default function AssignShiftModal(props: any) {
         const token = getAccessToken();
 
         const response = await fetch(`${API_BASE}/employee/s`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: (token ? { Authorization: `Bearer ${token}` } : {}) as Record<string, string>,
           credentials: "include",
         });
 
@@ -137,7 +137,7 @@ export default function AssignShiftModal(props: any) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {} as Record<string, string>),
         },
         credentials: "include",
         body: JSON.stringify(payload),

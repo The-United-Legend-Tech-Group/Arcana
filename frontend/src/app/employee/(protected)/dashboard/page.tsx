@@ -28,6 +28,7 @@ import StarIcon from '@mui/icons-material/Star';
 import OrganizationHierarchy from './OrganizationHierarchy';
 import PerformanceOverview from './PerformanceOverview';
 import EmploymentDetails, { Employee } from './EmploymentDetails';
+import OnboardingReminderTrigger from './OnboardingReminderTrigger';
 import { fetchServer } from '../../../../lib/api-server';
 
 
@@ -123,6 +124,8 @@ export default async function EmployeeDashboard() {
             <Typography component="h2" variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
                 Welcome back, {employee?.firstName}!
             </Typography>
+
+            <OnboardingReminderTrigger />
 
             <Stack spacing={4}>
                 {/* Profile Section */}

@@ -95,7 +95,7 @@ export class RecruitmentController {
   }
 
   @Post('offer/approve')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.DEPARTMENT_HEAD, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.DEPARTMENT_HEAD, SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.SYSTEM_ADMIN)
   async approveOffer(@Body() dto: ApproveOfferDto, @Req() req: any) {
     return this.recruitmentService.approveOffer(dto, req.user.sub);
   }
@@ -113,7 +113,7 @@ export class RecruitmentController {
   }
 
   @Get('offer/approvals/my')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.DEPARTMENT_HEAD, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.DEPARTMENT_HEAD, SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.SYSTEM_ADMIN)
   async getMyApprovals(@Req() req: any) {
     const userId = req.user?.employeeId || req.user?.sub;
     return this.recruitmentService.getMyApprovals(userId);
@@ -155,7 +155,7 @@ export class RecruitmentController {
   }
 
   @Post('documents/upload')
-  @Roles(SystemRole.JOB_CANDIDATE, SystemRole.HR_EMPLOYEE, SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.JOB_CANDIDATE, SystemRole.HR_EMPLOYEE, SystemRole.HR_MANAGER, SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.SYSTEM_ADMIN)
   @UseInterceptors(FilesInterceptor('files'))
   async uploadComplianceDocuments(
     @Body() dto: UploadComplianceDocumentsDto,
@@ -205,7 +205,7 @@ export class RecruitmentController {
   }
 
   @Post('onboarding/reminders')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE, SystemRole.DEPARTMENT_EMPLOYEE, SystemRole.SYSTEM_ADMIN)
   async sendOnboardingReminders(@Body() dto: SendOnboardingReminderDto) {
     return this.recruitmentService.sendOnboardingReminders(dto);
   }

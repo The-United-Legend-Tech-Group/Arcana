@@ -81,16 +81,6 @@ export function EmployeeDashboard() {
             fetchOnboardingChecklist(decryptedId);
             fetchResignationStatus(decryptedId);
             fetchComplianceDocuments(decryptedId);
-
-            // Trigger onboarding reminders for tasks due in 3, 2, or 1 days
-            try {
-              await recruitmentApi.sendOnboardingReminders({
-                employeeId: decryptedId,
-                daysBeforeDeadline: 3
-              });
-            } catch (reminderError) {
-              console.warn('Failed to send onboarding reminders:', reminderError);
-            }
           }
         }
       } catch (error) {

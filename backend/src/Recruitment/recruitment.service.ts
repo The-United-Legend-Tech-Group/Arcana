@@ -1409,38 +1409,76 @@ export class RecruitmentService {
 
     const notifications: Notification[] = [];
 
-    // Find tasks that are not completed and have upcoming deadlines
+    // Find tasks that are not completed and have deadlines
     for (const task of onboarding.tasks) {
       if (task.status !== OnboardingTaskStatus.COMPLETED && task.deadline) {
         const taskDeadline = new Date(task.deadline);
 
-        // Send reminder if deadline is within threshold and hasn't passed
+        let title = 'Onboarding Task Reminder';
+        let message = '';
+        let recipientIds = [employeeId];
+        let deliverToRole: SystemRole | undefined = undefined;
+        let deliveryType = 'UNICAST';
+        let type = 'Warning';
+
         if (taskDeadline >= now && taskDeadline <= reminderThreshold) {
+          // Upcoming reminder
           const daysUntilDeadline = Math.ceil((taskDeadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          const message = `Reminder: Onboarding task "${task.name}" is due in ${daysUntilDeadline} day(s). Department: ${task.department || 'N/A'}`;
-          const title = 'Onboarding Task Reminder';
+          message = `Reminder: Onboarding task "${task.name}" is due in ${daysUntilDeadline} day(s). Department: ${task.department || 'N/A'}`;
+        } else if (taskDeadline < now) {
+          // Overdue logic
+          const daysOverdue = Math.floor((now.getTime() - taskDeadline.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-          // Prevent spamming: Check if a similar notification was sent in the last 24 hours
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          const existingNotification = await this.notificationService.findByRecipientId(employeeId);
-          const recentDuplicate = existingNotification.find(n =>
-            (n as any).title === title &&
-            (n as any).message === message &&
-            new Date((n as any).createdAt) > oneDayAgo
-          );
+          if (daysOverdue <= 7) {
+            // Countdown for employee
+            const daysLeftToEscalation = 7 - daysOverdue;
+            title = 'URGENT: Onboarding Task OVERDUE';
+            type = 'Alert';
+            message = `URGENT: Onboarding task "${task.name}" is OVERDUE. You have ${daysLeftToEscalation} day(s) left until termination process is initiated.`;
+          } else {
+            // Escalation to HR Manager
+            try {
+              const employee = await this.employeeService.findById(employeeId);
+              const employeeName = employee ? `${(employee as any).firstName} ${(employee as any).lastName}` : employeeId;
 
-          if (!recentDuplicate) {
-            const notification = await this.notificationService.create({
-              recipientId: [employeeId],
-              type: 'Warning',
-              deliveryType: 'UNICAST',
-              title,
-              message,
-              relatedModule: 'Recruitment',
-              isRead: false,
-            });
-            notifications.push(notification);
+              title = 'Onboarding Escalation: Action Required';
+              type = 'Alert';
+              message = `Escalation: Employee ${employeeName} has failed to complete onboarding task "${task.name}" within 7 days of the deadline. Recommended action: Initiate termination.`;
+              recipientIds = []; // Broadcast to role
+              deliverToRole = SystemRole.HR_MANAGER;
+              deliveryType = 'BROADCAST';
+            } catch (e) {
+              console.error('Failed to fetch employee for escalation:', e);
+              continue;
+            }
           }
+        } else {
+          // Future task beyond threshold
+          continue;
+        }
+
+        // Prevent spamming: Check if a similar notification was sent in the last 24 hours
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const existingNotifications = await this.notificationService.findByRecipientId(employeeId);
+
+        const recentDuplicate = existingNotifications.find(n =>
+          (n as any).title === title &&
+          (n as any).message === message &&
+          new Date((n as any).createdAt) > oneDayAgo
+        );
+
+        if (!recentDuplicate) {
+          const notification = await this.notificationService.create({
+            recipientId: recipientIds,
+            type,
+            deliveryType,
+            deliverToRole,
+            title,
+            message,
+            relatedModule: 'Recruitment',
+            isRead: false,
+          });
+          notifications.push(notification);
         }
       }
     }

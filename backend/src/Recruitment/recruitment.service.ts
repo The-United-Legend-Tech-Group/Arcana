@@ -662,7 +662,7 @@ export class RecruitmentService {
       // Calculate next working day (skip weekends)
       const startDate = new Date();
       startDate.setDate(startDate.getDate() + 1); // Next day
-      
+
       // Skip weekends: if Saturday (6) or Sunday (0), move to Monday
       while (startDate.getDay() === 0 || startDate.getDay() === 6) {
         startDate.setDate(startDate.getDate() + 1);
@@ -725,12 +725,12 @@ export class RecruitmentService {
             if (requisition && requisition.openings > 0) {
               const newOpenings = requisition.openings - 1;
               const updateData: any = { openings: newOpenings };
-              
+
               // If openings reach 0, close the requisition
               if (newOpenings === 0) {
                 updateData.publishStatus = 'closed';
               }
-              
+
               await this.jobRequisitionRepository.updateById(requisition._id.toString(), updateData);
               console.log(`✅ Job requisition ${requisition.requisitionId} openings decremented to ${newOpenings}. Status: ${updateData.publishStatus || requisition.publishStatus}`);
             }
@@ -1935,7 +1935,7 @@ export class RecruitmentService {
   async getApplicationHistory(applicationId: string): Promise<any> {
     const history = await this.applicationHistoryRepository.findByApplicationId(applicationId);
     const application = await this.applicationRepository.findById(applicationId);
-    
+
     if (!application) {
       throw new NotFoundException('Application not found');
     }

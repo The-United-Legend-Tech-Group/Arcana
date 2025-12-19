@@ -111,7 +111,7 @@ export function RecruitmentProcessView() {
           try {
             const appsResponse = await recruitmentApi.getApplicationsByRequisition(job._id);
             const applications = appsResponse.data || [];
-            
+
             // Fetch time-to-hire for applications in offer or hired status
             const applicationsWithTimeToHire = await Promise.all(
               applications.map(async (app: Application) => {
@@ -611,8 +611,8 @@ export function RecruitmentProcessView() {
               {selectedApplication.timeToHire !== undefined && selectedApplication.timeToHire !== null && (
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>⏱️ Time to Hire</Typography>
-                  <Chip 
-                    label={`${selectedApplication.timeToHire} days`} 
+                  <Chip
+                    label={`${selectedApplication.timeToHire} days`}
                     color={selectedApplication.timeToHire < 14 ? 'success' : selectedApplication.timeToHire < 30 ? 'warning' : 'default'}
                     size="small"
                   />

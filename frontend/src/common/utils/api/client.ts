@@ -138,6 +138,19 @@ class ApiClient {
   async delete<T>(endpoint: string, options?: { params?: Record<string, any> }): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
+
+  async postFormData<T>(endpoint: string, formData: FormData, options?: { params?: Record<string, any>; headers?: Record<string, string> }): Promise<ApiResponse<T>> {
+    const { headers, ...rest } = options || {};
+    return this.request<T>(endpoint, {
+      ...rest,
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Omitting Content-Type lets the browser set it with the correct boundary for FormData
+        ...headers,
+      } as Record<string, string>,
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

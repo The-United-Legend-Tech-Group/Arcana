@@ -34,6 +34,7 @@ type Policy = {
   _id: string;
   name?: string;
   leaveTypeId?: string;
+  leaveTypeName?: string; // Added for display
   accrualMethod?: string;
   monthlyRate?: number;
   yearlyRate?: number;
@@ -83,7 +84,21 @@ export default function ManagePoliciesList() {
       });
       if (!res.ok) throw new Error(`Failed (${res.status})`);
       const data = await res.json();
-      setPolicies(Array.isArray(data) ? data : []);
+      // Fetch leave types to map id to name
+      const leaveTypeRes = await fetch(`${API_BASE}/leaves/leave-types`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      let leaveTypes: { _id: string; name: string }[] = [];
+      if (leaveTypeRes.ok) {
+        leaveTypes = await leaveTypeRes.json();
+      }
+      const leaveTypeMap = new Map(leaveTypes.map((lt) => [lt._id, lt.name]));
+      // Attach leaveTypeName to each policy
+      const policiesWithNames = (Array.isArray(data) ? data : []).map((p: any) => ({
+        ...p,
+        leaveTypeName: p.leaveTypeId ? leaveTypeMap.get(p.leaveTypeId) || p.leaveTypeId : 'N/A',
+      }));
+      setPolicies(policiesWithNames);
       setPage(1);
     } catch (err: any) {
       setError(err?.message ?? 'Failed to load policies');
@@ -286,7 +301,7 @@ export default function ManagePoliciesList() {
                   }}
                   secondary={
                     isOpen || !hasOpen
-                      ? `ID: ${p._id} · LeaveType: ${p.leaveTypeId ?? 'N/A'}`
+                      ? `Category: ${p.leaveTypeName ?? p.leaveTypeId ?? 'N/A'}`
                       : undefined
                   }
                   secondaryTypographyProps={{

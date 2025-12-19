@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Types } from 'mongoose';
 import { LeavePolicy } from '../models/leave-policy.schema';
 import { LeaveEntitlement } from '../models/leave-entitlement.schema';
@@ -35,6 +36,20 @@ import { LeaveStatus } from '../enums/leave-status.enum';
 
 @Injectable()
 export class LeavesPolicyService {
+  /**
+   * Cron job: Sync holidays from Time Management to Leaves Calendar every day at 2am.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async autoSyncHolidaysScheduled() {
+    try {
+      await this.autoSyncHolidaysForCurrentYear();
+      await this.executeAnnualReset({});
+      // Optionally, log or notify success
+    } catch (err) {
+      // Optionally, log error
+      // console.error('Auto holiday sync failed:', err);
+    }
+  }
   constructor(
     private readonly leavePolicyRepository: LeavePolicyRepository,
     private readonly leaveEntitlementRepository: LeaveEntitlementRepository,
@@ -488,6 +503,8 @@ export class LeavesPolicyService {
         leaveTypeId,
       );
 
+    let oldRemaining = entitlement?.remaining;
+
     if (!entitlement) {
       // Create new entitlement if missing
       entitlement = await this.leaveEntitlementRepository.create({
@@ -503,6 +520,7 @@ export class LeavesPolicyService {
       });
     }
 
+
     // 2. Update entitlement attributes
     const updateData: any = {};
     Object.keys(updateFields).forEach(key => {
@@ -516,12 +534,18 @@ export class LeavesPolicyService {
       updateData,
     );
 
+    let amount=0;
+    if (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining)
+      amount = updateFields.remaining - oldRemaining
+    else
+      (oldRemaining && updateFields.remaining)? amount = oldRemaining - updateFields.remaining : 0
+    
     // 3. Store adjustment audit log
     await this.leaveAdjustmentRepository.create({
       employeeId: new Types.ObjectId(employeeId),
       leaveTypeId: new Types.ObjectId(leaveTypeId),
-      adjustmentType: AdjustmentType.ADD, // Default to ADD for assignment
-      amount: updateFields.yearlyEntitlement ?? 0,
+      adjustmentType: (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining)? AdjustmentType.ADD : AdjustmentType.DEDUCT, // Default to ADD for assignment
+      amount,
       reason,
       hrUserId: new Types.ObjectId(hrUserId),
     });

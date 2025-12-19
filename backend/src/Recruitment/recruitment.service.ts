@@ -105,18 +105,17 @@ export class RecruitmentService {
     private readonly configSetupService: ConfigSetupService,
     private readonly employeeSigningBonusService: EmployeeSigningBonusService,
     //private payrollExecutionService: PayrollExecutionService,
-    try {
-      await this.notificationService.create({
-        recipientId: [employeeId],
-        type: 'Info',
-        deliveryType: 'UNICAST',
-        title: 'Offer Approval Request',
-        // Do not include raw MongoDB offer id in notifications during testing — replace with AITESTING
-        message: `You have been added as an approver for offer AITESTING.`,
-        relatedModule: 'Recruitment',
-        isRead: false,
-      });
-    } catch (e) {
+  ) { }
+
+  // need guards for auth and roles
+  //REC-018
+  //REC-018
+  async createOffer(dto: CreateOfferDto, userId?: string) {
+    const { applicationId, candidateId, role, benefits, conditions, insurances, content, deadline } = dto;
+
+    // STRICT: Always use the authenticated user's ID as the HR Employee ID
+    // We ignore any hrEmployeeId passed in the DTO to ensure security and source of truth
+    const hrEmployeeId = userId;
 
     if (!hrEmployeeId) {
       throw new BadRequestException('HR Employee ID is required');
@@ -242,8 +241,7 @@ export class RecruitmentService {
         type: 'Info',
         deliveryType: 'UNICAST',
         title: 'Offer Approval Request',
-        // Replace raw offer Mongo id with a test token to avoid leaking internal ids
-        message: `You have been added as an approver for offer AITESTING.`,
+        message: `You have been added as an approver for offer ${offerId}.`,
         relatedModule: 'Recruitment',
         isRead: false,
       });
@@ -433,26 +431,15 @@ export class RecruitmentService {
       );
 
       // Notify HR
-        // Resolve candidate number for inclusion in notification
-        let candidateNumberForNotif = candidateId;
-        try {
-          const candidateObj = await this.candidateRepository.findById(candidateId);
-          if (candidateObj && candidateObj.candidateNumber) {
-            candidateNumberForNotif = candidateObj.candidateNumber;
-          }
-        } catch (err) {
-          console.warn('Failed to fetch candidate for rejection notification', err);
-        }
-
-        await this.notificationService.create({
-          recipientId: [offer.hrEmployeeId.toString()],
-          type: 'Warning',
-          deliveryType: 'UNICAST',
-          title: 'Offer Rejected',
-          message: `Candidate (Number: ${candidateNumberForNotif}) has rejected the offer for ${offer.role}. ${notes || ''}`,
-          relatedModule: 'Recruitment',
-          isRead: false,
-        });
+      await this.notificationService.create({
+        recipientId: [offer.hrEmployeeId.toString()],
+        type: 'Warning',
+        deliveryType: 'UNICAST',
+        title: 'Offer Rejected',
+        message: `Candidate has rejected the offer for ${offer.role}. ${notes || ''}`,
+        relatedModule: 'Recruitment',
+        isRead: false,
+      });
     }
 
     await offer.save();

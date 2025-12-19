@@ -31,7 +31,7 @@ import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRou
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { CalendarViewDay, History } from "@mui/icons-material";
+import { CalendarViewDay, CategoryRounded, History } from "@mui/icons-material";
 import BalanceRoundedIcon from "@mui/icons-material/BalanceRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
@@ -152,6 +152,12 @@ export const leavesSubItems: MenuItem[] = [
     path: "/employee/leaves/automation",
     roles: ["HR Manager"],
   },
+    {
+    text: "Leave Categories",
+    icon: <CategoryRounded/>,
+    path: "/employee/leaves/category",
+    roles: ["HR Admin"],
+  },
   {
     text: "Leave Types",
     icon: <BeachAccessRoundedIcon />,
@@ -267,6 +273,7 @@ export default function MenuContent() {
     if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
     if (text === 'History' && pathname === '/employee/leaves/history') return true;
     if (text === 'Automation' && pathname === '/employee/leaves/automation') return true;
+    if (text === 'Leave Categories' && pathname === '/employee/leaves/category') return true;
     return false;
   };
 

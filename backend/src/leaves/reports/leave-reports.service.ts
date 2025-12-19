@@ -1,8 +1,11 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { Types } from 'mongoose';
 import { FilterLeaveHistoryDto } from '../dtos/filter-leave-history.dto';
 import { ManagerFilterTeamDataDto } from '../dtos/manager-filter-team-data.dto';
@@ -20,7 +23,8 @@ import {
 } from '../repository';
 
 @Injectable()
-export class LeavesReportService {
+export class LeavesReportService implements OnModuleInit{
+    private readonly logger = new Logger(LeavesReportService.name);
   constructor(
     private readonly leaveEntitlementRepository: LeaveEntitlementRepository,
     private readonly leaveRequestRepository: LeaveRequestRepository,
@@ -29,6 +33,11 @@ export class LeavesReportService {
     private readonly leaveTypeRepository: LeaveTypeRepository,
     private readonly employeeService: EmployeeService
   ) {}
+
+    onModuleInit() {
+    this.logger.log('✅ [REQ-040] Automatic accrual cron job registered - runs on 1st of each month at midnight');
+    this.logger.log('✅ [REQ-041] Automatic carry-forward cron job registered - runs on January 1st at midnight');
+  }
 
   // =============================
   // REQ-031 — Employee View Current Balance
@@ -443,7 +452,7 @@ export class LeavesReportService {
   }
 
   // =============================
-  // REQ-041 — Automatic Carry-Forward As HR
+  // REQ-042 — Automatic Carry-Forward As HR
   //⚠️i didnt add controller for this since its an automatic scheduled job
   // =============================
 
@@ -451,39 +460,125 @@ export class LeavesReportService {
    * REQ-041: Automatic Carry-Forward
    * Processes carry-forward of unused leave days
    */
+@Cron('*/5 * * * *', {
+    name: 'automatic-carry-forward',
+    timeZone: 'Africa/Cairo',
+  })
   async carryForwardLeaves() {
+    console.log('🔄 [REQ-041] Automatic carry-forward started at', new Date().toISOString());
+    const policies = await this.leavePolicyRepository.find();
     const entitlements = await this.leaveEntitlementRepository.find();
+    console.log(`📊 [REQ-041] Found ${policies.length} policies and ${entitlements.length} entitlements to process`);
 
+    const today = new Date();
     const results: {
       employeeId: Types.ObjectId;
       leaveTypeId: Types.ObjectId;
+      previousRemaining: number;
       carriedForward: number;
+      expired: number;
+      cappedAt: number;
     }[] = [];
 
     for (const entitlement of entitlements) {
-      const leftover =
-        (entitlement.accruedRounded ?? 0) +
-        (entitlement.carryForward ?? 0) -
-        (entitlement.taken ?? 0) -
-        (entitlement.pending ?? 0);
-
-      if (leftover > 0) {
-        entitlement.carryForward = leftover; // add leftover to carryForward
-        entitlement.remaining =
-          entitlement.carryForward -
-          (entitlement.taken || 0) -
-          (entitlement.pending || 0);
-        await entitlement.save();
-
-        results.push({
-          employeeId: entitlement.employeeId,
-          leaveTypeId: entitlement.leaveTypeId,
-          carriedForward: leftover,
-        });
+      // Find matching policy
+      const policy = policies.find(
+        (p) => p.leaveTypeId.toString() === entitlement.leaveTypeId.toString(),
+      );
+      
+      if (!policy) {
+        console.log(`⚠️ [REQ-041] Skipping entitlement ${entitlement._id}: No policy found for leaveTypeId ${entitlement.leaveTypeId}`);
+        continue;
       }
+
+      // Check if carry-forward is allowed for this policy
+      if (!policy.carryForwardAllowed) {
+        console.log(`⏭️ [REQ-041] Skipping entitlement ${entitlement._id}: Carry-forward not allowed for this policy`);
+        continue;
+      }
+
+      // Calculate current remaining balance (unused days)
+      const previousRemaining = entitlement.remaining ?? 0;
+      
+      // Calculate what can be carried forward (current remaining balance)
+      let unusedDays = previousRemaining;
+      
+      if (unusedDays <= 0) {
+        console.log(`⏭️ [REQ-041] Skipping entitlement ${entitlement._id}: No unused days to carry forward (remaining: ${previousRemaining})`);
+        continue;
+      }
+
+      // Handle expiry: Check if days should expire based on expiryAfterMonths
+      let expired = 0;
+      if (policy.expiryAfterMonths && policy.expiryAfterMonths > 0) {
+        // Check if there's an old carryForward that should expire
+        if (entitlement.carryForward && entitlement.carryForward > 0) {
+          // If nextResetDate exists and has passed, old carryForward expires
+          if (entitlement.nextResetDate) {
+            const resetDate = new Date(entitlement.nextResetDate);
+            if (resetDate < today) {
+              // Old carryForward has expired
+              expired = entitlement.carryForward;
+              console.log(`⏰ [REQ-041] Entitlement ${entitlement._id}: Expiring ${expired} days (expired after ${policy.expiryAfterMonths} months)`);
+            }
+          }
+        }
+      }
+
+      // Calculate new carry-forward amount (unused days minus expired)
+      let newCarryForward = unusedDays - expired;
+
+      // Apply maxCarryForward cap from policy
+      let cappedAt = newCarryForward;
+      if (policy.maxCarryForward && policy.maxCarryForward > 0) {
+        if (newCarryForward > policy.maxCarryForward) {
+          const excess = newCarryForward - policy.maxCarryForward;
+          expired += excess; // Excess days expire
+          newCarryForward = policy.maxCarryForward;
+          cappedAt = policy.maxCarryForward;
+          console.log(`📉 [REQ-041] Entitlement ${entitlement._id}: Capping carry-forward at ${policy.maxCarryForward} (excess ${excess} days expired)`);
+        }
+      }
+
+      // Update entitlement
+      entitlement.carryForward = newCarryForward;
+      
+      // Reset accrued values for new year (they've been carried forward)
+      entitlement.accruedActual = 0;
+      entitlement.accruedRounded = 0;
+      
+      // Update remaining balance: new carryForward + new yearly entitlement (will be set by next accrual)
+      // For now, remaining is just the carryForward
+      entitlement.remaining = newCarryForward;
+      
+      // Update nextResetDate if expiry is configured
+      if (policy.expiryAfterMonths && policy.expiryAfterMonths > 0) {
+        const nextReset = new Date();
+        nextReset.setMonth(nextReset.getMonth() + policy.expiryAfterMonths);
+        entitlement.nextResetDate = nextReset;
+      }
+
+      await entitlement.save();
+
+      results.push({
+        employeeId: entitlement.employeeId,
+        leaveTypeId: entitlement.leaveTypeId,
+        previousRemaining,
+        carriedForward: newCarryForward,
+        expired,
+        cappedAt,
+      });
+
+      console.log(`✅ [REQ-041] Processed entitlement ${entitlement._id}: carriedForward=${newCarryForward}, expired=${expired}, cappedAt=${cappedAt}`);
     }
 
-    console.log('Carry-forward results:', results);
+    console.log('✅ [REQ-041] Automatic carry-forward completed:', {
+      processed: entitlements.length,
+      successful: results.length,
+      failed: entitlements.length - results.length,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       processed: entitlements.length,
       successful: results.length,
@@ -491,22 +586,27 @@ export class LeavesReportService {
       details: results.map((r) => ({
         employeeId: r.employeeId.toString(),
         leaveTypeId: r.leaveTypeId.toString(),
-        previousRemaining: 0, // Not calculated in this method
+        previousRemaining: r.previousRemaining,
         carriedForward: r.carriedForward,
-        expired: 0, // Not calculated in this method
-        cappedAt: r.carriedForward, // Not calculated in this method
+        expired: r.expired,
+        cappedAt: r.cappedAt,
       })),
     };
   }
-
   /**
    * REQ-040: Automatic Accrual
    * Processes automatic leave accrual for all employees according to company policy
    * REQ-042: Automatically adjusts accrual for unpaid leave periods
    */
+  @Cron('*/5 * * * *', {
+    name: 'automatic-leave-accrual',
+    timeZone: 'Africa/Cairo',
+  })
   async accrueLeaves() {
+    console.log('🔄 [REQ-040] Automatic accrual started at', new Date().toISOString());
     const policies = await this.leavePolicyRepository.find();
     const entitlements = await this.leaveEntitlementRepository.find();
+    console.log(`📊 [REQ-040] Found ${policies.length} policies and ${entitlements.length} entitlements to process`);
 
     const today = new Date();
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -525,26 +625,60 @@ export class LeavesReportService {
       const policy = policies.find(
         (p) => p.leaveTypeId.toString() === entitlement.leaveTypeId.toString(),
       );
-      if (!policy) continue;
+      if (!policy) {
+        console.log(`⚠️ [REQ-040] Skipping entitlement ${entitlement._id}: No policy found for leaveTypeId ${entitlement.leaveTypeId}`);
+        continue;
+      }
 
-      // Check if accrual already processed for this month
+      // Check if accrual already processed based on accrual method
       if (entitlement.lastAccrualDate) {
         const lastAccrual = new Date(entitlement.lastAccrualDate);
-        if (
-          lastAccrual.getFullYear() === today.getFullYear() &&
-          lastAccrual.getMonth() === today.getMonth()
-        ) {
-          continue; // Already processed this month
+        
+        if (policy.accrualMethod === AccrualMethod.MONTHLY || policy.accrualMethod === AccrualMethod.YEARLY) {
+          // Monthly/Yearly: Check if already processed this month
+          if (
+            lastAccrual.getFullYear() === today.getFullYear() &&
+            lastAccrual.getMonth() === today.getMonth()
+          ) {
+            console.log(`⏭️ [REQ-040] Skipping entitlement ${entitlement._id}: Already processed this month (lastAccrual: ${lastAccrual.toISOString()})`);
+            continue; // Already processed this month
+          }
+        } else if (policy.accrualMethod === AccrualMethod.PER_TERM) {
+          // Per-Term: Check if 6 months have passed since last accrual
+          const monthsSinceLastAccrual = 
+            (today.getFullYear() - lastAccrual.getFullYear()) * 12 +
+            (today.getMonth() - lastAccrual.getMonth());
+          
+          if (monthsSinceLastAccrual < 6) {
+            console.log(`⏭️ [REQ-040] Skipping entitlement ${entitlement._id}: PER_TERM - Only ${monthsSinceLastAccrual} months since last accrual (needs 6)`);
+            continue; // Not yet time for per-term accrual (needs 6 months)
+          }
         }
       }
 
-      // Base accrual (monthly or yearly/12)
-      let accrual =
-        policy.accrualMethod === AccrualMethod.MONTHLY
-          ? policy.monthlyRate
-          : policy.yearlyRate / 12;
+      // Base accrual based on policy accrual method
+      let accrual = 0;
+      switch (policy.accrualMethod) {
+        case AccrualMethod.MONTHLY:
+          accrual = policy.monthlyRate;
+          break;
+        case AccrualMethod.YEARLY:
+          accrual = policy.yearlyRate / 12; // Divide yearly by 12 for monthly accrual
+          break;
+        case AccrualMethod.PER_TERM:
+          // Per-term accrual: typically monthlyRate * 6 (for 6-month term)
+          accrual = policy.monthlyRate * 6;
+          break;
+        default:
+          accrual = 0;
+      }
 
-      if (accrual <= 0) continue;
+      if (accrual <= 0) {
+        console.log(`⏭️ [REQ-040] Skipping entitlement ${entitlement._id}: Accrual rate is 0 (method: ${policy.accrualMethod}, monthlyRate: ${policy.monthlyRate}, yearlyRate: ${policy.yearlyRate})`);
+        continue;
+      }
+      
+      console.log(`✅ [REQ-040] Processing entitlement ${entitlement._id} for employee ${entitlement.employeeId}, accrual: ${accrual}, method: ${policy.accrualMethod}`);
 
       // =========================================
       // 1️⃣ Find unpaid leave days for this employee
@@ -619,6 +753,13 @@ export class LeavesReportService {
       });
     }
 
+    console.log('✅ [REQ-040] Automatic accrual completed:', {
+      processed: entitlements.length,
+      successful: results.length,
+      failed: entitlements.length - results.length,
+      timestamp: new Date().toISOString(),
+    });
+
     return {
       processed: entitlements.length,
       successful: results.length,
@@ -633,8 +774,7 @@ export class LeavesReportService {
     };
   }
 
-
-  //REQ-042
+  //REQ-043
   async payrollSync(employeeId: string) {
     const unpaidLeaveTypes = await this.leaveTypeRepository.findUnpaidLeaveTypes();
     const unpaidLeaveTypeIds = unpaidLeaveTypes.map(t => t._id);

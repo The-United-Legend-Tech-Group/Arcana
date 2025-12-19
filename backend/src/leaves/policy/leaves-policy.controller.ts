@@ -38,6 +38,8 @@ import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { AssignPersonalizedEntitlementDto } from '../dtos/personalized-entitlement.dto';
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
 import { LeaveCategory } from '../models/leave-category.schema';
+import { CreateLeaveCategoryDto } from '../dtos/create-leave-category.dto';
+import { UpdateLeaveCategoryDto } from '../dtos/update-leave-category.dto';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -522,5 +524,50 @@ export class LeavesPolicyController {
   @ApiResponse({ status: 200, description: 'All leave categories retrieved successfully' })
   async getLeaveCategories(): Promise<LeaveCategory[]> {
     return this.leavesService.getLeaveCategories();
+  }
+
+  // Create leave category
+  @Post('leave-categories')
+  @ApiOperation({ summary: 'Create a new leave category' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiBody({ type: CreateLeaveCategoryDto })
+  @ApiResponse({ status: 201, description: 'Leave category created successfully' })
+  async createLeaveCategory(@Body() dto: CreateLeaveCategoryDto): Promise<LeaveCategory> {
+    return this.leavesService.createLeaveCategory(dto);
+  }
+
+  // Get leave category by ID
+  @Get('leave-categories/:id')
+  @ApiOperation({ summary: 'Get leave category by ID' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiParam({ name: 'id', description: 'Leave category ID' })
+  @ApiResponse({ status: 200, description: 'Leave category found' })
+  async getLeaveCategoryById(@Param('id') id: string): Promise<LeaveCategory> {
+    return this.leavesService.getLeaveCategoryById(id);
+  }
+
+  // Update leave category by ID
+  @Patch('leave-categories/:id')
+  @ApiOperation({ summary: 'Update leave category by ID' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiParam({ name: 'id', description: 'Leave category ID' })
+  @ApiBody({ type: UpdateLeaveCategoryDto })
+  @ApiResponse({ status: 200, description: 'Leave category updated successfully' })
+  async updateLeaveCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateLeaveCategoryDto,
+  ): Promise<LeaveCategory> {
+    return this.leavesService.updateLeaveCategory(id, dto);
+  }
+
+  // Delete leave category by ID
+  @Delete('leave-categories/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete leave category by ID' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiParam({ name: 'id', description: 'Leave category ID' })
+  @ApiResponse({ status: 204, description: 'Leave category deleted successfully' })
+  async deleteLeaveCategory(@Param('id') id: string): Promise<void> {
+    return this.leavesService.deleteLeaveCategory(id);
   }
   }

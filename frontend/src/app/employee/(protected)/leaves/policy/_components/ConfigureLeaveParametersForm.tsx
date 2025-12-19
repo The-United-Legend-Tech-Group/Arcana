@@ -54,7 +54,6 @@ export default function ConfigureLeaveParametersForm({
   const [form, setForm] = useState({
     minNoticeDays: minNoticeDays?.toString() ?? '',
     maxDurationDays: maxDurationDays?.toString() ?? '',
-    approvalFlowRoles: approvalFlowRoles ?? [],
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -64,9 +63,8 @@ export default function ConfigureLeaveParametersForm({
     setForm({
       minNoticeDays: minNoticeDays?.toString() ?? '',
       maxDurationDays: maxDurationDays?.toString() ?? '',
-      approvalFlowRoles: approvalFlowRoles ?? [],
     });
-  }, [minNoticeDays, maxDurationDays, approvalFlowRoles]);
+  }, [minNoticeDays, maxDurationDays]);
 
   function toNumber(value: string) {
     if (value === '' || value === undefined || value === null) return undefined;
@@ -83,7 +81,6 @@ export default function ConfigureLeaveParametersForm({
       const payload = {
         maxDurationDays: toNumber(form.maxDurationDays),
         minNoticeDays: toNumber(form.minNoticeDays),
-        approvalFlowRoles: form.approvalFlowRoles,
       };
 
       const token = localStorage.getItem('access_token');
@@ -144,32 +141,7 @@ export default function ConfigureLeaveParametersForm({
           />
         </Stack>
 
-        <FormControl fullWidth size="small">
-          <InputLabel>Approval Flow Roles</InputLabel>
-          <Select
-            multiple
-            value={form.approvalFlowRoles}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                approvalFlowRoles: e.target.value as string[],
-              }))
-            }
-            input={<OutlinedInput label="Approval Flow Roles" />}
-            renderValue={(selected) => {
-              const count = (selected as string[]).length;
-              if (count === 0) return 'No roles selected';
-              if (count === 1) return '1 role selected';
-              return `${count} roles selected`;
-            }}
-          >
-            {roleOptions.map((role) => (
-              <MenuItem key={role} value={role}>
-                {role}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+
 
         <Stack direction="row" spacing={1.5} justifyContent="flex-end">
           {onCancel && (

@@ -10,6 +10,7 @@ import {
   LeaveTypeRepository,
   LeaveAdjustmentRepository,
   CalendarRepository,
+  LeaveRequestRepository,
 } from '../repository';
 import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
 import { AttendanceService } from '../../time-mangement/services/attendance.service';
@@ -30,6 +31,7 @@ import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { LeaveCategoryRepository } from '../repository/leave-category.repository';
 import { LeaveCategory } from '../models/leave-category.schema';
 import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { LeaveStatus } from '../enums/leave-status.enum';
 
 @Injectable()
 export class LeavesPolicyService {
@@ -42,6 +44,7 @@ export class LeavesPolicyService {
     private readonly employeeService: EmployeeService,
     private readonly attendanceService: AttendanceService,
     private readonly leaveCategoryRepository: LeaveCategoryRepository,
+    private readonly leaveRequestRepository: LeaveRequestRepository,
   ) {}
   //private readonly approvalWorkflowService: ApprovalWorkflowService
 
@@ -227,18 +230,28 @@ export class LeavesPolicyService {
     if (!employeeProfile)
       throw new NotFoundException('Employee profile not found');
 
-    const entitlement =
-      await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
-        employeeId,
-        leaveTypeId,
-      );
-    if (!entitlement)
-      throw new NotFoundException('Leave entitlement not found');
+    let entitlement = await this.leaveEntitlementRepository.findByEmployeeAndLeaveType(
+      employeeId,
+      leaveTypeId,
+    );
 
-    const policy =
-      await this.leavePolicyRepository.findByLeaveTypeId(leaveTypeId);
-
+    const policy = await this.leavePolicyRepository.findByLeaveTypeId(leaveTypeId);
     if (!policy) throw new NotFoundException('Leave policy not found');
+
+    // If entitlement missing, create initial one adhering to policy
+    if (!entitlement) {
+      entitlement = await this.leaveEntitlementRepository.create({
+        employeeId: new Types.ObjectId(employeeId),
+        leaveTypeId: new Types.ObjectId(leaveTypeId),
+        yearlyEntitlement: policy.yearlyRate ?? 0,
+        accruedActual: 0,
+        accruedRounded: 0,
+        carryForward: 0,
+        taken: 0,
+        pending: 0,
+        remaining: policy.yearlyRate ?? 0,
+      });
+    }
     /** ---------------------
      * 1. CALCULATE ACCRUAL
      * --------------------- */
@@ -286,7 +299,19 @@ export class LeavesPolicyService {
     entitlement.lastAccrualDate = new Date();
 
     /** ---------------------
-     * 7. SAVE
+     * 8. APPLY APPROVED LEAVE CONSUMPTION
+     * --------------------- */
+    const approvedRequests = await this.leaveRequestRepository.find({
+      employeeId: new Types.ObjectId(employeeId),
+      leaveTypeId: new Types.ObjectId(leaveTypeId),
+      status: LeaveStatus.APPROVED,
+    } as any);
+    const approvedTakenDays = (approvedRequests || []).reduce((sum: number, r: any) => sum + (Number(r.durationDays) || 0), 0);
+    entitlement.taken = approvedTakenDays;
+    entitlement.remaining = this.computeRemaining(entitlement);
+
+    /** ---------------------
+     * 9. SAVE
      * --------------------- */
     return entitlement.save(); // TODO: Use updateById instead of save
   }
@@ -875,5 +900,37 @@ async executeAnnualReset(): Promise<void> {
 
   async getLeaveCategories(): Promise<LeaveCategory[]> {
     return this.leaveCategoryRepository.find();
+  }
+
+  // ===== Leave Categories CRUD =====
+  async createLeaveCategory(dto: { name: string; description?: string }): Promise<LeaveCategory> {
+    // Ensure unique name
+    const existing = await this.leaveCategoryRepository.findOne({ name: dto.name } as any);
+    if (existing) throw new BadRequestException('Leave category name already exists');
+    return this.leaveCategoryRepository.create({ name: dto.name, description: dto.description } as any);
+  }
+
+  async getLeaveCategoryById(id: string): Promise<LeaveCategory> {
+    const cat = await this.leaveCategoryRepository.findById(id);
+    if (!cat) throw new NotFoundException('Leave category not found');
+    return cat;
+  }
+
+  async updateLeaveCategory(id: string, dto: { name?: string; description?: string }): Promise<LeaveCategory> {
+    if (dto?.name) {
+      // If name is being changed, enforce uniqueness
+      const existing = await this.leaveCategoryRepository.findOne({ name: dto.name } as any);
+      if (existing && (existing as any)._id.toString() !== id) {
+        throw new BadRequestException('Leave category name already exists');
+      }
+    }
+    const updated = await this.leaveCategoryRepository.updateById(id, dto as any);
+    if (!updated) throw new NotFoundException('Leave category not found');
+    return updated;
+  }
+
+  async deleteLeaveCategory(id: string): Promise<void> {
+    const deleted = await this.leaveCategoryRepository.deleteById(id);
+    if (!deleted) throw new NotFoundException('Leave category not found');
   }
 }

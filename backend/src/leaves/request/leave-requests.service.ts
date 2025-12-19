@@ -55,14 +55,16 @@ export class LeavesRequestService {
       );
     }
 
-    if (!dto.isEmergency) {
-      // Disallow past-dated leave requests (non-emergency must be today or later)
+    // Allow backdated requests up to 7 days in the past for both start and end dates
+    {
       const now = new Date();
       const startOfToday = new Date(
         now.getFullYear(),
         now.getMonth(),
         now.getDate(),
       );
+      const graceStart = new Date(startOfToday);
+      graceStart.setDate(graceStart.getDate() - 7); // 7-day grace period
 
       const fromDateRaw = new Date(dto.dates.from);
       const toDateRaw = new Date(dto.dates.to);
@@ -78,9 +80,9 @@ export class LeavesRequestService {
         toDateRaw.getDate(),
       );
 
-      if (startOfFrom < startOfToday || startOfTo < startOfToday) {
+      if (startOfFrom < graceStart || startOfTo < graceStart) {
         throw new BadRequestException(
-          'Start date and end date must not be in the past for non-emergency requests.',
+          'Start and end dates may be backdated by up to 7 days; older dates are not allowed.',
         );
       }
     }

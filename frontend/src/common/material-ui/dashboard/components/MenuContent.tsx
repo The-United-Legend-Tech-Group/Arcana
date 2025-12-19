@@ -8,6 +8,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Skeleton from "@mui/material/Skeleton";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
@@ -220,16 +221,34 @@ export default function MenuContent() {
     }
   }, [pathname]);
 
+  // Show skeleton while loading
+  if (loading) {
+    return (
+      <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
+        <List dense>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <ListItem key={i} disablePadding sx={{ display: "block" }}>
+              <ListItemButton disabled>
+                <ListItemIcon>
+                  <Skeleton variant="circular" width={24} height={24} />
+                </ListItemIcon>
+                <Skeleton variant="text" width={100} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Stack>
+    );
+  }
+
   const visibleListItems = mainListItems.filter((item) => {
     // For candidates, only show the Home button
     if (isCandidate) {
       return item.text === "Home";
     }
-    // Only apply role-based filtering after roles are loaded
-    if (!loading) {
-      if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role as SystemRole))) {
-        return false;
-      }
+    // Apply role-based filtering
+    if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role as SystemRole))) {
+      return false;
     }
     return true;
   });

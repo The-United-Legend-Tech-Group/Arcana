@@ -228,12 +228,13 @@ export default function CandidateDashboard() {
                 <Typography color="text.secondary" align="center" sx={{ py: 6 }}>No open positions</Typography>
               ) : (
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} flexWrap="wrap">
-                  {openJobs.map(job => {
+                  {openJobs.filter(job => !job.expiryDate || new Date(job.expiryDate) >= new Date()).map(job => {
                     // Access template data if it exists (when templateId is populated)
                     const template = job.templateId || {};
                     const title = template.title || job.title || 'Position Available';
                     const department = template.department || job.department || 'Not specified';
                     const location = job.location || 'Not specified';
+                    const isExpiringSoon = job.expiryDate && new Date(job.expiryDate).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000;
 
                     const isApplied = myApplications.some(app =>
                       (app.jobRequisitionId?._id === job._id) || (app.jobRequisitionId === job._id) || (app.requisitionId === job._id)
@@ -242,10 +243,20 @@ export default function CandidateDashboard() {
                     return (
                       <Card key={job._id} variant="outlined" sx={{ minWidth: 260, flex: 1, opacity: isApplied ? 0.7 : 1, bgcolor: isApplied ? 'action.hover' : 'background.paper' }}>
                         <CardContent>
-                          <Typography variant="subtitle1" fontWeight={600}>{title}</Typography>
+                          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={600}>{title}</Typography>
+                            {isExpiringSoon && (
+                              <Chip label="Expiring Soon" color="warning" size="small" sx={{ fontSize: '0.7rem', height: 20 }} />
+                            )}
+                          </Stack>
                           <Typography variant="caption" color="text.secondary" display="block">Department: {department}</Typography>
                           <Typography variant="caption" color="text.secondary" display="block">Location: {location}</Typography>
                           <Typography variant="caption" color="text.secondary" display="block">Openings: {job.openings || 1}</Typography>
+                          {job.expiryDate && (
+                            <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 0.5, fontWeight: 500 }}>
+                              Apply by: {new Date(job.expiryDate).toLocaleDateString()}
+                            </Typography>
+                          )}
                           <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                             <Button variant="outlined" onClick={() => setDetailJob({ ...job, title, department })}>View Details</Button>
                             <Button

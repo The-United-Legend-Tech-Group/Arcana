@@ -1770,6 +1770,11 @@ export class RecruitmentService {
       throw new NotFoundException(`Job requisition with id ${createApplicationDto.requisitionId} not found`);
     }
 
+    // Check if requisition has expired
+    if (requisition.expiryDate && new Date(requisition.expiryDate) < new Date()) {
+      throw new BadRequestException(`Job requisition ${createApplicationDto.requisitionId} has expired and is no longer accepting applications`);
+    }
+
     const validCandidateId = candidateId;
     if (!validCandidateId) {
       throw new BadRequestException('Candidate ID is required');
@@ -2377,11 +2382,13 @@ export class RecruitmentService {
           message += ` Video Link: ${interview.videoLink}`;
         }
         break;
+      case 'completed':
       case InterviewStatus.COMPLETED:
         title = 'Interview Completed';
         message = `Your ${interview.stage.replace('_', ' ')} interview has been completed. You will be notified of the next steps soon.`;
         notificationType = 'Success';
         break;
+      case 'cancelled':
       case InterviewStatus.CANCELLED:
         title = 'Interview Cancelled';
         message = `Your ${interview.stage.replace('_', ' ')} interview scheduled for ${interview.scheduledDate.toLocaleDateString()} has been cancelled. You will be contacted to reschedule.`;

@@ -1518,6 +1518,26 @@ export class RecruitmentService {
     if (allCompleted) {
       updateData.completed = true;
       updateData.completedAt = new Date();
+
+      // Notify System Admin regarding probation conversion
+      try {
+        const employee = await this.employeeService.findById(employeeId);
+        const employeeName = employee ? `${(employee as any).firstName} ${(employee as any).lastName}` : employeeId;
+
+        await this.notificationService.create({
+          recipientId: [], // Broadcast to role
+          type: 'Info',
+          deliveryType: 'BROADCAST',
+          deliverToRole: SystemRole.SYSTEM_ADMIN,
+          title: 'Onboarding Checklist Completed',
+          message: `Employee ${employeeName} has completed all onboarding tasks. Tasks: Convert from probation. Deadline: ASAP.`,
+          relatedEntityId: onboarding._id.toString(),
+          relatedModule: 'Recruitment',
+          isRead: false,
+        });
+      } catch (notifError) {
+        console.error('Failed to notify System Admin on onboarding completion:', notifError);
+      }
     }
 
     const updatedOnboarding = await this.onboardingRepository.updateById(

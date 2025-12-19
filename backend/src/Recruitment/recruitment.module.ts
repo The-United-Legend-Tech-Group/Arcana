@@ -101,7 +101,6 @@ import { NotificationModule } from '../employee-subsystem/notification/notificat
 import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
-import { AtsModule } from './ats/ats.module';
 
 @Module({
   imports: [
@@ -151,8 +150,6 @@ import { AtsModule } from './ats/ats.module';
     OrganizationStructureModule,
     LeavesModule,
 
-    // ATS Module
-    AtsModule,
   ],
   controllers: [RecruitmentController, OffboardingController],
   providers: [

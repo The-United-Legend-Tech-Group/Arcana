@@ -635,6 +635,13 @@ export class RecruitmentService {
       try {
         const createdEmployee = await this.employeeService.onboard(employeeData);
         employeeProfileId = String((createdEmployee as any)._id || (createdEmployee as any).id);
+
+        // Assign 'department employee' role to the new employee
+        console.log(`📝 [RecruitmentService.hrSignContract] Assigning 'department employee' role to new employee ${employeeProfileId}`);
+        await this.employeeService.assignRoles(employeeProfileId, {
+          roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+          permissions: []
+        });
       } catch (error) {
         // Re-throw the error from employee service (already formatted as BadRequestException)
         throw error;

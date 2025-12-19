@@ -102,6 +102,6 @@ import {
     ConfigBackupService,
     ConfigBackupSchedulerService,
   ],
-  exports: [ConfigSetupService], // export the facade service
+  exports: [ConfigSetupService, TerminationBenefitService], // export the facade service and termination benefit service
 })
 export class ConfigSetupModule {}

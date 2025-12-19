@@ -12,7 +12,7 @@ import { ConfigStatus } from '../enums/payroll-configuration-enums';
 
 @Injectable()
 export class TerminationBenefitService {
-  constructor(private readonly repository: TerminationBenefitsRepository) {}
+  constructor(private readonly repository: TerminationBenefitsRepository) { }
 
   async create(
     dto: CreateTerminationBenefitsDto,
@@ -54,13 +54,13 @@ export class TerminationBenefitService {
     id: string,
     dto: UpdateTerminationBenefitsDto,
   ): Promise<terminationAndResignationBenefitsDocument> {
-        const entity = await this.repository.findById(id);
-        if (!entity) {
-          throw new NotFoundException(`object with ID ${id} not found`);
-        }
-        if (entity.status !== ConfigStatus.DRAFT) {
-          throw new ForbiddenException('Editing is allowed when status is DRAFT only');
-        }
+    const entity = await this.repository.findById(id);
+    if (!entity) {
+      throw new NotFoundException(`object with ID ${id} not found`);
+    }
+    if (entity.status !== ConfigStatus.DRAFT) {
+      throw new ForbiddenException('Editing is allowed when status is DRAFT only');
+    }
     const updated = await this.repository.updateById(id, dto as any);
     if (!updated) {
       throw new NotFoundException(`Termination Benefit with ID ${id} not found`);
@@ -72,7 +72,7 @@ export class TerminationBenefitService {
     id: string,
     dto: UpdateTerminationBenefitsDto,
   ): Promise<terminationAndResignationBenefitsDocument> {
-        const entity = await this.repository.findById(id);
+    const entity = await this.repository.findById(id);
     if (!entity) {
       throw new NotFoundException(`object with ID ${id} not found`);
     }
@@ -96,7 +96,7 @@ export class TerminationBenefitService {
     if (!entity) {
       throw new NotFoundException(`Termination Benefit with ID ${id} not found`);
     }
-         if (entity.status !== ConfigStatus.DRAFT) {
+    if (entity.status !== ConfigStatus.DRAFT) {
       throw new ForbiddenException('Editing is allowed when status is DRAFT only');
     }
     if (entity.createdBy?.toString() === approverId) {
@@ -120,4 +120,17 @@ export class TerminationBenefitService {
       throw new NotFoundException(`Termination Benefit with ID ${id} not found`);
     }
   }
+  async sumApprovedBenefits(benefitNames: string[]): Promise<number> {
+    if (!benefitNames || benefitNames.length === 0) {
+      return 0;
+    }
+
+    const approvedBenefits = await this.repository.findMany({
+      name: { $in: benefitNames },
+      status: ConfigStatus.APPROVED,
+    });
+
+    return approvedBenefits.reduce((sum, benefit) => sum + (benefit.amount || 0), 0);
+  }
+
 }

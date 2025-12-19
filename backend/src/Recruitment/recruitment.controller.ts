@@ -72,7 +72,7 @@ export class RecruitmentController {
   }
 
   @Get('offer/:offerId')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN, SystemRole.JOB_CANDIDATE)
   async getOfferById(@Param('offerId') offerId: string) {
     return this.recruitmentService.getOfferById(offerId);
   }

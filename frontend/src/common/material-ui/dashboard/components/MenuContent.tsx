@@ -55,12 +55,12 @@ export const mainListItems: MenuItem[] = [
     text: "Manage Organization",
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
-    roles: ["System Admin"]
+    roles: ["System Admin", "HR Manager"]
   },
-  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests', roles: ["HR Admin"] },
-  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees', roles: ["HR Admin"] },
+  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests', roles: ["HR Admin", "HR Manager"] },
+  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees', roles: ["HR Admin", "HR Manager"] },
   { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification', roles: ["System Admin", "HR Admin", "HR Manager", "department head"] },
-  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests', roles: ["System Admin"] },
+  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests', roles: ["System Admin", "HR Manager"] },
 
 ];
 
@@ -69,31 +69,31 @@ export const performanceSubItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/performance/dashboard",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Performance Templates",
     icon: <AssessmentRoundedIcon />,
     path: "/employee/performance/templates",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Cycles",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/performance/cycles",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Assignments",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/assignments",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Monitoring",
     icon: <VisibilityRoundedIcon />,
     path: "/employee/performance/monitoring",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "Manager Appraisal",
@@ -105,7 +105,7 @@ export const performanceSubItems: MenuItem[] = [
     text: "Appraisal Review Hub",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/manager-assignments",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "My Performance",
@@ -116,7 +116,7 @@ export const performanceSubItems: MenuItem[] = [
     text: "Manage Disputes",
     icon: <GavelRoundedIcon />,
     path: "/employee/performance/manage-disputes",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Disputes",

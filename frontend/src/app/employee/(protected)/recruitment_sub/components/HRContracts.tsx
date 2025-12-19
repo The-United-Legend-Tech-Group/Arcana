@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -138,7 +138,7 @@ export default function HRContracts() {
     }
   };
 
-  const getContractStatus = (contract: Contract) => {
+  const getContractStatus = useCallback((contract: Contract) => {
     if (contract.employeeSignedAt && contract.employerSignedAt) {
       return { label: 'Fully Signed', color: 'bg-green-100 text-green-800' };
     }
@@ -146,11 +146,16 @@ export default function HRContracts() {
       return { label: 'Awaiting HR Signature', color: 'bg-yellow-100 text-yellow-800' };
     }
     return { label: 'Awaiting Employee Signature', color: 'bg-blue-100 text-blue-800' };
-  };
+  }, []);
 
-  const canHRSign = (contract: Contract) => {
+  const canHRSign = useCallback((contract: Contract) => {
     return contract.employeeSignedAt && !contract.employerSignedAt;
-  };
+  }, []);
+
+  const pendingHRSignature = useMemo(() =>
+    contracts.filter(c => canHRSign(c)).length,
+    [contracts, canHRSign]
+  );
 
   if (loading) {
     return (
@@ -167,7 +172,7 @@ export default function HRContracts() {
           Employment Contracts
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Total: {contracts.length} | Pending HR Signature: {contracts.filter(c => canHRSign(c)).length}
+          Total: {contracts.length} | Pending HR Signature: {pendingHRSignature}
         </Typography>
       </Stack>
 
@@ -190,19 +195,21 @@ export default function HRContracts() {
                       <Typography variant="h6" fontWeight={500}>
                         {contract.role}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Salary: ${contract.grossSalary?.toLocaleString() || 'N/A'}
-                        {contract.signingBonus && contract.signingBonus > 0 &&
-                          ` + $${contract.signingBonus.toLocaleString()} signing bonus`}
-                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                          <strong>Gross Salary:</strong> ${contract.grossSalary?.toLocaleString() || 'N/A'}
+                        </Typography>
+                        {contract.signingBonus && contract.signingBonus > 0 && (
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>Signing Bonus:</strong> ${contract.signingBonus.toLocaleString()}
+                          </Typography>
+                        )}
+                      </Stack>
                       {contract.benefits && contract.benefits.length > 0 && (
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                           Benefits: {contract.benefits.join(', ')}
                         </Typography>
                       )}
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                        Created: {new Date(contract.createdAt).toLocaleDateString()}
-                      </Typography>
                     </Box>
                     <Chip
                       label={status.label}
@@ -327,17 +334,19 @@ export default function HRContracts() {
 
                 {/* Contract Summary */}
                 <Box sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, p: 2, color: 'text.primary' }}>
-                  <Typography variant="body2">
-                    <strong>Salary:</strong> ${selectedContract.grossSalary?.toLocaleString()}
-                  </Typography>
-                  {selectedContract.signingBonus && selectedContract.signingBonus > 0 && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      <strong>Signing Bonus:</strong> ${selectedContract.signingBonus.toLocaleString()}
+                  <Stack spacing={0.75}>
+                    <Typography variant="body2">
+                      <strong>Gross Salary:</strong> ${selectedContract.grossSalary?.toLocaleString()}
                     </Typography>
-                  )}
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    <strong>Employee Signed:</strong> {new Date(selectedContract.employeeSignedAt!).toLocaleDateString()}
-                  </Typography>
+                    {selectedContract.signingBonus && selectedContract.signingBonus > 0 && (
+                      <Typography variant="body2">
+                        <strong>Signing Bonus:</strong> ${selectedContract.signingBonus.toLocaleString()}
+                      </Typography>
+                    )}
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      <strong>Employee Signed:</strong> {new Date(selectedContract.employeeSignedAt!).toLocaleDateString()}
+                    </Typography>
+                  </Stack>
                 </Box>
 
                 {/* Custom Employee Data Toggle */}

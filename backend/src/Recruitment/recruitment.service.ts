@@ -133,6 +133,15 @@ export class RecruitmentService {
       throw new NotFoundException(`Candidate with id ${candidateId} is not valid or not active`);
     }
 
+    // Check if an offer already exists for this application
+    const existingOffer = await this.offerRepository.findOne({
+      applicationId: new mongoose.Types.ObjectId(applicationId)
+    });
+
+    if (existingOffer) {
+      throw new BadRequestException(`An offer already exists for this application. Please edit the existing offer instead of creating a new one.`);
+    }
+
     // Validate HR employee exists and has proper role
     /*const isValidHR = await this.validateEmployeeExistence(hrEmployeeId, [SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.HR_EMPLOYEE]);
     if (!isValidHR) {
@@ -2456,6 +2465,13 @@ export class RecruitmentService {
     if (!await this.validateCandidateExistence(candidateId)) {
       throw new NotFoundException(`Candidate with id ${candidateId} is not valid or not active`);
     }
+
+    // Check if a referral already exists for this candidate (prevent duplicates per candidate)
+    const existingReferrals = await this.referralRepository.findByCandidateId(candidateId);
+    if (existingReferrals && existingReferrals.length > 0) {
+      throw new BadRequestException(`A referral already exists for this candidate. Candidates can only be referred once.`);
+    }
+
     const referralData = {
       candidateId: new Types.ObjectId(candidateId),
       referringEmployeeId: new Types.ObjectId(referringEmployeeId),
@@ -2503,6 +2519,46 @@ export class RecruitmentService {
       }
     }
 
+    // Populate application details with requisition and job template
+    if (offer.applicationId) {
+      try {
+        const application = await this.applicationRepository.findById(offer.applicationId.toString());
+        if (application) {
+          const appObj = application.toObject ? application.toObject() : application;
+
+          // Populate requisition details
+          if (appObj.requisitionId) {
+            const requisition = await this.jobRequisitionRepository.findById(appObj.requisitionId.toString());
+            if (requisition) {
+              const reqObj = requisition.toObject ? requisition.toObject() : requisition;
+
+              // Populate job template details
+              if (reqObj.templateId) {
+                const template = await this.jobTemplateRepository.findById(reqObj.templateId.toString());
+                if (template) {
+                  const templateObj = template.toObject ? template.toObject() : template;
+
+                  // Build job details object without MongoDB IDs
+                  offerObj.jobDetails = {
+                    requisitionId: reqObj.requisitionId, // Custom ID, not MongoDB _id
+                    location: reqObj.location,
+                    openings: reqObj.openings,
+                    department: templateObj.department,
+                    title: templateObj.title,
+                    description: templateObj.description,
+                    qualifications: templateObj.qualifications || [],
+                    skills: templateObj.skills || []
+                  };
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to populate application/requisition/template details for offer', e);
+      }
+    }
+
     // Manually populate approvers
     if (offerObj.approvers && offerObj.approvers.length > 0) {
       for (const approver of offerObj.approvers) {
@@ -2543,12 +2599,37 @@ export class RecruitmentService {
   }
 
   // Get offers by candidate ID
-  async getOffersByCandidateId(candidateId: string): Promise<OfferDocument[]> {
+  async getOffersByCandidateId(candidateId: string): Promise<any[]> {
     // Filter to show only 'sent' offers (which means they are ready for candidate checks)
-    return await this.offerRepository.find({
+    const offers = await this.offerRepository.find({
       candidateId: new mongoose.Types.ObjectId(candidateId),
       finalStatus: 'sent'
     });
+
+    // Calculate benifitsum for each offer using terminationBenefitService
+    const offersWithBenefits = await Promise.all(
+      offers.map(async (offer) => {
+        const offerObj = offer.toObject ? offer.toObject() : offer;
+        let benifitsum = 0;
+
+        // Calculate sum of approved benefits if benefits array exists
+        if (offerObj.benefits && Array.isArray(offerObj.benefits) && offerObj.benefits.length > 0) {
+          try {
+            benifitsum = await this.configSetupService.terminationBenefit.sumApprovedBenefits(offerObj.benefits);
+          } catch (error) {
+            console.warn('Failed to calculate benefit sum for offer', error);
+          }
+        }
+
+        return {
+          ...offerObj,
+          benifitsum,
+          offerDocument: offerObj.content || '' // Map content to offerDocument for DTO compatibility
+        };
+      })
+    );
+
+    return offersWithBenefits;
   }
 
   // Get all contracts

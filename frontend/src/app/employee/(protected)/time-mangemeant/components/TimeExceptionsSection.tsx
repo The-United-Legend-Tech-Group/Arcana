@@ -127,32 +127,28 @@ export default function TimeExceptionsSection({
   const [loadingCorrections, setLoadingCorrections] = React.useState(false);
 
   const fetchCorrectionHistory = React.useCallback(async () => {
-    if (!employeeId) return;
+  if (!employeeId) return;
 
-    try {
-      setLoadingCorrections(true);
+  try {
+    setLoadingCorrections(true);
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:50000";
 
-      const res = await fetch(
-        `${API_URL}/time/corrections/history/${employeeId}`,
-        {
-          headers: (getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}) as Record<string, string>,
-          credentials: "include",
-        }
-      );
+    const res = await fetch(
+      `${API_URL}/time/corrections/history/${employeeId}`
+    );
 
-      if (!res.ok) throw new Error("Failed to fetch correction history");
+    if (!res.ok) throw new Error("Failed to fetch correction history");
 
-      const data = await res.json();
-      setCorrectionHistory(Array.isArray(data) ? data : data?.data || []);
-    } catch (e) {
-      console.error("❌ Failed to load correction history", e);
-    } finally {
-      setLoadingCorrections(false);
-    }
-  }, [employeeId]);
+    const data = await res.json();
+    setCorrectionHistory(Array.isArray(data) ? data : data?.data || []);
+  } catch (e) {
+    console.error("❌ Failed to load correction history", e);
+  } finally {
+    setLoadingCorrections(false);
+  }
+}, [employeeId]);
 
 
   // Validation
@@ -657,66 +653,66 @@ export default function TimeExceptionsSection({
         </CardContent>
       </Card>
       <Card variant="outlined" sx={{ mt: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            My Attendance Correction Requests
-          </Typography>
+  <CardContent>
+    <Typography variant="h6" gutterBottom>
+      My Attendance Correction Requests
+    </Typography>
 
-          {loadingCorrections ? (
-            <Skeleton height={120} />
-          ) : correctionHistory.length === 0 ? (
-            <Alert severity="info">
-              You haven’t submitted any attendance correction requests yet.
-            </Alert>
-          ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell align="right">Adjustment</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {correctionHistory.map((c) => (
-                  <TableRow key={c._id}>
-                    <TableCell>
-                      {new Date(
-                        c.appliesFromDate || c.createdAt
-                      ).toLocaleDateString()}
-                    </TableCell>
+    {loadingCorrections ? (
+      <Skeleton height={120} />
+    ) : correctionHistory.length === 0 ? (
+      <Alert severity="info">
+        You haven’t submitted any attendance correction requests yet.
+      </Alert>
+    ) : (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Date</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Reason</TableCell>
+            <TableCell align="right">Adjustment</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {correctionHistory.map((c) => (
+            <TableRow key={c._id}>
+              <TableCell>
+                {new Date(
+                  c.appliesFromDate || c.createdAt
+                ).toLocaleDateString()}
+              </TableCell>
 
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={c.status}
-                        color={
-                          c.status === "APPROVED"
-                            ? "success"
-                            : c.status === "REJECTED"
-                              ? "error"
-                              : "info"
-                        }
-                      />
-                    </TableCell>
+              <TableCell>
+                <Chip
+                  size="small"
+                  label={c.status}
+                  color={
+                    c.status === "APPROVED"
+                      ? "success"
+                      : c.status === "REJECTED"
+                      ? "error"
+                      : "info"
+                  }
+                />
+              </TableCell>
 
-                    <TableCell sx={{ maxWidth: 300 }}>
-                      <Typography variant="body2" noWrap>
-                        {c.reason}
-                      </Typography>
-                    </TableCell>
+              <TableCell sx={{ maxWidth: 300 }}>
+                <Typography variant="body2" noWrap>
+                  {c.reason}
+                </Typography>
+              </TableCell>
 
-                    <TableCell align="right">
-                      {c.correctionType} {c.durationMinutes} min
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              <TableCell align="right">
+                {c.correctionType} {c.durationMinutes} min
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )}
+  </CardContent>
+</Card>
 
 
       {/* ESS Correction Dialog */}

@@ -35,7 +35,6 @@ import TextField from "@mui/material/TextField";
 
 import SectionHeading from "./SectionHeading";
 import { CorrectionRequest, SectionDefinition } from "./types";
-import { getAccessToken, getEmployeeIdFromCookie } from "@/lib/auth-utils";
 
 const STATUS_COLORS: Record<
   string,

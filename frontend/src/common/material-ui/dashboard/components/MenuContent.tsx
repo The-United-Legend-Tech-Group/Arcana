@@ -8,6 +8,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Skeleton from "@mui/material/Skeleton";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
@@ -28,9 +29,18 @@ import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import WorkRoundedIcon from '@mui/icons-material/WorkRounded';
+import BeachAccessRoundedIcon from "@mui/icons-material/BeachAccessRounded";
+import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
+import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { SystemRole } from "@/types/auth";
+import { CalendarViewDay, CategoryRounded, History } from "@mui/icons-material";
+import BalanceRoundedIcon from "@mui/icons-material/BalanceRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+
+
 
 // Type definition for menu items
 export interface MenuItem {
@@ -47,7 +57,7 @@ export const mainListItems: MenuItem[] = [
     icon: <CalendarMonthRoundedIcon />,
     path: "/employee/calendar",
   },
-  { text: "Team", icon: <PeopleRoundedIcon />, path: "/employee/team", roles: ["department head"] },
+  { text: "Manager Hub", icon: <PeopleRoundedIcon />, path: "/employee/team", roles: ["department head"] },
   {
     text: "Time Management",
     icon: <AccessTimeRoundedIcon />,
@@ -57,12 +67,12 @@ export const mainListItems: MenuItem[] = [
     text: "Manage Organization",
     icon: <ApartmentRoundedIcon />,
     path: "/employee/manage-organization",
-    roles: ["System Admin"]
+    roles: ["System Admin", "HR Manager"]
   },
-  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests', roles: ["HR Admin"] },
-  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees', roles: ["HR Admin"] },
+  { text: 'Employee Requests', icon: <EditNoteRoundedIcon />, path: '/employee/manage-requests', roles: ["HR Admin", "HR Manager"] },
+  { text: 'Manage Employees', icon: <PeopleRoundedIcon />, path: '/employee/manage-employees', roles: ["HR Admin", "HR Manager"] },
   { text: 'Compose Notification', icon: <SendTwoToneIcon />, path: '/employee/compose-notification', roles: ["System Admin", "HR Admin", "HR Manager", "department head"] },
-  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests', roles: ["System Admin"] },
+  { text: 'Organization Changes', icon: <AssignmentRoundedIcon />, path: '/employee/manage-structure-requests', roles: ["System Admin", "HR Manager"] },
   {
     text: "Payroll",
     icon: <AccountBalanceRoundedIcon />,
@@ -75,31 +85,31 @@ export const performanceSubItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardRoundedIcon />,
     path: "/employee/performance/dashboard",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Performance Templates",
     icon: <AssessmentRoundedIcon />,
     path: "/employee/performance/templates",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Cycles",
     icon: <AccessTimeRoundedIcon />,
     path: "/employee/performance/cycles",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Assignments",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/assignments",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "Appraisal Monitoring",
     icon: <VisibilityRoundedIcon />,
     path: "/employee/performance/monitoring",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "Manager Appraisal",
@@ -111,7 +121,7 @@ export const performanceSubItems: MenuItem[] = [
     text: "Appraisal Review Hub",
     icon: <AssignmentRoundedIcon />,
     path: "/employee/performance/manager-assignments",
-    roles: ["HR Employee"]
+    roles: ["HR Employee", "HR Manager", "HR Admin"]
   },
   {
     text: "My Performance",
@@ -122,7 +132,7 @@ export const performanceSubItems: MenuItem[] = [
     text: "Manage Disputes",
     icon: <GavelRoundedIcon />,
     path: "/employee/performance/manage-disputes",
-    roles: ["HR Manager"]
+    roles: ["HR Manager", "HR Admin"]
   },
   {
     text: "Disputes",
@@ -177,6 +187,94 @@ export const trackingSubItems: MenuItem[] = [
   },
 ];
 
+export const recruitmentSubItems: MenuItem[] = [
+  { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/employee/recruitment_sub', roles: ['System Admin'] },
+  { text: 'Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/employee', roles: ['department employee', 'HR Employee', 'HR Manager', 'System Admin'] },
+  { text: 'HR Employee', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-employee', roles: ['HR Manager', 'HR Employee'] },
+  { text: 'HR Manager', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/hr-manager', roles: ['HR Manager'] },
+  { text: 'System Admin', icon: <PeopleRoundedIcon />, path: '/employee/recruitment_sub/system-admin', roles: ['System Admin'] },
+];
+
+
+
+export const candidateRecruitmentSubItems: MenuItem[] = [
+  { text: 'Overview', icon: <AssignmentRoundedIcon />, path: '/candidate/recruitment_sub' }
+
+];
+export const leavesSubItems: MenuItem[] = [
+  {
+    text: "Requests Dashboard",
+    icon: <DashboardRoundedIcon />,
+    path: "/employee/leaves/requests/hr",
+    roles: ["HR Manager"],
+  },
+  {
+    text: "Requests Dashboard",
+    icon: <DashboardRoundedIcon />,
+    path: "/employee/leaves/requests/manager",
+    roles: ["department head"],
+  },
+  {
+    text: "Automation",
+    icon: <AutoAwesomeRoundedIcon   />,
+    path: "/employee/leaves/automation",
+    roles: ["HR Manager"],
+  },
+    {
+    text: "Leave Categories",
+    icon: <CategoryRounded/>,
+    path: "/employee/leaves/category",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "Leave Types",
+    icon: <BeachAccessRoundedIcon />,
+    path: "/employee/leaves/type",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "Leave Policies",
+    icon: <ListAltRoundedIcon />,
+    path: "/employee/leaves/policy",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "Approval Flow",
+    icon: <ListAltRoundedIcon />,
+    path: "/employee/leaves/requests/admin",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "Leave Requests",
+    icon: <ListAltRoundedIcon />,
+    path: "/employee/leaves/requests",
+  },
+  {
+    text: "Entitlements",
+    icon: <PlaylistAddCheckRoundedIcon />,
+    path: "/employee/leaves/entitlement",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "Balance",
+    icon: <BalanceRoundedIcon />,
+    path: "/employee/leaves/balance",
+    roles: [],
+  },
+  {
+    text: "Calendar",
+    icon: <CalendarViewDay />,
+    path: "/employee/leaves/calendar",
+    roles: ["HR Admin"],
+  },
+  {
+    text: "History",
+    icon: <History />,
+    path: "/employee/leaves/history",
+    roles: [],
+  },
+];
+
 const secondaryListItems = [
   { text: "Settings", icon: <SettingsRoundedIcon /> },
   { text: "About", icon: <InfoRoundedIcon /> },
@@ -193,10 +291,12 @@ export default function MenuContent() {
   const [performanceOpen, setPerformanceOpen] = useState(false);
 
   // Hooks
+  const [recruitmentOpen, setRecruitmentOpen] = useState(false);
   const { roles: userRoles, loading } = useAuth();
-
+  const [leavesOpen, setLeavesOpen] = useState(false);
   const isCandidate = pathname.startsWith("/candidate");
   const isPerformancePath = pathname.startsWith("/employee/performance");
+  const isRecruitmentPath = pathname.includes('/recruitment_sub');
 
   // Auto-expand payroll menu if on any payroll route
   useEffect(() => {
@@ -209,23 +309,42 @@ export default function MenuContent() {
     }
   }, [pathname]);
 
+  // Show skeleton while loading
+  if (loading) {
+    return (
+      <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
+        <List dense>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <ListItem key={i} disablePadding sx={{ display: "block" }}>
+              <ListItemButton disabled>
+                <ListItemIcon>
+                  <Skeleton variant="circular" width={24} height={24} />
+                </ListItemIcon>
+                <Skeleton variant="text" width={100} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Stack>
+    );
+  }
+  const isLeavesPath = pathname.startsWith("/employee/leaves");
+
   const visibleListItems = mainListItems.filter((item) => {
     // For candidates, only show the Home button
     if (isCandidate) {
       return item.text === "Home";
     }
-    // Only apply role-based filtering after roles are loaded
-    if (!loading) {
-      if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role as SystemRole))) {
-        return false;
-      }
+    // Apply role-based filtering
+    if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role as SystemRole))) {
+      return false;
     }
     return true;
   });
 
   const isSelected = (text: string) => {
     if (text === 'Home' && (pathname === '/employee/dashboard' || pathname === '/candidate/dashboard')) return true;
-    if (text === 'Team' && pathname === '/employee/team') return true;
+    if (text === 'Manager Hub' && pathname === '/employee/team') return true;
     if (text === 'Analytics' && pathname === '/employee/analytics') return true;
     if (text === 'Settings' && pathname === '/employee/settings') return true;
     if (text === 'Calendar' && pathname === '/employee/calendar') return true;
@@ -251,6 +370,22 @@ export default function MenuContent() {
     if (text === 'My Performance' && pathname === '/employee/performance/my-records') return true;
     if (text === 'Manage Disputes' && pathname === '/employee/performance/manage-disputes') return true;
     if (text === 'Disputes' && pathname === '/employee/performance/disputes') return true;
+    if (text === 'Recruitment' && pathname.includes('/recruitment_sub')) return true;
+    if (text === 'Recruitment' && pathname.startsWith('/employee/recruitment_sub')) return true;
+
+    // Leaves submenu highlight
+    if (text === 'Leave Requests' && pathname === '/employee/leaves/requests') return true;
+    if (text === 'Leave Policies' && pathname === '/employee/leaves/policy') return true;
+    if (text === 'Entitlements' && pathname === '/employee/leaves/entitlement') return true;
+    if (text === 'Leave Types' && (pathname === '/employee/leaves/type' || pathname === '/employee/leaves/type/special')) return true;
+    if (text === 'Calendar' && pathname === '/employee/leaves/calendar') return true;
+    if (text === 'Requests Dashboard' && pathname === '/employee/leaves/requests/hr' ) return true;
+    if (text === 'Requests Dashboard' && pathname === '/employee/leaves/requests/manager') return true;
+    if (text === 'Approval Flow' && pathname === '/employee/leaves/requests/admin') return true;
+    if (text === 'Balance' && pathname === '/employee/leaves/balance' ) return true;
+    if (text === 'History' && pathname === '/employee/leaves/history') return true;
+    if (text === 'Automation' && pathname === '/employee/leaves/automation') return true;
+    if (text === 'Leave Categories' && pathname === '/employee/leaves/category') return true;
     return false;
   };
 
@@ -283,7 +418,7 @@ export default function MenuContent() {
         router.push("/employee/dashboard");
       }
     }
-    if (text === 'Team') router.push('/employee/team');
+    if (text === 'Manager Hub') router.push('/employee/team');
     if (text === 'Analytics') router.push('/employee/analytics');
     if (text === 'Settings') router.push('/employee/settings');
     if (text === 'Calendar') router.push('/employee/calendar');
@@ -293,6 +428,7 @@ export default function MenuContent() {
     if (text === 'Manage Employees') router.push('/employee/manage-employees');
     if (text === 'Compose Notification') router.push('/employee/compose-notification');
     if (text === 'Time Management') router.push('/employee/time-mangemeant');
+    if (text === 'Dashboard') router.push('/employee/leaves/hr');
   };
 
   return (
@@ -439,6 +575,83 @@ export default function MenuContent() {
             </Collapse>
           </>
         )}
+
+        {/* Recruitment Dropdown */}
+        <ListItem disablePadding sx={{ display: 'block' }}>
+          <ListItemButton
+            selected={isRecruitmentPath}
+            onClick={() => setRecruitmentOpen(!recruitmentOpen)}
+          >
+            <ListItemIcon>
+              <WorkRoundedIcon />
+            </ListItemIcon>
+            <ListItemText primary="Recruitment" />
+            {recruitmentOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </ListItemButton>
+        </ListItem>
+
+        <Collapse in={recruitmentOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {(isCandidate ? candidateRecruitmentSubItems : recruitmentSubItems).map((item, index) => {
+              // Only apply role-based filtering after roles are loaded
+              if (!loading) {
+                // @ts-ignore
+                if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+                  return null;
+                }
+              }
+              return (
+                <ListItem key={index} disablePadding sx={{ display: 'block' }}>
+                  <ListItemButton
+                    selected={isSelected(item.text)}
+                    onClick={() => handleNavigation(item.text, item.path)}
+                  >
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Collapse>
+        {/* Leaves Dropdown (routes will be wired later) */}
+        <ListItem disablePadding sx={{ display: "block" }}>
+          <ListItemButton
+            selected={isLeavesPath}
+            onClick={() => setLeavesOpen(!leavesOpen)}
+          >
+            <ListItemIcon>
+              <BeachAccessRoundedIcon />
+            </ListItemIcon>
+            <ListItemText primary="Leaves" />
+            {leavesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </ListItemButton>
+        </ListItem>
+
+        <Collapse in={leavesOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {leavesSubItems.map((item, index) => {
+              // Only apply role-based filtering on client side after hydration
+              if (!loading) {
+                // @ts-ignore
+                if (item.roles && item.roles.length > 0 && !item.roles.some((role) => userRoles.includes(role))) {
+                  return null;
+                }
+              }
+              return (
+                <ListItem key={index} disablePadding sx={{ display: "block" }}>
+                  <ListItemButton
+                    selected={isSelected(item.text)}
+                    onClick={() => handleNavigation(item.text, item.path)}
+                  >
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Collapse>
       </List>
 
       {/* Secondary items - Only show for employees, not candidates */}

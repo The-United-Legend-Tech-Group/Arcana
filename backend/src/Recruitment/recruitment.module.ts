@@ -1,82 +1,44 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
 import { RecruitmentController } from './recruitment.controller';
 import { RecruitmentService } from './recruitment.service';
 import { OffboardingController } from './offboarding.controller';
 import { OffboardingService } from './offboarding.service';
+import { RecruitmentSchedulerService } from './recruitment-scheduler.service';
+import { AuthGuard } from '../common/guards/authentication.guard';
+import { authorizationGuard } from '../common/guards/authorization.guard';
 
 // Recruitment schemas
 import { JobTemplate, JobTemplateSchema } from './models/job-template.schema';
-import {
-  JobRequisition,
-  JobRequisitionSchema,
-} from './models/job-requisition.schema';
+import { JobRequisition, JobRequisitionSchema } from './models/job-requisition.schema';
 import { Application, ApplicationSchema } from './models/application.schema';
-import {
-  ApplicationStatusHistory,
-  ApplicationStatusHistorySchema,
-} from './models/application-history.schema';
+import { ApplicationStatusHistory, ApplicationStatusHistorySchema } from './models/application-history.schema';
 import { Interview, InterviewSchema } from './models/interview.schema';
-import {
-  AssessmentResult,
-  AssessmentResultSchema,
-} from './models/assessment-result.schema';
+import { AssessmentResult, AssessmentResultSchema } from './models/assessment-result.schema';
 import { Referral, ReferralSchema } from './models/referral.schema';
 import { Offer, OfferSchema } from './models/offer.schema';
 import { Contract, ContractSchema } from './models/contract.schema';
 import { Document, DocumentSchema } from './models/document.schema';
-import {
-  TerminationRequest,
-  TerminationRequestSchema,
-} from './models/termination-request.schema';
-import {
-  ClearanceChecklist,
-  ClearanceChecklistSchema,
-} from './models/clearance-checklist.schema';
+import { TerminationRequest, TerminationRequestSchema } from './models/termination-request.schema';
+import { ClearanceChecklist, ClearanceChecklistSchema } from './models/clearance-checklist.schema';
 import { Onboarding, OnboardingSchema } from './models/onboarding.schema';
 
 // Employee subsystem schemas
-import {
-  AppraisalRecord,
-  AppraisalRecordSchema,
-} from '../employee-subsystem/performance/models/appraisal-record.schema';
-import {
-  EmployeeProfile,
-  EmployeeProfileSchema,
-} from '../employee-subsystem/employee/models/employee-profile.schema';
-import {
-  EmployeeSystemRole,
-  EmployeeSystemRoleSchema,
-} from '../employee-subsystem/employee/models/employee-system-role.schema';
-import {
-  Candidate,
-  CandidateSchema,
-} from '../employee-subsystem/employee/models/candidate.schema';
-import {
-  Notification,
-  NotificationSchema,
-} from '../employee-subsystem/notification/models/notification.schema';
+import { AppraisalRecord, AppraisalRecordSchema } from '../employee-subsystem/performance/models/appraisal-record.schema';
+import { EmployeeProfile, EmployeeProfileSchema } from '../employee-subsystem/employee/models/employee-profile.schema';
+import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsystem/employee/models/employee-system-role.schema';
+import { Candidate, CandidateSchema } from '../employee-subsystem/employee/models/candidate.schema';
+import { Notification, NotificationSchema } from '../employee-subsystem/notification/models/notification.schema';
 
 // Leaves schemas
-import {
-  LeaveEntitlement,
-  LeaveEntitlementSchema,
-} from '../leaves/models/leave-entitlement.schema';
+import { LeaveEntitlement, LeaveEntitlementSchema } from '../leaves/models/leave-entitlement.schema';
 import { LeaveType, LeaveTypeSchema } from '../leaves/models/leave-type.schema';
 
 // Payroll schemas
-import {
-  EmployeeTerminationResignation,
-  EmployeeTerminationResignationSchema,
-} from '../payroll/execution/models/EmployeeTerminationResignation.schema';
-import {
-  signingBonus,
-  signingBonusSchema,
-} from '../payroll/config_setup/models/signingBonus.schema';
-import {
-  payGrade,
-  payGradeSchema,
-} from '../payroll/config_setup/models/payGrades.schema';
+import { EmployeeTerminationResignation, EmployeeTerminationResignationSchema } from '../payroll/execution/models/EmployeeTerminationResignation.schema';
+import { signingBonus, signingBonusSchema } from '../payroll/config_setup/models/signingBonus.schema';
+import { payGrade, payGradeSchema } from '../payroll/config_setup/models/payGrades.schema';
 
 // Repository implementations
 import {
@@ -93,7 +55,9 @@ import {
   TerminationRequestRepository,
   ClearanceChecklistRepository,
   EmployeeTerminationResignationRepository,
+  AssessmentResultRepository
 } from './repositories';
+import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
 
 // Module imports
 import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
@@ -101,7 +65,7 @@ import { NotificationModule } from '../employee-subsystem/notification/notificat
 import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
-
+import { PayrollModule } from '../payroll/payroll.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -109,10 +73,7 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
       { name: JobTemplate.name, schema: JobTemplateSchema },
       { name: JobRequisition.name, schema: JobRequisitionSchema },
       { name: Application.name, schema: ApplicationSchema },
-      {
-        name: ApplicationStatusHistory.name,
-        schema: ApplicationStatusHistorySchema,
-      },
+      { name: ApplicationStatusHistory.name, schema: ApplicationStatusHistorySchema },
       { name: Interview.name, schema: InterviewSchema },
       { name: AssessmentResult.name, schema: AssessmentResultSchema },
       { name: Referral.name, schema: ReferralSchema },
@@ -135,10 +96,7 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
       { name: LeaveType.name, schema: LeaveTypeSchema },
 
       // Payroll schemas
-      {
-        name: EmployeeTerminationResignation.name,
-        schema: EmployeeTerminationResignationSchema,
-      },
+      { name: EmployeeTerminationResignation.name, schema: EmployeeTerminationResignationSchema },
       { name: signingBonus.name, schema: signingBonusSchema },
       { name: payGrade.name, schema: payGradeSchema },
     ]),
@@ -149,11 +107,19 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     forwardRef(() => PerformanceModule),
     OrganizationStructureModule,
     LeavesModule,
-
+    PayrollModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'default-secret-key',
+      signOptions: { expiresIn: '24h' },
+    }),
   ],
-  controllers: [RecruitmentController, OffboardingController],
+  controllers: [
+    RecruitmentController,
+    OffboardingController,
+  ],
   providers: [
     RecruitmentService,
+    RecruitmentSchedulerService,
     OffboardingService,
     // Repository implementations
     JobTemplateRepository,
@@ -169,7 +135,15 @@ import { OrganizationStructureModule } from '../employee-subsystem/organization-
     TerminationRequestRepository,
     ClearanceChecklistRepository,
     EmployeeTerminationResignationRepository,
+    AssessmentResultRepository,
+    CandidateRepository,
+    // Guards
+    AuthGuard,
+    authorizationGuard,
   ],
-  exports: [RecruitmentService, OffboardingService],
+  exports: [
+    RecruitmentService,
+    OffboardingService,
+  ],
 })
-export class RecruitmentModule {}
+export class RecruitmentModule { }

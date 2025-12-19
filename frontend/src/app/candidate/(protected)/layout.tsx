@@ -18,9 +18,13 @@ import {
 } from '../../../common/material-ui/dashboard/theme/customizations';
 import {
     getCandidateIdFromCookie,
+    getUserRolesFromCookie,
     logout
 } from '../../../lib/auth-utils';
 import { decryptData } from '../../../common/utils/encryption';
+import { AuthProvider } from '../../../context/AuthContext';
+import { ToastProvider } from '../../../lib/hooks/useToast';
+import { SystemRole } from '../../../types/auth';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -43,11 +47,13 @@ interface CandidateProfile {
 export default function CandidateLayout({ children }: LayoutProps) {
     const router = useRouter();
     const [candidate, setCandidate] = React.useState<CandidateProfile | null>(null);
+    const [roles, setRoles] = React.useState<SystemRole[]>(getUserRolesFromCookie() as SystemRole[]);
 
     React.useEffect(() => {
         const fetchCandidate = async () => {
             // Try cookie-based auth first (new approach)
             let candidateId = getCandidateIdFromCookie();
+            setRoles(getUserRolesFromCookie() as SystemRole[]);
 
             // Fallback to localStorage during migration
             if (!candidateId) {
@@ -79,12 +85,15 @@ export default function CandidateLayout({ children }: LayoutProps) {
                     const data = await response.json();
                     setCandidate(data);
                 } else {
-                    console.error('Failed to fetch candidate profile', response.status, response.statusText);
-                    logout('/candidate/login');
+                    // Only logout on authentication/authorization failures
+                    if (response.status === 401 || response.status === 403) {
+                        logout('/candidate/login');
+                    }
                 }
             } catch (error) {
-                console.error('Failed to fetch candidate profile for layout', error);
-                logout('/candidate/login');
+                console.error('❌ [CandidateLayout] Network error fetching profile:', error);
+                // Don't logout on network error - might be transient
+                // logout('/candidate/login');
             }
         };
 
@@ -92,48 +101,52 @@ export default function CandidateLayout({ children }: LayoutProps) {
     }, [router]);
 
     return (
-        <AppTheme themeComponents={xThemeComponents}>
-            <CssBaseline enableColorScheme />
-            <Box sx={{ display: 'flex' }}>
-                <SideMenu user={candidate ? {
-                    name: `${candidate.firstName} ${candidate.lastName}`,
-                    email: candidate.personalEmail,
-                    image: candidate.profilePictureUrl || ''
-                } : undefined} />
-                <AppNavbar />
+        <AuthProvider initialRoles={roles} initialLoading={false}>
+            <ToastProvider>
+                <AppTheme themeComponents={xThemeComponents}>
+                    <CssBaseline enableColorScheme />
+                    <Box sx={{ display: 'flex' }}>
+                        <SideMenu user={candidate ? {
+                            name: `${candidate.firstName} ${candidate.lastName}`,
+                            email: candidate.personalEmail,
+                            image: candidate.profilePictureUrl || ''
+                        } : undefined} />
+                        <AppNavbar />
 
-                {/* Main Content Area */}
-                <Box
-                    component="main"
-                    sx={(theme) => ({
-                        flexGrow: 1,
-                        backgroundColor: theme.vars
-                            ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
-                            : alpha(theme.palette.background.default, 1),
-                        overflow: 'auto',
-                        height: '100vh',
-                    })}
-                >
-                    <Stack
-                        spacing={2}
-                        sx={{
-                            alignItems: 'center',
-                            mx: 3,
-                            pb: 5,
-                            mt: { xs: 8, md: 0 },
-                            height: '100%',
-                        }}
-                    >
-                        {/* Header is universal for this layout */}
-                        <Header notificationPath="/candidate/notifications" />
+                        {/* Main Content Area */}
+                        <Box
+                            component="main"
+                            sx={(theme) => ({
+                                flexGrow: 1,
+                                backgroundColor: theme.vars
+                                    ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
+                                    : alpha(theme.palette.background.default, 1),
+                                overflow: 'auto',
+                                height: '100vh',
+                            })}
+                        >
+                            <Stack
+                                spacing={2}
+                                sx={{
+                                    alignItems: 'center',
+                                    mx: 3,
+                                    pb: 5,
+                                    mt: { xs: 8, md: 0 },
+                                    height: '100%',
+                                }}
+                            >
+                                {/* Header is universal for this layout */}
+                                <Header notificationPath="/candidate/notifications" />
 
-                        {/* Page Content */}
-                        <Box sx={{ width: '100%', height: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
-                            {children}
+                                {/* Page Content */}
+                                <Box sx={{ width: '100%', height: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+                                    {children}
+                                </Box>
+                            </Stack>
                         </Box>
-                    </Stack>
-                </Box>
-            </Box>
-        </AppTheme>
+                    </Box>
+                </AppTheme>
+            </ToastProvider>
+        </AuthProvider>
     );
 }

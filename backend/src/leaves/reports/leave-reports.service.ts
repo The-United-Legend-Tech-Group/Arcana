@@ -5,7 +5,7 @@ import {
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+//import { Cron } from '@nestjs/schedule';
 import { Types } from 'mongoose';
 import { FilterLeaveHistoryDto } from '../dtos/filter-leave-history.dto';
 import { ManagerFilterTeamDataDto } from '../dtos/manager-filter-team-data.dto';
@@ -55,11 +55,7 @@ export class LeavesReportService implements OnModuleInit{
       taken: entitlement.taken,
       pending: entitlement.pending,
       remaining: entitlement.remaining,
-      balance:
-        (entitlement.accruedRounded ?? 0) +
-        (entitlement.carryForward ?? 0) -
-        (entitlement.taken ?? 0) -
-        (entitlement.pending ?? 0),
+      balance: entitlement.remaining
     }));
   }
 
@@ -460,10 +456,10 @@ export class LeavesReportService implements OnModuleInit{
    * REQ-041: Automatic Carry-Forward
    * Processes carry-forward of unused leave days
    */
-@Cron('*/5 * * * *', {
+/*@Cron('5 * * * *', {
     name: 'automatic-carry-forward',
     timeZone: 'Africa/Cairo',
-  })
+  })*/
   async carryForwardLeaves() {
     console.log('🔄 [REQ-041] Automatic carry-forward started at', new Date().toISOString());
     const policies = await this.leavePolicyRepository.find();
@@ -598,10 +594,10 @@ export class LeavesReportService implements OnModuleInit{
    * Processes automatic leave accrual for all employees according to company policy
    * REQ-042: Automatically adjusts accrual for unpaid leave periods
    */
-  @Cron('*/5 * * * *', {
+  /*@Cron('5 * * * *', {
     name: 'automatic-leave-accrual',
     timeZone: 'Africa/Cairo',
-  })
+  })*/
   async accrueLeaves() {
     console.log('🔄 [REQ-040] Automatic accrual started at', new Date().toISOString());
     const policies = await this.leavePolicyRepository.find();

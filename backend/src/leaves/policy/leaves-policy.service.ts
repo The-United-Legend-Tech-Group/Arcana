@@ -43,7 +43,11 @@ export class LeavesPolicyService {
   async autoSyncHolidaysScheduled() {
     try {
       await this.autoSyncHolidaysForCurrentYear();
-      await this.executeAnnualReset({});
+      // Only run annual reset automatically on Jan 1st.
+      const now = new Date();
+      if (now.getMonth() === 0 && now.getDate() === 1) {
+        await this.executeAnnualReset({ year: now.getFullYear() });
+      }
       // Optionally, log or notify success
     } catch (err) {
       // Optionally, log error
@@ -865,8 +869,192 @@ async executeAnnualReset(): Promise<void> {
         pending: 0,
         carryForward: carryForward,
         remaining: newRemaining,
-        nextResetDate: new Date(year ?? new Date().getFullYear() + 1, 0, 1), // Jan 1 of next year
+        nextResetDate: new Date((year ?? new Date().getFullYear()) + 1, 0, 1), // Jan 1 of next year
       });
+    }
+  }
+
+  /**
+   * Execute carry-forward for entitlements whose reset date has arrived.
+   * Moves unused remaining into carryForward within caps and resets taken/pending.
+   * Also advances nextResetDate according to expiryAfterMonths or year boundary.
+   */
+  async executeCarryForward(dto: AnnualResetDto = {} as any): Promise<void> {
+    const { employeeIds, leaveTypeIds } = dto || {};
+
+    const filter: any = {};
+    if (employeeIds?.length) filter.employeeId = { $in: employeeIds.map((id) => new Types.ObjectId(id)) };
+    if (leaveTypeIds?.length) filter.leaveTypeId = { $in: leaveTypeIds.map((id) => new Types.ObjectId(id)) };
+
+    const entitlements = await this.leaveEntitlementRepository.find(filter);
+
+    const now = new Date();
+    for (const ent of entitlements) {
+      // Only process if reset is due: nextResetDate <= now, or it's Jan 1 when no nextResetDate set
+      const isYearStart = now.getMonth() === 0 && now.getDate() === 1;
+      if (ent.nextResetDate && new Date(ent.nextResetDate) > now) continue;
+      if (!ent.nextResetDate && !isYearStart) continue;
+
+      const policy = await this.leavePolicyRepository.findOne({ leaveTypeId: ent.leaveTypeId });
+      if (!policy) continue;
+
+      const carryForward = policy.carryForwardAllowed
+        ? Math.min(ent.remaining ?? 0, policy.maxCarryForward ?? 0)
+        : 0;
+
+      const yearlyEntitlement = policy.yearlyRate ?? (ent.yearlyEntitlement || 0);
+      const newRemaining = yearlyEntitlement + carryForward;
+
+      // Advance next reset: prefer expiryAfterMonths, else next Jan 1
+      let nextReset = null as Date | null;
+      if (policy.expiryAfterMonths && Number(policy.expiryAfterMonths) > 0) {
+        nextReset = new Date(now);
+        nextReset.setMonth(nextReset.getMonth() + Number(policy.expiryAfterMonths));
+      } else {
+        nextReset = new Date(now.getFullYear() + 1, 0, 1);
+      }
+
+      await this.leaveEntitlementRepository.updateById(ent._id.toString(), {
+        taken: 0,
+        pending: 0,
+        carryForward,
+        yearlyEntitlement,
+        remaining: newRemaining,
+        nextResetDate: nextReset,
+      });
+    }
+  }
+
+  /**
+   * Daily cron: apply carry-forward for any entitlements due to reset.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async autoCarryForwardScheduled() {
+    try {
+      await this.executeCarryForward({});
+    } catch (err) {
+      // Optionally log errors
+    }
+  }
+
+  /**
+   * Process monthly accrual and suspend/adjust during unpaid leave or long absence.
+   * - Base accrual per policy (MONTHLY, YEARLY/12, PER_TERM)
+   * - Reduce proportionally by unpaid leave days in the current month
+   * - Optionally suspend entirely for very long unpaid leaves (>= 14 days within the month)
+   */
+  async processMonthlyAccrual(filters?: { employeeIds?: string[]; leaveTypeIds?: string[] }) {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const totalDays = monthEnd.getDate();
+
+    // Load all policies once
+    const policies = await this.leavePolicyRepository.find();
+
+    // Filter entitlements by optional filters
+    const entFilter: any = {};
+    if (filters?.employeeIds?.length) entFilter.employeeId = { $in: filters.employeeIds.map((id) => new Types.ObjectId(id)) };
+    if (filters?.leaveTypeIds?.length) entFilter.leaveTypeId = { $in: filters.leaveTypeIds.map((id) => new Types.ObjectId(id)) };
+    const entitlements = await this.leaveEntitlementRepository.find(entFilter);
+
+    for (const entitlement of entitlements) {
+      const policy = policies.find((p) => p.leaveTypeId.toString() === entitlement.leaveTypeId.toString());
+      if (!policy) continue;
+
+      // Skip if already processed this month for MONTHLY or YEARLY methods
+      if (entitlement.lastAccrualDate) {
+        const lastAccrual = new Date(entitlement.lastAccrualDate);
+        if (
+          (policy.accrualMethod === AccrualMethod.MONTHLY || policy.accrualMethod === AccrualMethod.YEARLY) &&
+          lastAccrual.getFullYear() === today.getFullYear() &&
+          lastAccrual.getMonth() === today.getMonth()
+        ) {
+          continue;
+        }
+      }
+
+      // Base accrual
+      let accrual = 0;
+      switch (policy.accrualMethod) {
+        case AccrualMethod.MONTHLY:
+          accrual = policy.monthlyRate ?? 0;
+          break;
+        case AccrualMethod.YEARLY:
+          accrual = (policy.yearlyRate ?? 0) / 12;
+          break;
+        case AccrualMethod.PER_TERM: {
+          // Only accrue every 6 months
+          const last = entitlement.lastAccrualDate ? new Date(entitlement.lastAccrualDate) : null;
+          const monthsSinceLast = last
+            ? (today.getFullYear() - last.getFullYear()) * 12 + (today.getMonth() - last.getMonth())
+            : Infinity;
+          if (monthsSinceLast < 6) continue;
+          accrual = (policy.monthlyRate ?? 0) * 6;
+          break;
+        }
+        default:
+          accrual = 0;
+      }
+
+      if (accrual <= 0) continue;
+
+      // Find approved unpaid leave requests overlapping this month
+      const unpaidLeaveRequests = await this.leaveRequestRepository.findWithFiltersAndPopulate(
+        {
+          employeeId: entitlement.employeeId,
+          status: 'APPROVED',
+          'dates.from': { $lte: monthEnd },
+          'dates.to': { $gte: monthStart },
+        },
+        ['leaveTypeId']
+      );
+
+      let unpaidDays = 0;
+      let hasLongUnpaidAbsence = false;
+      for (const req of unpaidLeaveRequests) {
+        const lt: any = req.leaveTypeId;
+        const isUnpaid = lt && typeof lt === 'object' ? lt.paid === false : false;
+        if (!isUnpaid) continue;
+
+        const from = new Date(req.dates.from);
+        const to = new Date(req.dates.to);
+        const start = from < monthStart ? monthStart : from;
+        const end = to > monthEnd ? monthEnd : to;
+        const diffDays = Math.max(0, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1);
+        unpaidDays += diffDays;
+        if (diffDays >= 14) hasLongUnpaidAbsence = true;
+      }
+
+      // Adjust accrual: either proportional reduction, or full suspension for long unpaid absence
+      let adjustedAccrual = accrual;
+      if (hasLongUnpaidAbsence) {
+        adjustedAccrual = 0;
+      } else if (unpaidDays > 0) {
+        const workingDays = Math.max(0, totalDays - unpaidDays);
+        adjustedAccrual = accrual * (workingDays / totalDays);
+      }
+
+      // Update entitlement accruals
+      entitlement.accruedActual = (entitlement.accruedActual || 0) + adjustedAccrual;
+      entitlement.accruedRounded = this.applyRoundingRule(entitlement.accruedActual, policy.roundingRule);
+
+      // Recompute remaining
+      entitlement.remaining = this.computeRemaining(entitlement);
+      entitlement.lastAccrualDate = today;
+      await entitlement.save();
+    }
+  }
+
+  /**
+   * Cron: Run monthly accrual at 1:30am. Guarded to avoid double-processing in the same month.
+   */
+  @Cron('30 1 * * *')
+  async autoMonthlyAccrualScheduled() {
+    try {
+      await this.processMonthlyAccrual();
+    } catch (err) {
+      // Optionally log errors
     }
   }
 

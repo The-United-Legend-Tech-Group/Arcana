@@ -435,6 +435,36 @@ export class LeavesPolicyController {
     return { message: 'Annual reset completed successfully' };
   }
 
+  // Trigger carry-forward manually (period end)
+  @Post('carry-forward/run')
+  @ApiOperation({ summary: 'Execute carry-forward for due entitlements (period end)' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiBody({ type: AnnualResetDto })
+  @ApiResponse({ status: 200, description: 'Carry-forward executed successfully' })
+  async runCarryForward(@Body() dto: AnnualResetDto): Promise<{ message: string }> {
+    await this.leavesService.executeCarryForward(dto);
+    return { message: 'Carry-forward executed successfully' };
+  }
+
+  // Trigger monthly accrual manually with unpaid leave suspension
+  @Post('accrual/run')
+  @ApiOperation({ summary: 'Execute monthly accrual (suspended/adjusted during unpaid leave)' })
+  @Roles(SystemRole.HR_ADMIN)
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        employeeIds: { type: 'array', items: { type: 'string' } },
+        leaveTypeIds: { type: 'array', items: { type: 'string' } },
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Monthly accrual executed successfully' })
+  async runMonthlyAccrual(@Body() dto: { employeeIds?: string[]; leaveTypeIds?: string[] }): Promise<{ message: string }> {
+    await this.leavesService.processMonthlyAccrual(dto);
+    return { message: 'Monthly accrual executed successfully' };
+  }
+
   // ------------------------------
   // REQ-013: Manual Balance Adjustment - Tested
   // ------------------------------

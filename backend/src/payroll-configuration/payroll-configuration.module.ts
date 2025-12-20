@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 // Import Payroll Configuration&Setup controller and service
 import { ConfigSetupController } from './payroll-configuration.controller';
 import { ConfigSetupService } from './payroll-configuration.service';
-import { AuthModule } from '../employee-subsystem/employee/auth.module';
+import { AuthModule } from '../employee-profile/auth.module';
 // Import Backup services and controller
 import { ConfigBackupService } from './backup/config-backup.service';
 import { ConfigBackupSchedulerService } from './backup/config-backup-scheduler.service';
@@ -60,7 +60,7 @@ import {
 import {
   EmployeeSystemRole,
   EmployeeSystemRoleSchema,
-} from '../employee-subsystem/employee/models/employee-system-role.schema';
+} from '../employee-profile/models/employee-system-role.schema';
 
 @Module({
   imports: [

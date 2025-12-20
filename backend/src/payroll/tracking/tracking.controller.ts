@@ -27,7 +27,7 @@ import { CreateTaxDocumentDto } from './dto/create-tax-document.dto';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
 
 // All employee roles (excluding JOB_CANDIDATE as they are not employees yet)
 const ALL_EMPLOYEE_ROLES = [
@@ -50,7 +50,7 @@ export class TrackingController {
   constructor(
     private readonly trackingService: TrackingService,
     private readonly payslipService: PayslipService,
-  ) {}
+  ) { }
 
   // Payroll tracking - Disputes operations
   // REQ-PY-16: Submit payroll dispute - Any authenticated employee
@@ -299,23 +299,23 @@ export class TrackingController {
   ) {
     const employeeId = this.getEmployeeId(req);
     const pdfBuffer = await this.trackingService.downloadTaxInsuranceBenefitsReportPDF(employeeId, reportData);
-    
+
     // Generate filename
     const documentType = reportData.documentType || 'Report';
     const year = reportData.year || new Date().getFullYear();
     const month = reportData.month || '';
-    
+
     // Sanitize document type for filename (remove spaces and special characters)
     const sanitizedDocumentType = documentType.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-    
+
     const filename = `TaxInsuranceBenefitsReport_${sanitizedDocumentType}_${year}${month ? `_${month}` : ''}.pdf`;
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': pdfBuffer.length.toString(),
     });
-    
+
     res.send(pdfBuffer);
   }
 
@@ -373,13 +373,13 @@ export class TrackingController {
   ) {
     const employeeId = this.getEmployeeId(req);
     const { buffer, filename } = await this.payslipService.downloadPayslipPDFWithMetadata(payslipId, employeeId);
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': buffer.length.toString(),
     });
-    
+
     res.send(buffer);
   }
 
@@ -543,21 +543,21 @@ export class TrackingController {
   ) {
     const employeeId = this.getEmployeeId(req);
     const yearNumber = parseInt(year, 10);
-    
+
     if (isNaN(yearNumber) || yearNumber < 2000 || yearNumber > 2100) {
       return res.status(400).json({ message: 'Invalid year. Must be between 2000 and 2100' });
     }
 
     const pdfBuffer = await this.trackingService.downloadAnnualTaxDocumentPDF(employeeId, yearNumber);
-    
+
     const filename = `Annual_Tax_Statement_${yearNumber}.pdf`;
-    
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': pdfBuffer.length.toString(),
     });
-    
+
     res.send(pdfBuffer);
   }
 
@@ -579,11 +579,11 @@ export class TrackingController {
 
   private getEmployeeId(req: Request): string {
     const user = req['user'];
-    const employeeId = user?.sub || 
-                       user?.userid || 
-                       user?.employeeId ||
-                       req.cookies?.employeeid || 
-                       req.cookies?.employeeId;
+    const employeeId = user?.sub ||
+      user?.userid ||
+      user?.employeeId ||
+      req.cookies?.employeeid ||
+      req.cookies?.employeeId;
     if (!employeeId) {
       throw new UnauthorizedException('Employee ID not found in token or cookies');
     }

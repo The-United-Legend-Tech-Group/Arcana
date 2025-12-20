@@ -24,7 +24,7 @@ import {
   employeePenalties,
   employeePenaltiesSchema,
 } from './employeePenalties.schema';
-import { EmployeeProfile as Employee } from '../../../employee-subsystem/employee/models/employee-profile.schema';
+import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
 import {
   refundDetails,
   refundDetailsSchema,

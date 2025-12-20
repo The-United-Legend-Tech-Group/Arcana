@@ -4,7 +4,7 @@ import { OffboardingService } from './offboarding.service';
 import { AuthGuard } from '../common/guards/authentication.guard';
 import { authorizationGuard } from '../common/guards/authorization.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../employee-profile/enums/employee-profile.enums';
 import { InitiateTerminationReviewDto } from './offboardingDtos/initiate-termination-review.dto';
 import { InitiateOffboardingChecklistDto } from './offboardingDtos/initiate-offboarding-checklist.dto';
 //import { SendOffboardingNotificationDto } from './offboardingDtos/send-offboarding-notification.dto';
@@ -17,9 +17,9 @@ import { UpdateEquipmentReturnDto } from './offboardingDtos/update-equipment-ret
 import { TerminationRequest } from './models/termination-request.schema';
 import { ClearanceChecklist } from './models/clearance-checklist.schema';
 import { RevokeSystemAccessDto } from './offboardingDtos/revoke-system-access.dto';
-import { EmployeeStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { EmployeeStatus } from '../employee-profile/enums/employee-profile.enums';
 import { Types } from 'mongoose';
-//import { Notification } from '../employee-subsystem/notification/models/notification.schema';
+//import { Notification } from '../notification/models/notification.schema';
 
 @ApiTags('Offboarding')
 @Controller('offboarding')
@@ -73,11 +73,11 @@ export class OffboardingController {
   async submitResignation(@Body() dto: SubmitResignationDto, @Request() req: any): Promise<TerminationRequest> {
     // Extract employeeId from JWT token if not provided in DTO
     const employeeId = dto.employeeId || req.user?.sub;
-    
+
     console.log('Submit Resignation - Employee ID from DTO:', dto.employeeId);
     console.log('Submit Resignation - Employee ID from JWT:', req.user?.sub);
     console.log('Submit Resignation - Final Employee ID:', employeeId);
-    
+
     if (!employeeId) {
       throw new BadRequestException('Employee ID is required. Please authenticate or provide valid employee ID.');
     }
@@ -86,7 +86,7 @@ export class OffboardingController {
     if (!Types.ObjectId.isValid(employeeId)) {
       throw new BadRequestException(`Invalid Employee ID format: ${employeeId}. Must be a valid MongoDB ObjectId (24 hex characters).`);
     }
-    
+
     return this.offboardingService.submitResignation({ ...dto, employeeId });
   }
 

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { terminationAndResignationBenefits } from '../../../payroll-configuration/models/terminationAndResignationBenefits';
-import { EmployeeProfile as Employee } from '../../../employee-subsystem/employee/models/employee-profile.schema';
+import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
 import { TerminationRequest } from '../../../Recruitment/models/termination-request.schema';
 import { BenefitStatus } from '../enums/payroll-execution-enum';
 

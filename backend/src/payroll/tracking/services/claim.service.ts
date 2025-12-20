@@ -8,9 +8,9 @@ import { CreateExpenseClaimDto } from '../dto/create-expense-claim.dto';
 import { ApproveRejectClaimDto } from '../dto/approve-reject-claim.dto';
 import { ConfirmApprovalDto } from '../dto/confirm-approval.dto';
 import { GenerateRefundDto } from '../dto/generate-refund.dto';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-subsystem/employee/models/employee-system-role.schema';
-import { Notification } from '../../../employee-subsystem/notification/models/notification.schema';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-profile/models/employee-system-role.schema';
+import { Notification } from '../../../notification/models/notification.schema';
 import { generateEntityId } from './shared/id-generator.util';
 import { NotificationUtil } from './shared/notification.util';
 
@@ -23,7 +23,7 @@ export class ClaimService {
     @InjectModel(EmployeeSystemRole.name)
     private employeeSystemRoleModel: Model<EmployeeSystemRoleDocument>,
     private notificationUtil: NotificationUtil,
-  ) {}
+  ) { }
 
   /**
    * Validates that claim has not already been processed (approved or rejected)
@@ -57,11 +57,11 @@ export class ClaimService {
     claim.status = ClaimStatus.REJECTED;
     claim.rejectionReason = rejectionReason.trim();
 
-    const managerComment = comment 
-      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}` 
+    const managerComment = comment
+      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}`
       : `Manager rejected. Reason: ${rejectionReason}`;
-    
-    claim.resolutionComment = claim.resolutionComment 
+
+    claim.resolutionComment = claim.resolutionComment
       ? `${claim.resolutionComment}\n${managerComment}`
       : managerComment;
 
@@ -146,13 +146,13 @@ export class ClaimService {
 
   async getClaimById(claimId: string, employeeId: Types.ObjectId): Promise<claimsDocument> {
     const cleanClaimId = claimId.trim();
-    
+
     const employeeRole = await this.employeeSystemRoleModel.findOne({
       employeeProfileId: employeeId,
       isActive: true,
     });
 
-    const canViewAnyClaim = employeeRole?.roles?.some(role => 
+    const canViewAnyClaim = employeeRole?.roles?.some(role =>
       [SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF].includes(role)
     );
 
@@ -200,11 +200,11 @@ export class ClaimService {
     }
 
     this.validateClaimNotProcessed(claim);
-    
+
     if (claim.status === ClaimStatus.PENDING_MANAGER_APPROVAL) {
       throw new BadRequestException('Claim has already been approved by a Payroll Specialist and is awaiting manager confirmation');
     }
-    
+
     this.validateClaimStatus(
       claim,
       ClaimStatus.UNDER_REVIEW,
@@ -221,7 +221,7 @@ export class ClaimService {
       if (approveRejectDto.approvedAmount > claim.amount) {
         throw new BadRequestException(`Approved amount (${approveRejectDto.approvedAmount}) cannot exceed the claimed amount (${claim.amount}).`);
       }
-      
+
       claim.approvedAmount = approveRejectDto.approvedAmount;
       claim.status = ClaimStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
@@ -229,7 +229,7 @@ export class ClaimService {
       } else {
         claim.resolutionComment = `Payroll Specialist: Approved for manager review (Proposed approved amount: ${approveRejectDto.approvedAmount})`;
       }
-      
+
       try {
         await this.notificationUtil.notifyEmployeeAboutStatus(
           claim.employeeId,
@@ -242,7 +242,7 @@ export class ClaimService {
       } catch (error) {
         // Continue even if notification fails
       }
-      
+
       try {
         await this.notificationUtil.notifyPayrollManager(
           'claim',
@@ -257,7 +257,7 @@ export class ClaimService {
       if (!approveRejectDto.rejectionReason || approveRejectDto.rejectionReason.trim().length === 0) {
         throw new BadRequestException('Rejection reason is required when rejecting a claim');
       }
-      
+
       await this.handleClaimRejection(
         claim,
         approveRejectDto.rejectionReason,
@@ -272,8 +272,8 @@ export class ClaimService {
     return await this.claimsModel.find({
       status: ClaimStatus.PENDING_MANAGER_APPROVAL,
     })
-    .sort({ createdAt: -1 })
-    .populate('employeeId');
+      .sort({ createdAt: -1 })
+      .populate('employeeId');
   }
 
   async confirmClaimApproval(
@@ -295,7 +295,7 @@ export class ClaimService {
       }
 
       this.validateClaimNotProcessed(claim);
-      
+
       this.validateClaimStatus(
         claim,
         ClaimStatus.PENDING_MANAGER_APPROVAL,
@@ -312,11 +312,11 @@ export class ClaimService {
     }
 
     this.validateClaimNotProcessed(claim);
-    
+
     if (claim.status === ClaimStatus.APPROVED) {
       throw new BadRequestException('Claim has already been approved and confirmed');
     }
-    
+
     this.validateClaimStatus(
       claim,
       ClaimStatus.PENDING_MANAGER_APPROVAL,
@@ -350,11 +350,11 @@ export class ClaimService {
       }
     }
 
-    const managerComment = confirmDto.comment 
-      ? `Manager confirmed: ${confirmDto.comment}` 
+    const managerComment = confirmDto.comment
+      ? `Manager confirmed: ${confirmDto.comment}`
       : 'Manager confirmed approval';
-    
-    claim.resolutionComment = claim.resolutionComment 
+
+    claim.resolutionComment = claim.resolutionComment
       ? `${claim.resolutionComment}\n${managerComment}`
       : managerComment;
 
@@ -372,7 +372,7 @@ export class ClaimService {
     } catch (error) {
       // Continue even if notification fails
     }
-    
+
     try {
       await this.notificationUtil.notifyFinanceStaff(
         'claim',
@@ -392,8 +392,8 @@ export class ClaimService {
     const approvedClaims = await this.claimsModel.find({
       status: ClaimStatus.APPROVED,
     })
-    .sort({ updatedAt: -1 })
-    .populate('employeeId');
+      .sort({ updatedAt: -1 })
+      .populate('employeeId');
 
     const refunds = await this.refundsModel.find({
       claimId: { $in: approvedClaims.map(c => c._id) },

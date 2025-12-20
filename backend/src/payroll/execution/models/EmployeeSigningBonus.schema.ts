@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { signingBonus } from '../../../payroll-configuration/models/signingBonus.schema';
-import { EmployeeProfile as Employee } from '../../../employee-subsystem/employee/models/employee-profile.schema';
+import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
 import { BonusStatus } from '../enums/payroll-execution-enum';
 
 export type employeeSigningBonusDocument =

@@ -46,11 +46,11 @@ import {
 import {
   EmployeeProfile,
   EmployeeProfileSchema,
-} from '../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../employee-profile/models/employee-profile.schema';
 import {
   EmployeeSystemRole,
   EmployeeSystemRoleSchema,
-} from '../../employee-subsystem/employee/models/employee-system-role.schema';
+} from '../../employee-profile/models/employee-system-role.schema';
 
 // Schemas - Config Setup
 import {

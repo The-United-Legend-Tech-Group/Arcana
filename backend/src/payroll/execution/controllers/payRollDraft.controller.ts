@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../../common/guards/authorization.guard';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
 import { Roles } from '../../../common/decorators/roles.decorator';
 
 
@@ -37,7 +37,7 @@ export class PayRollDraftController {
     private signingBonusService: EmployeeSigningBonusService,
     private terminationService: EmployeeTerminationResignationService,
     private payrollRunPeriodService: PayrollRunPeriodService,
-  ) {}
+  ) { }
 
   @Roles(SystemRole.PAYROLL_SPECIALIST)
   // Signing bonus approve
@@ -51,53 +51,53 @@ export class PayRollDraftController {
   async rejectSigningBonus(@Body() dto: RejectSigningBonusDto) {
     return this.signingBonusService.rejectEmployeeSigningBonus(dto);
   }
-  
+
   @Roles(SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
   // Create employee signing bonus
   @Post('signing-bonus/create')
   async createEmployeeSigningBonus(@Body() dto: CreateEmployeeSigningBonusDto) {
     return this.signingBonusService.createEmployeeSigningBonus(dto);
   }
-@Roles(SystemRole.PAYROLL_SPECIALIST)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   // Termination approve
   @Patch('termination/approve')
   async approveTermination(@Body() dto: ApproveTerminationDto) {
     return this.terminationService.approveTermination(dto);
   }
-@Roles(SystemRole.PAYROLL_SPECIALIST)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   // Termination reject
   @Patch('termination/reject')
   async rejectTermination(@Body() dto: RejectTerminationDto) {
     return this.terminationService.rejectTermination(dto);
   }
 
-   @Roles(SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
   // Create employee termination
   @Post('termination/create')
   async createEmployeeTermination(@Body() dto: CreateEmployeeTerminationDto) {
     return this.terminationService.createEmployeeTermination(dto);
   }
 
-   @Roles(SystemRole.PAYROLL_SPECIALIST)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   // Edit payroll period (only when run is rejected)
   @Patch('payroll-run/period')
   async editPayrollPeriod(@Body() dto: EditPayrollPeriodDto) {
     return this.payrollRunPeriodService.editPayrollPeriod(dto);
   }
 
-     @Roles(SystemRole.PAYROLL_SPECIALIST)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   @Patch('termination/edit-amount')
   async editEmployeeTerminationAmount(@Body() dto: EditEmployeeTerminationDto) {
     return this.terminationService.editEmployeeTerminationAmount(dto);
   }
 
-     @Roles(SystemRole.PAYROLL_SPECIALIST)
+  @Roles(SystemRole.PAYROLL_SPECIALIST)
   @Patch('signingBonus/edit-amount')
-  async editEmployeeSigningBonusAmount(@Body() dto: EditEmployeeSigningBonusDto){
+  async editEmployeeSigningBonusAmount(@Body() dto: EditEmployeeSigningBonusDto) {
     return this.signingBonusService.editEmployeeSigningAmount(dto);
   }
 
-    @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.PAYROLL_SPECIALIST, SystemRole.HR_MANAGER, SystemRole.SYSTEM_ADMIN)
   @Get('signing-bonuses')
   async getAllSigningBonuses() {
     return this.signingBonusService.getAllEmployeeSigningBonuses();

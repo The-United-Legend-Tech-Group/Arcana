@@ -5,7 +5,7 @@ import { RecruitmentService } from './recruitment.service';
 import { AuthGuard } from '../common/guards/authentication.guard';
 import { authorizationGuard } from '../common/guards/authorization.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../employee-profile/enums/employee-profile.enums';
 import { UploadSignedContractDto } from './DTO/upload-signed-contract.dto';
 import { UploadComplianceDocumentsDto } from './DTO/upload-compliance-documents.dto';
 import { HrSignContractDto } from './DTO/hr-sign-contract.dto';

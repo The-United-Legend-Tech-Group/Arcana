@@ -22,7 +22,7 @@ import { FreezePayrollDto } from './dto/freeze-payroll.dto';
 import { UnfreezePayrollDto } from './dto/unfreeze-payroll.dto';
 import { GeneratePayslipsDto } from './dto/generate-payslips.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
 import { PayrollRunService } from './services/payroll-run.service';
 import { GenerateDraftDto } from './dto/generateDraft.dto';
 import { PayrollExceptionsQueryService } from './services/payroll-exceptions-query.service';
@@ -37,7 +37,7 @@ export class ExecutionController {
     private readonly executionService: ExecutionService,
     private readonly payrollRunService: PayrollRunService,
     private readonly payrollExceptionsQueryService: PayrollExceptionsQueryService,
-  ) {}
+  ) { }
 
   // ==================== PHASE 3: REVIEW & APPROVAL ====================
   // NOTE: Specific routes MUST come before parameterized routes in NestJS

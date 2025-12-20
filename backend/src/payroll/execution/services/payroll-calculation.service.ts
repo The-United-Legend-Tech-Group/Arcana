@@ -19,8 +19,8 @@ import {
 
 import { ConfigStatus } from '../../../payroll-configuration/enums/payroll-configuration-enums';
 import { refunds } from 'src/payroll/tracking/models/refunds.schema';
-import { EmployeeSystemRole } from 'src/employee-subsystem/employee/models/employee-system-role.schema';
-import { EmployeeProfile } from 'src/employee-subsystem/employee/models/employee-profile.schema';
+import { EmployeeSystemRole } from 'src/employee-profile/models/employee-system-role.schema';
+import { EmployeeProfile } from 'src/employee-profile/models/employee-profile.schema';
 import { employeePenalties } from '../models/employeePenalties.schema';
 import {
   employeeSigningBonus,

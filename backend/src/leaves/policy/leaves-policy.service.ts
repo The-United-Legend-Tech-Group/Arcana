@@ -35,7 +35,7 @@ import { RoundingRule } from '../enums/rounding-rule.enum';
 import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { LeaveCategoryRepository } from '../repository/leave-category.repository';
 import { LeaveCategory } from '../models/leave-category.schema';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
 import { LeaveStatus } from '../enums/leave-status.enum';
 
 @Injectable()
@@ -68,7 +68,7 @@ export class LeavesPolicyService {
     private readonly attendanceService: AttendanceService,
     private readonly leaveCategoryRepository: LeaveCategoryRepository,
     private readonly leaveRequestRepository: LeaveRequestRepository,
-  ) {}
+  ) { }
   //private readonly approvalWorkflowService: ApprovalWorkflowService
 
   // REQ-001: Initiate a leave policy
@@ -607,6 +607,7 @@ export class LeavesPolicyService {
     );
 
     let amount = 0;
+<<<<<<< HEAD
     if (
       oldRemaining &&
       updateFields.remaining &&
@@ -617,17 +618,27 @@ export class LeavesPolicyService {
       oldRemaining && updateFields.remaining
         ? (amount = oldRemaining - updateFields.remaining)
         : 0;
+=======
+    if (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining)
+      amount = updateFields.remaining - oldRemaining
+    else
+      (oldRemaining && updateFields.remaining) ? amount = oldRemaining - updateFields.remaining : 0
+>>>>>>> 7de1403ce38fd6f33ce313fba55f0873e03e2adf
 
     // 3. Store adjustment audit log
     await this.leaveAdjustmentRepository.create({
       employeeId: new Types.ObjectId(employeeId),
       leaveTypeId: new Types.ObjectId(leaveTypeId),
+<<<<<<< HEAD
       adjustmentType:
         oldRemaining &&
         updateFields.remaining &&
         oldRemaining < updateFields.remaining
           ? AdjustmentType.ADD
           : AdjustmentType.DEDUCT, // Default to ADD for assignment
+=======
+      adjustmentType: (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining) ? AdjustmentType.ADD : AdjustmentType.DEDUCT, // Default to ADD for assignment
+>>>>>>> 7de1403ce38fd6f33ce313fba55f0873e03e2adf
       amount,
       reason,
       hrUserId: new Types.ObjectId(hrUserId),

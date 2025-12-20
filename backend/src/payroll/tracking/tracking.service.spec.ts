@@ -5,8 +5,8 @@ import { TrackingService } from './tracking.service';
 import { disputes, disputesDocument } from './models/disputes.schema';
 import { refunds, refundsDocument } from './models/refunds.schema';
 import { paySlip, PayslipDocument } from '../execution/models/payslip.schema';
-import { Notification } from '../../employee-subsystem/notification/models/notification.schema';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../employee-subsystem/employee/models/employee-system-role.schema';
+import { Notification } from '../../notification/models/notification.schema';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../employee-profile/models/employee-system-role.schema';
 import { DisputeStatus, RefundStatus } from './enums/payroll-tracking-enum';
 import { Types } from 'mongoose';
 
@@ -36,7 +36,7 @@ describe('TrackingService', () => {
   };
 
   beforeEach(async () => {
-    const mockDisputesModel: any = function(data: any) {
+    const mockDisputesModel: any = function (data: any) {
       const saveMock = jest.fn();
       saveMock.mockResolvedValue({ ...data, save: saveMock });
       return {
@@ -48,7 +48,7 @@ describe('TrackingService', () => {
     mockDisputesModel.find = jest.fn();
     mockDisputesModel.countDocuments = jest.fn();
 
-    const mockRefundsModel: any = function(data: any) {
+    const mockRefundsModel: any = function (data: any) {
       const saveMock = jest.fn();
       saveMock.mockResolvedValue({ ...data, save: saveMock });
       return {
@@ -62,7 +62,7 @@ describe('TrackingService', () => {
       findOne: jest.fn(),
     };
 
-    const mockNotificationModel: any = function(data: any) {
+    const mockNotificationModel: any = function (data: any) {
       const saveMock = jest.fn();
       saveMock.mockResolvedValue({ ...data, save: saveMock });
       return {

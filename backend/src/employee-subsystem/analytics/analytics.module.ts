@@ -15,4 +15,5 @@ import { EmployeeModule } from '../employee/employee.module';
   providers: [AnalyticsService],
   exports: [AnalyticsService],
 })
-export class AnalyticsModule {}
+export class AnalyticsModule { }
+

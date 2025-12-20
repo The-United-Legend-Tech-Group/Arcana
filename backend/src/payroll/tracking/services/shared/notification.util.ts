@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationService } from '../../../../employee-subsystem/notification/notification.service';
-import { CreateNotificationDto } from '../../../../employee-subsystem/notification/dto/create-notification.dto';
-import { SystemRole } from '../../../../employee-subsystem/employee/enums/employee-profile.enums';
+import { NotificationService } from '../../../../notification/notification.service';
+import { CreateNotificationDto } from '../../../../notification/dto/create-notification.dto';
+import { SystemRole } from '../../../../employee-profile/enums/employee-profile.enums';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { EmployeeSystemRoleDocument } from '../../../../employee-subsystem/employee/models/employee-system-role.schema';
-import { EmployeeSystemRole } from '../../../../employee-subsystem/employee/models/employee-system-role.schema';
+import { EmployeeSystemRoleDocument } from '../../../../employee-profile/models/employee-system-role.schema';
+import { EmployeeSystemRole } from '../../../../employee-profile/models/employee-system-role.schema';
 
 @Injectable()
 export class NotificationUtil {
@@ -13,7 +13,7 @@ export class NotificationUtil {
     private notificationService: NotificationService,
     @InjectModel(EmployeeSystemRole.name)
     private employeeSystemRoleModel: Model<EmployeeSystemRoleDocument>,
-  ) {}
+  ) { }
 
   /**
    * Notify employee about status change
@@ -75,7 +75,7 @@ export class NotificationUtil {
       role.employeeProfileId.toString(),
     );
 
-      const messages = {
+    const messages = {
       dispute: `Dispute ${entityDisplayId} has been approved by the Payroll Specialist and is now awaiting your confirmation.`,
       claim: `Expense claim ${entityDisplayId} has been approved by the Payroll Specialist and is now awaiting your confirmation.`,
     };
@@ -117,7 +117,7 @@ export class NotificationUtil {
       role.employeeProfileId.toString(),
     );
 
-      const messages = {
+    const messages = {
       dispute: `Dispute ${entityDisplayId} has been approved and confirmed. Approved refund amount: ${amount}. Please process the refund.`,
       claim: `Expense claim ${entityDisplayId} has been approved and confirmed. Approved amount: ${amount}. Please process the refund.`,
     };

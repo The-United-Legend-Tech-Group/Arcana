@@ -779,7 +779,7 @@ export class RecruitmentService {
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: 'Signing Bonus Record Created',
         message: `Signing bonus record has been automatically created for employee ${employeeNumber || employeeId} for position ${positionName}. Status: Pending approval.`,
@@ -792,7 +792,7 @@ export class RecruitmentService {
       await this.notificationService.create({
         recipientId: [],
         type: 'Alert',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: 'Signing Bonus Processing Failed',
         message: `Failed to create signing bonus record for employee ${employeeNumber || employeeId}. Position: ${positionName}. Please create manually. Error: ${error.message || 'Unknown error'}`,
@@ -1070,7 +1070,7 @@ export class RecruitmentService {
           await this.notificationService.create({
             recipientId: [],
             type: 'Info',
-            deliveryType: 'BROADCAST',
+            deliveryType: 'MULTICAST',
             deliverToRole: department as SystemRole,
             title: 'New Onboarding Tasks Assigned',
             message: `New onboarding tasks assigned for employee ${employeeDisplayNumber}. Tasks: ${taskNames}. Deadline: ${deadlineStr}.${notesSection}`,
@@ -1161,7 +1161,7 @@ export class RecruitmentService {
         await this.notificationService.create({
           recipientId: [],
           type: 'Info',
-          deliveryType: 'BROADCAST',
+          deliveryType: 'MULTICAST',
           deliverToRole: department as SystemRole,
           title: 'New Onboarding Tasks Assigned',
           message: `New onboarding tasks assigned for employee ${employeeDisplayNumber}. Tasks: ${taskNames}. Deadline: ${deadlineStr}.${notesSection}`,
@@ -1310,7 +1310,7 @@ export class RecruitmentService {
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.SYSTEM_ADMIN,
         title: 'New Employee Onboarding Tasks Assigned',
         message: `New onboarding tasks have been created for employee ${employeeNumber || employeeId}. Tasks: ${itAdminTasksList.join(', ')}. Deadline: ${deadline.toDateString()}. Total tasks: ${itAdminTaskCount}.`,
@@ -1327,7 +1327,7 @@ export class RecruitmentService {
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.PAYROLL_SPECIALIST,
         title: 'New Payroll & Benefits Onboarding Tasks',
         message: `New payroll and benefits tasks created for employee ${employeeNumber || employeeId}. Tasks: ${hrTasksList.join(', ')}. Deadline: ${deadline.toDateString()}. Total tasks: ${hrTaskCount}.`,
@@ -1596,7 +1596,7 @@ export class RecruitmentService {
         await this.notificationService.create({
           recipientId: [], // Broadcast to role
           type: 'Info',
-          deliveryType: 'BROADCAST',
+          deliveryType: 'MULTICAST',
           deliverToRole: SystemRole.SYSTEM_ADMIN,
           title: 'Onboarding Checklist Completed',
           message: `Employee ${employeeName} has completed all onboarding tasks. Tasks: Convert from probation. Deadline: ASAP.`,
@@ -3071,7 +3071,7 @@ export class RecruitmentService {
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: 'Assessment Submitted',
         message: `Assessment has been submitted for interview. Score: ${score}/10`,

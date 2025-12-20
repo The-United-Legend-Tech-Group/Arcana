@@ -234,6 +234,28 @@ export function InterviewScheduling() {
 
   const handleUpdateInterviewStatus = async (interviewId: string, newStatus: string) => {
     try {
+      const interview = interviews.find((i: any) => i._id === interviewId);
+      if (!interview) {
+        toast.error('Interview not found');
+        return;
+      }
+
+      // When marking completed, require assessment to be accepted or rejected
+      if ((newStatus || '').toString().toLowerCase() === 'completed') {
+        const assessmentStatus = (
+          interview.assessment?.status ||
+          interview.assessmentStatus ||
+          interview.applicationId?.assessment?.status ||
+          interview.applicationId?.assessmentStatus ||
+          null
+        );
+        const s = assessmentStatus ? String(assessmentStatus).toLowerCase() : null;
+        if (s !== 'accepted' && s !== 'accepted' && s !== 'rejected' && s !== 'reject') {
+          toast.error('Cannot mark interview completed until assessment is accepted or rejected');
+          return;
+        }
+      }
+
       await recruitmentApi.updateInterview(interviewId, { status: newStatus });
       toast.success(`Interview marked as ${newStatus}`);
       await fetchAllInterviews();

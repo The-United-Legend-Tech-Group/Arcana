@@ -86,9 +86,9 @@ export class OffboardingService {
         const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
         return dateB - dateA; // Descending order (newest first)
       });
-      
+
       const latestTermination = sortedTerminations[0];
-      
+
       // Check if the latest termination request is PENDING or APPROVED
       if (latestTermination.status === TerminationStatus.PENDING || latestTermination.status === TerminationStatus.APPROVED) {
         console.warn(`Employee ${dto.employeeNumber} already has an active termination request (latest: ${latestTermination.status})`);
@@ -97,7 +97,7 @@ export class OffboardingService {
           `Latest request created on: ${(latestTermination as any).createdAt ? new Date((latestTermination as any).createdAt).toLocaleDateString() : 'N/A'}`
         );
       }
-      
+
       // If we reach here, the latest request is REJECTED - allow new request
       console.log(`Employee ${dto.employeeNumber} has rejected termination request (latest status: ${latestTermination.status}), allowing new request`);
     }
@@ -291,9 +291,9 @@ export class OffboardingService {
       try {
         // Try to get department head ID
         const departmentHeadId = await this.getDepartmentHeadId(department);
-        
-        const recipients = departmentHeadId 
-          ? [departmentHeadId.toString()] 
+
+        const recipients = departmentHeadId
+          ? [departmentHeadId.toString()]
           : [employeeId]; // Fallback to general notification
 
         console.log(`Sending notification to ${department} department. Recipients:`, recipients);
@@ -319,7 +319,7 @@ Please navigate to the Offboarding Clearance section to sign off on your departm
         };
 
         await this.notificationService.create(notificationPayload);
-        
+
         console.log(`✓ Notification sent successfully to ${department} department${departmentHeadId ? ' head' : ' (general)'}`);
       } catch (error) {
         console.error(`✗ Failed to send notification to ${department}:`, error.message);
@@ -536,15 +536,15 @@ Please navigate to the Offboarding Clearance section to sign off on your departm
     try {
       const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
       const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-      const employeeName = employee?.profile 
-        ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+      const employeeName = employee?.profile
+        ? `${employee.profile.firstName} ${employee.profile.lastName}`
         : 'Employee';
 
       // Send to HR Managers using role-based delivery (same pattern as recruitment.service.ts)
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: `Offboarding Checklist Created - ${employeeNumber}`,
         message: `A new offboarding checklist has been created for ${employeeName} (${employeeNumber}).
@@ -603,8 +603,8 @@ Please monitor the clearance progress and ensure all items are completed.`,
     console.log(`Termination request ${dto.terminationRequestId} validated successfully`);
 
     // Check if termination date has expired
-    const terminationDate = terminationRequest.terminationDate 
-      ? new Date(terminationRequest.terminationDate) 
+    const terminationDate = terminationRequest.terminationDate
+      ? new Date(terminationRequest.terminationDate)
       : null;
     const isExpired = terminationDate && terminationDate < new Date();
 
@@ -683,28 +683,28 @@ Please monitor the clearance progress and ensure all items are completed.`,
     } else if (isPendingExpired) {
       // For expired pending terminations, log incomplete items but allow revocation
       const incompleteItems: string[] = [];
-      
+
       if (anyDepartmentRejected) {
         const rejectedDepartments = checklist.items
           .filter(item => item.status === ApprovalStatus.REJECTED)
           .map(item => item.department);
         incompleteItems.push(`Rejected departments: ${rejectedDepartments.join(', ')}`);
       }
-      
+
       if (anyDepartmentPending) {
         const pendingDepartments = checklist.items
           .filter(item => item.status === ApprovalStatus.PENDING)
           .map(item => item.department);
         incompleteItems.push(`Pending departments: ${pendingDepartments.join(', ')}`);
       }
-      
+
       if (!allEquipmentReturned) {
         const unreturnedEquipment = checklist.equipmentList
           .filter(eq => !eq.returned)
           .map(eq => eq.name);
         incompleteItems.push(`Unreturned equipment: ${unreturnedEquipment.join(', ')}`);
       }
-      
+
       if (!cardReturned) {
         incompleteItems.push('Access card not returned');
       }
@@ -812,7 +812,7 @@ Please contact HR if you have any questions regarding your final settlement or b
       await this.notificationService.create({
         recipientId: [],
         type: 'Alert',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: `Employee Revoked from System - ${employee.profile.employeeNumber}`,
         message: `Employee ${employee.profile.employeeNumber} (${employee.profile.firstName} ${employee.profile.lastName}) has been revoked from the system by System Admin.
@@ -1053,9 +1053,9 @@ ${dto.additionalMessage ? `--- ADDITIONAL NOTES ---\n${dto.additionalMessage}\n\
         const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
         return dateB - dateA; // Descending order (newest first)
       });
-      
+
       const latestTermination = sortedTerminations[0];
-      
+
       // Check if the latest termination/resignation request is PENDING or APPROVED
       if (latestTermination.status === TerminationStatus.PENDING || latestTermination.status === TerminationStatus.APPROVED) {
         console.warn(`Employee ${dto.employeeId} already has an active termination/resignation request (latest: ${latestTermination.status})`);
@@ -1064,21 +1064,21 @@ ${dto.additionalMessage ? `--- ADDITIONAL NOTES ---\n${dto.additionalMessage}\n\
           `Latest request created on: ${(latestTermination as any).createdAt ? new Date((latestTermination as any).createdAt).toLocaleDateString() : 'N/A'}`
         );
       }
-      
+
       // If we reach here, the latest request is REJECTED - allow new request
       console.log(`Employee ${dto.employeeId} has rejected termination/resignation request (latest status: ${latestTermination.status}), allowing new resignation request`);
     }
 
-      // Validate proposed last working day is not in the past
-      if (dto.proposedLastWorkingDay) {
-        const selected = new Date(dto.proposedLastWorkingDay);
-        const today = new Date();
-        const selDay = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
-        const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        if (selDay < todayDay) {
-          throw new BadRequestException('Proposed last working day cannot be in the past');
-        }
+    // Validate proposed last working day is not in the past
+    if (dto.proposedLastWorkingDay) {
+      const selected = new Date(dto.proposedLastWorkingDay);
+      const today = new Date();
+      const selDay = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (selDay < todayDay) {
+        throw new BadRequestException('Proposed last working day cannot be in the past');
       }
+    }
 
     const savedResignation = await this.terminationRequestRepository.create({
       employeeId: employeeObjectId,
@@ -1460,7 +1460,7 @@ ${dto.additionalMessage ? `--- ADDITIONAL NOTES ---\n${dto.additionalMessage}\n\
     // Check if termination date has expired - prevent updates after expiration
     const relatedTerminationRequest = await this.terminationRequestRepository
       .findById(clearanceChecklist.terminationId.toString());
-    
+
     if (relatedTerminationRequest && relatedTerminationRequest.terminationDate) {
       const terminationDate = new Date(relatedTerminationRequest.terminationDate);
       const now = new Date();
@@ -1754,18 +1754,18 @@ Clearance Progress:
       try {
         const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
         const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-        const employeeName = employee?.profile 
-          ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+        const employeeName = employee?.profile
+          ? `${employee.profile.firstName} ${employee.profile.lastName}`
           : 'Employee';
 
         // Send to HR Managers using role-based delivery (same pattern as recruitment.service.ts)
         await this.notificationService.create({
           recipientId: [],
           type: 'Info',
-          deliveryType: 'BROADCAST',
+          deliveryType: 'MULTICAST',
           deliverToRole: SystemRole.HR_MANAGER,
           title: `Department Clearance Update - ${employeeNumber}`,
-                    message: `Department clearance sign-off updated for ${employeeName} (${employeeNumber}).
+          message: `Department clearance sign-off updated for ${employeeName} (${employeeNumber}).
 
 Update Details:
 - Department: ${dto.department}
@@ -1844,7 +1844,7 @@ ${anyDepartmentRejected ? '⚠ Some departments have rejected clearance. Review 
     // Check if termination date has expired - prevent updates after expiration
     const relatedTerminationForEquipment = await this.terminationRequestRepository
       .findById(clearanceChecklist.terminationId.toString());
-    
+
     if (relatedTerminationForEquipment && relatedTerminationForEquipment.terminationDate) {
       const terminationDate = new Date(relatedTerminationForEquipment.terminationDate);
       const now = new Date();
@@ -1890,8 +1890,8 @@ ${anyDepartmentRejected ? '⚠ Some departments have rejected clearance. Review 
       try {
         const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
         const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-        const employeeName = employee?.profile 
-          ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+        const employeeName = employee?.profile
+          ? `${employee.profile.firstName} ${employee.profile.lastName}`
           : 'Employee';
 
         const unreturned = clearanceChecklist.equipmentList
@@ -1902,7 +1902,7 @@ ${anyDepartmentRejected ? '⚠ Some departments have rejected clearance. Review 
         await this.notificationService.create({
           recipientId: [],
           type: 'Info',
-          deliveryType: 'BROADCAST',
+          deliveryType: 'MULTICAST',
           deliverToRole: SystemRole.HR_MANAGER,
           title: `Equipment Return Update - ${employeeNumber}`,
           message: `Equipment return status updated for ${employeeName} (${employeeNumber}).
@@ -2037,7 +2037,7 @@ ${allEquipmentReturned ? 'All equipment has been returned! Thank you.' : 'Please
     // Check if termination date has expired - prevent updates after expiration
     const relatedTerminationForCard = await this.terminationRequestRepository
       .findById(clearanceChecklist.terminationId.toString());
-    
+
     if (relatedTerminationForCard && relatedTerminationForCard.terminationDate) {
       const terminationDate = new Date(relatedTerminationForCard.terminationDate);
       const now = new Date();
@@ -2066,15 +2066,15 @@ ${allEquipmentReturned ? 'All equipment has been returned! Thank you.' : 'Please
       try {
         const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
         const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-        const employeeName = employee?.profile 
-          ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+        const employeeName = employee?.profile
+          ? `${employee.profile.firstName} ${employee.profile.lastName}`
           : 'Employee';
 
         // Send to HR Managers using role-based delivery (same pattern as recruitment.service.ts)
         await this.notificationService.create({
           recipientId: [],
           type: 'Info',
-          deliveryType: 'BROADCAST',
+          deliveryType: 'MULTICAST',
           deliverToRole: SystemRole.HR_MANAGER,
           title: `Access Card Return Update - ${employeeNumber}`,
           message: `Access card return status updated for ${employeeName} (${employeeNumber}).
@@ -2359,8 +2359,8 @@ The employee is now ready for system access revocation. Please navigate to Syste
     try {
       const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
       const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-      const employeeName = employee?.profile 
-        ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+      const employeeName = employee?.profile
+        ? `${employee.profile.firstName} ${employee.profile.lastName}`
         : 'Employee';
 
       // Notification to employee
@@ -2389,7 +2389,7 @@ ${dto.status === TerminationStatus.APPROVED ? 'Your termination has been approve
       await this.notificationService.create({
         recipientId: [],
         type: 'Info',
-        deliveryType: 'BROADCAST',
+        deliveryType: 'MULTICAST',
         deliverToRole: SystemRole.HR_MANAGER,
         title: `Termination Request ${dto.status} - ${employeeNumber}`,
         message: `Termination request for ${employeeName} (${employeeNumber}) has been ${dto.status.toLowerCase()}.
@@ -2492,17 +2492,17 @@ ${dto.status === TerminationStatus.APPROVED ? 'The termination has been approved
           const anyDepartmentRejected = checklist.items?.some(
             (item: any) => item.status === 'rejected'
           ) || false;
-          
+
           const allDepartmentsApproved = checklist.items?.every(
             (item: any) => item.status === 'approved'
           ) || false;
-          
+
           const allEquipmentReturned = checklist.equipmentList?.every(
             (equipment: any) => equipment.returned === true
           ) || false;
-          
+
           const cardReturned = checklist.cardReturned === true;
-          
+
           // Determine overall status
           let overallStatus = 'in_progress';
           if (anyDepartmentRejected) {
@@ -2587,8 +2587,8 @@ ${dto.status === TerminationStatus.APPROVED ? 'The termination has been approved
     // Get employee details
     const employee = await this.employeeService.getProfile(terminationRequest.employeeId.toString());
     const employeeNumber = employee?.profile?.employeeNumber || 'N/A';
-    const employeeName = employee?.profile 
-      ? `${employee.profile.firstName} ${employee.profile.lastName}` 
+    const employeeName = employee?.profile
+      ? `${employee.profile.firstName} ${employee.profile.lastName}`
       : 'Employee';
 
     // Identify pending departments
@@ -2616,12 +2616,12 @@ ${dto.status === TerminationStatus.APPROVED ? 'The termination has been approved
 
     // Send reminders to pending departments only
     console.log(`Sending reminders to ${pendingDepartments.length} pending department(s)...`);
-    
+
     for (const department of pendingDepartments) {
       try {
         const departmentHeadId = await this.getDepartmentHeadId(department);
-        const recipients = departmentHeadId 
-          ? [departmentHeadId.toString()] 
+        const recipients = departmentHeadId
+          ? [departmentHeadId.toString()]
           : [terminationRequest.employeeId.toString()];
 
         console.log(`Sending reminder to ${department}. Recipients:`, recipients);
@@ -2743,13 +2743,13 @@ Please complete the clearance process as soon as possible.`,
         for (const dept of allDepartments) {
           try {
             const departmentHeadId = await this.getDepartmentHeadId(dept);
-            const recipients = departmentHeadId 
-              ? [departmentHeadId.toString()] 
+            const recipients = departmentHeadId
+              ? [departmentHeadId.toString()]
               : [termination.employeeId.toString()];
 
             const wasAutoApproved = termination.status === TerminationStatus.APPROVED;
-            const statusWarning = wasAutoApproved 
-              ? 'The termination request has been automatically APPROVED due to expired termination date.' 
+            const statusWarning = wasAutoApproved
+              ? 'The termination request has been automatically APPROVED due to expired termination date.'
               : '';
 
             const notificationPayload = {
@@ -2800,8 +2800,8 @@ Please complete your clearance items immediately, or contact System Administrato
         for (const dept of pendingDepartments) {
           try {
             const departmentHeadId = await this.getDepartmentHeadId(dept);
-            const recipients = departmentHeadId 
-              ? [departmentHeadId.toString()] 
+            const recipients = departmentHeadId
+              ? [departmentHeadId.toString()]
               : [termination.employeeId.toString()];
 
             const notificationPayload = {
@@ -2883,8 +2883,8 @@ Please complete your clearance items before the termination date to avoid delays
         }
 
         // Check if termination date has expired
-        const terminationDate = terminationRequest.terminationDate 
-          ? new Date(terminationRequest.terminationDate) 
+        const terminationDate = terminationRequest.terminationDate
+          ? new Date(terminationRequest.terminationDate)
           : null;
         const isExpired = terminationDate && terminationDate < now;
 
@@ -2913,8 +2913,8 @@ Please complete your clearance items before the termination date to avoid delays
         }
 
         // All requirements met - add to ready list
-        const reason = allClearancesComplete 
-          ? 'All clearances completed' 
+        const reason = allClearancesComplete
+          ? 'All clearances completed'
           : 'Termination date expired (pending status)';
         console.log(`Employee ${terminationRequest.employeeId} is ready for revocation - ${reason}`);
 

@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 // Import Payroll Configuration&Setup controller and service
+<<<<<<< HEAD:backend/src/payroll/config_setup/config_setup.module.ts
 import { ConfigSetupController } from './config_setup.controller';
 import { ConfigSetupService } from './config_setup.service';
 import { AuthModule } from '../../employee-profile/auth.module';
+=======
+import { ConfigSetupController } from './payroll-configuration.controller';
+import { ConfigSetupService } from './payroll-configuration.service';
+import { AuthModule } from '../employee-subsystem/employee/auth.module';
+>>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/payroll-configuration.module.ts
 // Import Backup services and controller
 import { ConfigBackupService } from './backup/config-backup.service';
 import { ConfigBackupSchedulerService } from './backup/config-backup-scheduler.service';
@@ -60,7 +66,11 @@ import {
 import {
   EmployeeSystemRole,
   EmployeeSystemRoleSchema,
+<<<<<<< HEAD:backend/src/payroll/config_setup/config_setup.module.ts
 } from '../../employee-profile/models/employee-system-role.schema';
+=======
+} from '../employee-subsystem/employee/models/employee-system-role.schema';
+>>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/payroll-configuration.module.ts
 
 @Module({
   imports: [

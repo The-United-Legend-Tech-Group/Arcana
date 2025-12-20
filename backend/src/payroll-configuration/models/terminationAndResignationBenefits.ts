@@ -1,16 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+<<<<<<< HEAD:backend/src/payroll/config_setup/models/terminationAndResignationBenefits.ts
 import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
+=======
+import { EmployeeProfile as Employee } from '../../employee-subsystem/employee/models/employee-profile.schema';
+>>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/models/terminationAndResignationBenefits.ts
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
 
-export type signingBonusDocument = HydratedDocument<signingBonus>;
+export type terminationAndResignationBenefitsDocument =
+  HydratedDocument<terminationAndResignationBenefits>;
 
 @Schema({ timestamps: true })
-export class signingBonus {
+export class terminationAndResignationBenefits {
   @Prop({ required: true, }) // unique removed for execution module
-  positionName: string; // only onboarding bonus based on position like:  Junior TA, Mid TA, Senior TA
+  name: string; // termination/resignation name like:  End of Service Gratuity.
   @Prop({ required: true, min: 0 })
   amount: number;
+  @Prop()
+  terms?: string;
   @Prop({
     required: true,
     type: String,
@@ -27,4 +34,5 @@ export class signingBonus {
   approvedAt?: Date;
 }
 
-export const signingBonusSchema = SchemaFactory.createForClass(signingBonus);
+export const terminationAndResignationBenefitsSchema =
+  SchemaFactory.createForClass(terminationAndResignationBenefits);

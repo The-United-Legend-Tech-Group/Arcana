@@ -1,19 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+<<<<<<< HEAD:backend/src/payroll/config_setup/models/allowance.schema.ts
 import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
+=======
+import { EmployeeProfile as Employee } from '../../employee-subsystem/employee/models/employee-profile.schema';
+>>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/models/allowance.schema.ts
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
-
-export type terminationAndResignationBenefitsDocument =
-  HydratedDocument<terminationAndResignationBenefits>;
+export type allowanceDocument = HydratedDocument<allowance>;
 
 @Schema({ timestamps: true })
-export class terminationAndResignationBenefits {
+export class allowance {
   @Prop({ required: true, }) // unique removed for execution module
-  name: string; // termination/resignation name like:  End of Service Gratuity.
+  name: string; // allowance name like:  Housing Allowance, Transport Allowance
   @Prop({ required: true, min: 0 })
   amount: number;
-  @Prop()
-  terms?: string;
   @Prop({
     required: true,
     type: String,
@@ -30,5 +30,4 @@ export class terminationAndResignationBenefits {
   approvedAt?: Date;
 }
 
-export const terminationAndResignationBenefitsSchema =
-  SchemaFactory.createForClass(terminationAndResignationBenefits);
+export const allowanceSchema = SchemaFactory.createForClass(allowance);

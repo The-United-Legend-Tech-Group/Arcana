@@ -1,13 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+<<<<<<< HEAD:backend/src/payroll/config_setup/models/signingBonus.schema.ts
 import { EmployeeProfile as Employee } from '../../../employee-profile/models/employee-profile.schema';
+=======
+import { EmployeeProfile as Employee } from '../../employee-subsystem/employee/models/employee-profile.schema';
+>>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/models/signingBonus.schema.ts
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
-export type allowanceDocument = HydratedDocument<allowance>;
+
+export type signingBonusDocument = HydratedDocument<signingBonus>;
 
 @Schema({ timestamps: true })
-export class allowance {
+export class signingBonus {
   @Prop({ required: true, }) // unique removed for execution module
-  name: string; // allowance name like:  Housing Allowance, Transport Allowance
+  positionName: string; // only onboarding bonus based on position like:  Junior TA, Mid TA, Senior TA
   @Prop({ required: true, min: 0 })
   amount: number;
   @Prop({
@@ -26,4 +31,4 @@ export class allowance {
   approvedAt?: Date;
 }
 
-export const allowanceSchema = SchemaFactory.createForClass(allowance);
+export const signingBonusSchema = SchemaFactory.createForClass(signingBonus);

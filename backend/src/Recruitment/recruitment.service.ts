@@ -1477,7 +1477,7 @@ export class RecruitmentService {
               message = `Escalation: Employee ${employeeName} has failed to complete onboarding task "${task.name}" within 7 days of the deadline. Recommended action: Initiate termination.`;
               recipientIds = []; // Broadcast to role
               deliverToRole = SystemRole.SYSTEM_ADMIN;
-              deliveryType = 'BROADCAST';
+              deliveryType = 'MULTICAST';
             } catch (e) {
               console.error('Failed to fetch employee for escalation:', e);
               continue;
@@ -2190,7 +2190,7 @@ export class RecruitmentService {
       throw new NotFoundException(`Application with id ${createInterviewDto.applicationId} not found`);
     }
     if (application.status === ApplicationStatus.REJECTED || application.status === ApplicationStatus.HIRED) {
-      throw new NotFoundException(`Cannot schedule interview for application with status ${application.status}`);
+      throw new BadRequestException(`Cannot schedule interview for application with status ${application.status}`);
     }
 
     // Check if interview already exists for this application
@@ -2199,7 +2199,7 @@ export class RecruitmentService {
       interview => interview.status === InterviewStatus.SCHEDULED
     );
     if (hasScheduledInterview) {
-      throw new NotFoundException(`An interview is already scheduled for this application. Please cancel or complete the existing interview before scheduling a new one.`);
+      throw new BadRequestException(`An interview is already scheduled for this application. Please cancel or complete the existing interview before scheduling a new one.`);
     }
 
     // Use userId as hrId if provided
@@ -2210,30 +2210,30 @@ export class RecruitmentService {
       throw new NotFoundException(`HR with id ${hrId} not found or does not have the required role`);
     }*/
     if (!createInterviewDto.panel || createInterviewDto.panel.length === 0) {
-      throw new NotFoundException('At least one interviewer/panel member is required to schedule an interview');
+      throw new BadRequestException('At least one interviewer/panel member is required to schedule an interview');
     }
     // Normalize scheduledDate to a Date object (DTO now accepts ISO string)
 
     if (createInterviewDto.scheduledDate <= new Date()) {
-      throw new NotFoundException('Scheduled date and time for the interview must be in the future');
+      throw new BadRequestException('Scheduled date and time for the interview must be in the future');
     }
     if (createInterviewDto.method === InterviewMethod.VIDEO && !createInterviewDto.videoLink) {
-      throw new NotFoundException('Video link is required for video interviews');
+      throw new BadRequestException('Video link is required for video interviews');
     }
     if (createInterviewDto.method !== InterviewMethod.VIDEO && createInterviewDto.videoLink) {
-      throw new NotFoundException('Video link should not be provided for non-video interviews');
+      throw new BadRequestException('Video link should not be provided for non-video interviews');
     }
     if (new Set(createInterviewDto.panel).size !== createInterviewDto.panel.length) {
-      throw new NotFoundException('Duplicate panel member IDs are not allowed');
+      throw new BadRequestException('Duplicate panel member IDs are not allowed');
     }
     // Validate stage is interview-related
     if (createInterviewDto.stage !== ApplicationStage.HR_INTERVIEW &&
       createInterviewDto.stage !== ApplicationStage.DEPARTMENT_INTERVIEW) {
-      throw new NotFoundException('Interview can only be created for HR or Department interview stages');
+      throw new BadRequestException('Interview can only be created for HR or Department interview stages');
     }
     if (application.currentStage !== ApplicationStage.HR_INTERVIEW &&
       application.currentStage !== ApplicationStage.DEPARTMENT_INTERVIEW) {
-      throw new NotFoundException('Interview can only be created for HR or Department interview stages');
+      throw new BadRequestException('Interview can only be created for HR or Department interview stages');
     }
     const interviewData = {
       applicationId: new Types.ObjectId(createInterviewDto.applicationId),

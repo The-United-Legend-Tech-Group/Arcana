@@ -269,7 +269,7 @@ export class RecruitmentController {
   @ApiResponse({ status: 404, description: 'Job requisition with specified ID not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Patch('Rrequisition/:requisitionid')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN, SystemRole.HR_EMPLOYEE)
   async updateJobRequision(@Param('requisitionid') id: string, @Body() UpdateJobRequisitionDto: UpdateJobRequisitionDto): Promise<JobRequisitionDocument> {
     return await this.recruitmentService.updatejob_requisition(id, UpdateJobRequisitionDto)
   }
@@ -425,7 +425,7 @@ export class RecruitmentController {
   @ApiResponse({ status: 404, description: 'Application not found or invalid stage' })
   @ApiResponse({ status: 400, description: 'Invalid interview data' })
   @Post('Interview')
-  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN)
+  @Roles(SystemRole.HR_MANAGER, SystemRole.HR_ADMIN, SystemRole.RECRUITER, SystemRole.SYSTEM_ADMIN, SystemRole.HR_EMPLOYEE)
   async createInterview(@Body() createInterviewDto: CreateInterviewDto, @Req() req: any): Promise<InterviewDocument> {
     // If hrId not supplied, try to derive it from authenticated user
     if (!createInterviewDto.hrId) {

@@ -226,7 +226,9 @@ export function InterviewScheduling() {
       handleClose();
       await fetchAllInterviews();
     } catch (error: any) {
-      toast.error('Failed to schedule interview');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to schedule interview';
+      toast.error(errorMessage);
+      console.error('Interview scheduling error:', error);
     } finally {
       setSubmitting(false);
     }

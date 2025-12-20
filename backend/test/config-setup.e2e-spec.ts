@@ -5,8 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../src/config/configuration';
 import { ConfigSetupModule } from '../src/payroll/config_setup/config_setup.module';
-import { AuthGuard } from '../src/employee-subsystem/guards/authentication.guard';
-import { authorizationGuard } from '../src/employee-subsystem/guards/authorization.guard';
+import { AuthGuard } from '../src/employee-profile/guards/authentication.guard';
+import { authorizationGuard } from '../src/employee-profile/guards/authorization.guard';
 
 describe('Config Setup API (e2e)', () => {
   let app: INestApplication;

@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { DocumentDocument } from './models/document.schema';
 
-import { Notification } from '../employee-subsystem/notification/models/notification.schema';
+import { Notification } from '../employee-profile/notification/models/notification.schema';
 import { DocumentType } from './enums/document-type.enum';
 import { OnboardingTaskStatus } from './enums/onboarding-task-status.enum';
 import mongoose from 'mongoose';
@@ -22,7 +22,7 @@ import { AddOfferApproverDto } from './DTO/add-offer-approver.dto';
 import { ApproveOfferDto } from './DTO/approve-offer.dto';
 import { SendOfferDto } from './DTO/send-offer.dto';
 import { CandidateRespondOfferDto } from './DTO/candidate-respond-offer.dto';
-import { EmployeeService } from '../employee-subsystem/employee/employee.service';
+import { EmployeeService } from '../employee-profile/employee/employee.service';
 import { ConfigSetupService } from '../payroll/config_setup/config_setup.service';
 import { EmployeeSigningBonusService } from '../payroll/execution/services/EmployeesigningBonus.service';
 
@@ -40,13 +40,13 @@ import { ReferralDocument } from './models/referral.schema';
 import { OfferDocument } from './models/offer.schema';
 //import { ContractDocument } from './models/contract.schema';
 
-import { NotificationService } from '../employee-subsystem/notification/notification.service';
+import { NotificationService } from '../employee-profile/notification/notification.service';
 import { ApplicationStage } from './enums/application-stage.enum';
 import { ApplicationStatus } from './enums/application-status.enum';
 import { InterviewStatus } from './enums/interview-status.enum';
 import { InterviewMethod } from './enums/interview-method.enum';
-import { /*SystemRole, EmployeeStatus,*/ CandidateStatus, SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
-import type { UpdateCandidateStatusDto } from '../employee-subsystem/employee/dto/update-candidate-status.dto';
+import { /*SystemRole, EmployeeStatus,*/ CandidateStatus, SystemRole } from '../employee-profile/employee/enums/employee-profile.enums';
+import type { UpdateCandidateStatusDto } from '../employee-profile/employee/dto/update-candidate-status.dto';
 
 import { CreateJobTemplateDto } from './dtos/create-job-template.dto';
 import { CreateJobRequisitionDto } from './dtos/create-job-requisition.dto';
@@ -55,13 +55,13 @@ import { CreateCVDocumentDto } from './dtos/create-cv-document.dto';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { UpdateApplicationDto } from './dtos/update-application.dto';
 import { CreateInterviewDto } from './dtos/create-interview.dto';
-import { CreateNotificationDto } from '../employee-subsystem/notification/dto/create-notification.dto';
+import { CreateNotificationDto } from '../employee-profile/notification/dto/create-notification.dto';
 import { UpdateInterviewDto } from './dtos/Update-interview.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { CreateAssessmentDto } from './dtos/create-assessment.dto';
 
 //import { EmployeeProfileRepository } from '../employee-subsystem/employee/repository/employee-profile.repository';
-import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
+import { CandidateRepository } from '../employee-profile/employee/repository/candidate.repository';
 
 // Repository implementations
 import {

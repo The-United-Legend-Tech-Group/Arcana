@@ -14,11 +14,11 @@ import {
 import {
   EmployeeProfile,
   EmployeeProfileDocument,
-} from '../../../employee-profile/employee/models/employee-profile.schema';
+} from '../../../employee-subsystem/employee/models/employee-profile.schema';
 import {
   Department,
   DepartmentDocument,
-} from '../../../employee-profile/organization-structure/models/department.schema';
+} from '../../../employee-subsystem/organization-structure/models/department.schema';
 import { PayRollStatus } from '../../execution/enums/payroll-execution-enum';
 import { CreateTaxDocumentDto } from '../dto/create-tax-document.dto';
 import { CreatePayrollSummaryDto } from '../dto/create-payroll-summary.dto';

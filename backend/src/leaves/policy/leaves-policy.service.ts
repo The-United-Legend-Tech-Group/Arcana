@@ -13,7 +13,7 @@ import {
   CalendarRepository,
   LeaveRequestRepository,
 } from '../repository';
-import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
+import { EmployeeService } from '../../employee-profile/employee/employee.service';
 import { AttendanceService } from '../../time-mangement/services/attendance.service';
 import { InitiatePolicyDto } from '../dtos/initiate-policy.dto';
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
@@ -31,7 +31,7 @@ import { RoundingRule } from '../enums/rounding-rule.enum';
 import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { LeaveCategoryRepository } from '../repository/leave-category.repository';
 import { LeaveCategory } from '../models/leave-category.schema';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/employee/enums/employee-profile.enums';
 import { LeaveStatus } from '../enums/leave-status.enum';
 
 @Injectable()

@@ -56,29 +56,29 @@ import {
 import {
   allowance,
   allowanceSchema,
-} from '../config_setup/models/allowance.schema';
+} from '../payroll-configuration/models/allowance.schema';
 import {
   taxRules,
   taxRulesSchema,
-} from '../config_setup/models/taxRules.schema';
+} from '../payroll-configuration/models/taxRules.schema';
 import {
   insuranceBrackets,
   insuranceBracketsSchema,
-} from '../config_setup/models/insuranceBrackets.schema';
+} from '../payroll-configuration/models/insuranceBrackets.schema';
 import {
   signingBonus,
   signingBonusSchema,
-} from '../config_setup/models/signingBonus.schema';
+} from '../payroll-configuration/models/signingBonus.schema';
 import {
   terminationAndResignationBenefits,
   terminationAndResignationBenefitsSchema,
-} from '../config_setup/models/terminationAndResignationBenefits';
+} from '../payroll-configuration/models/terminationAndResignationBenefits';
 
 // Schemas - Tracking
-import { refunds, refundsSchema } from '../tracking/models/refunds.schema';
+import { refunds, refundsSchema } from '../payroll-tracking/models/refunds.schema';
 
 // Modules
-import { ConfigSetupModule } from '../config_setup/config_setup.module';
+import { ConfigSetupModule } from '../payroll-configuration/config_setup.module';
 import { TimeMangementModule } from '../../time-mangement/timemangment.module';
 import { AuthModule } from '../../employee-subsystem/employee/auth.module';
 

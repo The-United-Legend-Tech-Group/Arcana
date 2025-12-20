@@ -19,7 +19,7 @@ import { SubmitPostLeaveDto } from '../dtos/submit-post-leave.dto';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/employee/enums/employee-profile.enums';
 
 @ApiTags('Leaves Reports')
 @Controller('leaves-report')

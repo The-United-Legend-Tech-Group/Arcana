@@ -30,9 +30,9 @@ import { AppraisalAssignmentService } from './appraisal-assignment.service';
 import { NotificationModule } from '../notification/notification.module';
 import { EmployeeModule } from '../employee/employee.module';
 import { TimeMangementModule } from '../../time-mangement/timemangment.module';
-import { RecruitmentModule } from '../../Recruitment/recruitment.module';
-import { ContractRepository } from '../../Recruitment/repositories/implementations/contract.repository';
-import { Contract, ContractSchema } from '../../Recruitment/models/contract.schema';
+import { RecruitmentModule } from '../../recruitment/recruitment.module';
+import { ContractRepository } from '../../recruitment/repositories/implementations/contract.repository';
+import { Contract, ContractSchema } from '../../recruitment/models/contract.schema';
 
 @Module({
   imports: [

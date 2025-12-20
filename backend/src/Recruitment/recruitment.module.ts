@@ -25,11 +25,11 @@ import { ClearanceChecklist, ClearanceChecklistSchema } from './models/clearance
 import { Onboarding, OnboardingSchema } from './models/onboarding.schema';
 
 // Employee subsystem schemas
-import { AppraisalRecord, AppraisalRecordSchema } from '../employee-subsystem/performance/models/appraisal-record.schema';
-import { EmployeeProfile, EmployeeProfileSchema } from '../employee-subsystem/employee/models/employee-profile.schema';
-import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsystem/employee/models/employee-system-role.schema';
-import { Candidate, CandidateSchema } from '../employee-subsystem/employee/models/candidate.schema';
-import { Notification, NotificationSchema } from '../employee-subsystem/notification/models/notification.schema';
+import { AppraisalRecord, AppraisalRecordSchema } from '../employee-profile/performance/models/appraisal-record.schema';
+import { EmployeeProfile, EmployeeProfileSchema } from '../employee-profile/employee/models/employee-profile.schema';
+import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-profile/employee/models/employee-system-role.schema';
+import { Candidate, CandidateSchema } from '../employee-profile/employee/models/candidate.schema';
+import { Notification, NotificationSchema } from '../employee-profile/notification/models/notification.schema';
 
 // Leaves schemas
 import { LeaveEntitlement, LeaveEntitlementSchema } from '../leaves/models/leave-entitlement.schema';
@@ -57,14 +57,14 @@ import {
   EmployeeTerminationResignationRepository,
   AssessmentResultRepository
 } from './repositories';
-import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
+import { CandidateRepository } from '../employee-profile/employee/repository/candidate.repository';
 
 // Module imports
-import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
-import { NotificationModule } from '../employee-subsystem/notification/notification.module';
+import { EmployeeModule } from '../employee-profile/employee/employee.module';
+import { NotificationModule } from '../employee-profile/notification/notification.module';
 import { LeavesModule } from '../leaves/leaves.module';
-import { PerformanceModule } from '../employee-subsystem/performance/performance.module';
-import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
+import { PerformanceModule } from '../employee-profile/performance/performance.module';
+import { OrganizationStructureModule } from '../employee-profile/organization-structure/organization-structure.module';
 import { PayrollModule } from '../payroll/payroll.module';
 @Module({
   imports: [

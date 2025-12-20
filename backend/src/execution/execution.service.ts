@@ -25,13 +25,13 @@ import {
   PaySlipPaymentStatus,
 } from './enums/payroll-execution-enum';
 import { EmailService } from './email.service';
-import { allowance } from '../config_setup/models/allowance.schema';
-import { taxRules } from '../config_setup/models/taxRules.schema';
-import { insuranceBrackets } from '../config_setup/models/insuranceBrackets.schema';
+import { allowance } from '../payroll-configuration/models/allowance.schema';
+import { taxRules } from '../payroll-configuration/models/taxRules.schema';
+import { insuranceBrackets } from '../payroll-configuration/models/insuranceBrackets.schema';
 import { employeeSigningBonus } from './models/EmployeeSigningBonus.schema';
 import { EmployeeTerminationResignation } from './models/EmployeeTerminationResignation.schema';
 import { employeePenalties } from './models/employeePenalties.schema';
-import { refunds } from '../tracking/models/refunds.schema';
+import { refunds } from '../payroll-tracking/models/refunds.schema';
 
 @Injectable()
 export class ExecutionService {

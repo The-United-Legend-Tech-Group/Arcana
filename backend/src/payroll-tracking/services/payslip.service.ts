@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 const PDFDocument = require('pdfkit');
 import { PayslipDocument } from '../../execution/models/payslip.schema';
-import { SystemRole } from '../../../employee-profile/employee/enums/employee-profile.enums';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-profile/employee/models/employee-system-role.schema';
+import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-subsystem/employee/models/employee-system-role.schema';
 import { validateAndConvertObjectId } from './shared/validation.util';
 import { ExecutionService } from '../../execution/execution.service';
 

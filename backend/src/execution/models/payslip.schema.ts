@@ -3,23 +3,23 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import {
   allowance,
   allowanceSchema,
-} from '../../config_setup/models/allowance.schema';
+} from '../../payroll-configuration/models/allowance.schema';
 import {
   signingBonus,
   signingBonusSchema,
-} from '../../config_setup/models/signingBonus.schema';
+} from '../../payroll-configuration/models/signingBonus.schema';
 import {
   terminationAndResignationBenefits,
   terminationAndResignationBenefitsSchema,
-} from '../../config_setup/models/terminationAndResignationBenefits';
+} from '../../payroll-configuration/models/terminationAndResignationBenefits';
 import {
   taxRules,
   taxRulesSchema,
-} from '../../config_setup/models/taxRules.schema';
+} from '../../payroll-configuration/models/taxRules.schema';
 import {
   insuranceBrackets,
   insuranceBracketsSchema,
-} from '../../config_setup/models/insuranceBrackets.schema';
+} from '../../payroll-configuration/models/insuranceBrackets.schema';
 import {
   employeePenalties,
   employeePenaltiesSchema,
@@ -28,7 +28,7 @@ import { EmployeeProfile as Employee } from '../../../employee-subsystem/employe
 import {
   refundDetails,
   refundDetailsSchema,
-} from '../../tracking/models/refunds.schema';
+} from '../../payroll-tracking/models/refunds.schema';
 import { payrollRuns } from './payrollRuns.schema';
 import { PaySlipPaymentStatus } from '../enums/payroll-execution-enum';
 

@@ -4,7 +4,7 @@ import { OffboardingService } from './offboarding.service';
 import { AuthGuard } from '../common/guards/authentication.guard';
 import { authorizationGuard } from '../common/guards/authorization.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../employee-profile/employee/enums/employee-profile.enums';
 import { InitiateTerminationReviewDto } from './offboardingDtos/initiate-termination-review.dto';
 import { InitiateOffboardingChecklistDto } from './offboardingDtos/initiate-offboarding-checklist.dto';
 //import { SendOffboardingNotificationDto } from './offboardingDtos/send-offboarding-notification.dto';
@@ -17,7 +17,7 @@ import { UpdateEquipmentReturnDto } from './offboardingDtos/update-equipment-ret
 import { TerminationRequest } from './models/termination-request.schema';
 import { ClearanceChecklist } from './models/clearance-checklist.schema';
 import { RevokeSystemAccessDto } from './offboardingDtos/revoke-system-access.dto';
-import { EmployeeStatus } from '../employee-subsystem/employee/enums/employee-profile.enums';
+import { EmployeeStatus } from '../employee-profile/employee/enums/employee-profile.enums';
 //import { Notification } from '../employee-subsystem/notification/models/notification.schema';
 
 @ApiTags('Offboarding')

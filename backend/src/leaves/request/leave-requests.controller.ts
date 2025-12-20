@@ -22,7 +22,7 @@ import { Types } from 'mongoose';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/employee/enums/employee-profile.enums';
 import { FilterLeaveRequestsByTypeDto } from '../dtos/filter-leave-requests-by-type.dto';
 import { SetApprovalFlowDto } from '../dtos/set-approval-flow.dto';
 // (no-op) remove unused import

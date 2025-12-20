@@ -10,10 +10,10 @@ import { AttendanceService } from '../../time-mangement/services/attendance.serv
 import { AppraisalCycleRepository } from './repository/appraisal-cycle.repository';
 import { AppraisalAssignmentRepository } from './repository/appraisal-assignment.repository';
 import { NotificationService } from '../notification/notification.service';
-import { OffboardingService } from '../../Recruitment/offboarding.service';
-import { TerminationInitiation } from '../../Recruitment/enums/termination-initiation.enum';
+import { OffboardingService } from '../../recruitment/offboarding.service';
+import { TerminationInitiation } from '../../recruitment/enums/termination-initiation.enum';
 import { CandidateRepository } from '../employee/repository/candidate.repository';
-import { ContractRepository } from '../../Recruitment/repositories/implementations/contract.repository';
+import { ContractRepository } from '../../recruitment/repositories/implementations/contract.repository';
 import { EmployeeProfileRepository } from '../employee/repository/employee-profile.repository';
 import { EmployeeStatus } from '../employee/enums/employee-profile.enums';
 import { Types } from 'mongoose';

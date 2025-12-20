@@ -43,7 +43,7 @@ import { UpdateLeaveCategoryDto } from '../dtos/update-leave-category.dto';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { SystemRole } from 'src/employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from 'src/employee-profile/employee/enums/employee-profile.enums';
 
 @ApiTags('Leaves Policy')
 @Controller('leaves')

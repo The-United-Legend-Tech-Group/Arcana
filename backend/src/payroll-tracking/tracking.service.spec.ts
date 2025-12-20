@@ -5,8 +5,8 @@ import { TrackingService } from './tracking.service';
 import { disputes, disputesDocument } from './models/disputes.schema';
 import { refunds, refundsDocument } from './models/refunds.schema';
 import { paySlip, PayslipDocument } from '../execution/models/payslip.schema';
-import { Notification } from '../../employee-profile/notification/models/notification.schema';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../employee-profile/employee/models/employee-system-role.schema';
+import { Notification } from '../../employee-subsystem/notification/models/notification.schema';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../employee-subsystem/employee/models/employee-system-role.schema';
 import { DisputeStatus, RefundStatus } from './enums/payroll-tracking-enum';
 import { Types } from 'mongoose';
 

@@ -7,8 +7,8 @@ import { DisputeStatus } from '../enums/payroll-tracking-enum';
 import { CreatePayslipDisputeDto } from '../dto/create-payslip-dispute.dto';
 import { ApproveRejectDisputeDto } from '../dto/approve-reject-dispute.dto';
 import { ConfirmApprovalDto } from '../dto/confirm-approval.dto';
-import { SystemRole } from '../../../employee-profile/employee/enums/employee-profile.enums';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-profile/employee/models/employee-system-role.schema';
+import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-subsystem/employee/models/employee-system-role.schema';
 import { generateEntityId } from './shared/id-generator.util';
 import { NotificationUtil } from './shared/notification.util';
 

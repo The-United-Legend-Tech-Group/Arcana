@@ -11,8 +11,8 @@ import {
 
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
-import { AuthGuard } from '../../common/guards/authentication.guard';
-import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { AuthGuard } from '../common/guards/authentication.guard';
+import { authorizationGuard } from '../common/guards/authorization.guard';
 import { ExecutionService } from './execution.service';
 import { PublishPayrollDto } from './dto/publish-payroll.dto';
 import { ApprovePayrollManagerDto } from './dto/approve-payroll-manager.dto';
@@ -21,12 +21,12 @@ import { ApprovePayrollFinanceDto } from './dto/approve-payroll-finance.dto';
 import { FreezePayrollDto } from './dto/freeze-payroll.dto';
 import { UnfreezePayrollDto } from './dto/unfreeze-payroll.dto';
 import { GeneratePayslipsDto } from './dto/generate-payslips.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { Roles } from '../common/decorators/roles.decorator';
+import { SystemRole } from '../employee-profile/employee/enums/employee-profile.enums';
 import { PayrollRunService } from './services/payroll-run.service';
 import { GenerateDraftDto } from './dto/generateDraft.dto';
 import { PayrollExceptionsQueryService } from './services/payroll-exceptions-query.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Payroll Execution')
 @ApiBearerAuth()

@@ -7,7 +7,7 @@ import { ApproveSigningBonusDto } from '../dto/approve-signing-bonus.dto';
 import { RejectSigningBonusDto } from '../dto/reject-signing-bonus.dto';
 import { EditEmployeeSigningBonusDto } from '../dto/edit-employee-signing-bonus.dto';
 import { CreateEmployeeSigningBonusDto } from '../dto/create-employee-signing-bonus.dto';
-import { signingBonus } from '../../config_setup/models/signingBonus.schema';
+import { signingBonus } from '../../payroll-configuration/models/signingBonus.schema';
 
 @Injectable()
 export class EmployeeSigningBonusService {

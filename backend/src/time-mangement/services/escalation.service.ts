@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AttendanceCorrectionRepository } from '../repository/attendance-correction.repository';
-import { NotificationService } from '../../employee-subsystem/notification/notification.service';
+import { NotificationService } from '../../employee-profile/notification/notification.service';
 
 /**
  * EscalationService

@@ -7,7 +7,6 @@ import { NotificationModule } from '../notification/notification.module';
 import { AuthModule } from '../employee-profile/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { PerformanceModule } from '../performance/performance.module';
-import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     NotificationModule,
     AuthModule,
     PerformanceModule,
-    AnalyticsModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],

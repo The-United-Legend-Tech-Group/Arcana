@@ -4,7 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export async function createTimeManagementApp() {
   const app = await NestFactory.create(TimeManagementModule);
-  const app = await NestFactory.create(TimeManagementModule);
 
   const config = new DocumentBuilder()
     .setTitle('Arcana - Time Management')

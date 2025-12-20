@@ -75,7 +75,7 @@ import {
 } from '../../payroll-configuration/models/terminationAndResignationBenefits';
 
 // Schemas - Tracking
-import { refunds, refundsSchema } from '../tracking/models/refunds.schema';
+import { refunds, refundsSchema } from '../../payroll-tracking/models/refunds.schema';
 
 // Modules
 import { ConfigSetupModule } from '../../payroll-configuration/payroll-configuration.module';
@@ -85,6 +85,7 @@ import { AuthModule } from '../../employee-profile/auth.module';
 @Module({
   imports: [
     ConfigSetupModule,
+    forwardRef(() => TimeManagementModule),
     forwardRef(() => TimeManagementModule),
     AuthModule,
     MongooseModule.forFeature([
@@ -154,4 +155,4 @@ import { AuthModule } from '../../employee-profile/auth.module';
     EmployeeTerminationResignationService,
   ],
 })
-export class ExecutionModule { }
+export class ExecutionModule {}

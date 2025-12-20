@@ -11,7 +11,7 @@ import { signingBonusSchema } from '../payroll-configuration/models/signingBonus
 import { taxRulesSchema } from '../payroll-configuration/models/taxRules.schema';
 import { terminationAndResignationBenefitsSchema } from '../payroll-configuration/models/terminationAndResignationBenefits';
 import { SchemaFactory } from '@nestjs/mongoose';
-import { PositionSchema } from '../organization-structure/models/position.schema';
+import { PositionSchema } from '../employee-subsystem/organization-structure/models/position.schema';
 import {
   ConfigStatus,
   PolicyType,
@@ -426,8 +426,14 @@ export async function seedPayrollConfiguration(
           grossSalary: template.grossSalary,
           status: template.status,
           createdBy: template.createdBy || employees.alice?._id,
-          approvedBy: template.status === ConfigStatus.APPROVED ? template.approvedBy : undefined,
-          approvedAt: template.status === ConfigStatus.APPROVED ? template.approvedAt || new Date() : undefined,
+          approvedBy:
+            template.status === ConfigStatus.APPROVED
+              ? template.approvedBy
+              : undefined,
+          approvedAt:
+            template.status === ConfigStatus.APPROVED
+              ? template.approvedAt || new Date()
+              : undefined,
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },

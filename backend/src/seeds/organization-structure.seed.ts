@@ -1,25 +1,27 @@
 import mongoose from 'mongoose';
-import { DepartmentSchema } from '../organization-structure/models/department.schema';
-import { PositionSchema } from '../organization-structure/models/position.schema';
-import { PositionAssignmentSchema } from '../organization-structure/models/position-assignment.schema';
-import { StructureChangeRequestSchema } from '../organization-structure/models/structure-change-request.schema';
-import { StructureApprovalSchema } from '../organization-structure/models/structure-approval.schema';
-import { StructureChangeLogSchema } from '../organization-structure/models/structure-change-log.schema';
+import { DepartmentSchema } from '../employee-subsystem/organization-structure/models/department.schema';
+import { PositionSchema } from '../employee-subsystem/organization-structure/models/position.schema';
+import { PositionAssignmentSchema } from '../employee-subsystem/organization-structure/models/position-assignment.schema';
+import { StructureChangeRequestSchema } from '../employee-subsystem/organization-structure/models/structure-change-request.schema';
+import { StructureApprovalSchema } from '../employee-subsystem/organization-structure/models/structure-approval.schema';
+import { StructureChangeLogSchema } from '../employee-subsystem/organization-structure/models/structure-change-log.schema';
 import {
   StructureRequestType,
   StructureRequestStatus,
   ApprovalDecision,
   ChangeLogAction,
-} from '../organization-structure/enums/organization-structure.enums';
+} from '../employee-subsystem/organization-structure/enums/organization-structure.enums';
 
-export async function seedOrganizationStructure(connection: mongoose.Connection) {
+export async function seedOrganizationStructure(
+  connection: mongoose.Connection,
+) {
   const DepartmentModel = connection.model('Department', DepartmentSchema);
   const PositionModel = connection.model('Position', PositionSchema);
 
   console.log('Clearing Organization Structure data...');
   await DepartmentModel.deleteMany({});
   await PositionModel.deleteMany({});
-  
+
   // 1. Create Departments
   console.log('Seeding Departments...');
   const hrDept = await DepartmentModel.create({
@@ -246,12 +248,29 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
   };
 }
 
-export async function seedPositionAssignments(connection: mongoose.Connection, employees: any, positions: any, departments: any) {
-  const PositionAssignmentModel = connection.model('PositionAssignment', PositionAssignmentSchema);
-  const StructureChangeRequestModel = connection.model('StructureChangeRequest', StructureChangeRequestSchema);
-  const StructureApprovalModel = connection.model('StructureApproval', StructureApprovalSchema);
-  const StructureChangeLogModel = connection.model('StructureChangeLog', StructureChangeLogSchema);
-  
+export async function seedPositionAssignments(
+  connection: mongoose.Connection,
+  employees: any,
+  positions: any,
+  departments: any,
+) {
+  const PositionAssignmentModel = connection.model(
+    'PositionAssignment',
+    PositionAssignmentSchema,
+  );
+  const StructureChangeRequestModel = connection.model(
+    'StructureChangeRequest',
+    StructureChangeRequestSchema,
+  );
+  const StructureApprovalModel = connection.model(
+    'StructureApproval',
+    StructureApprovalSchema,
+  );
+  const StructureChangeLogModel = connection.model(
+    'StructureChangeLog',
+    StructureChangeLogSchema,
+  );
+
   console.log('Clearing Position Assignments...');
   await PositionAssignmentModel.deleteMany({});
   await StructureChangeRequestModel.deleteMany({});
@@ -335,7 +354,7 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
 
   console.log('Seeding Structure Change workflow...');
   const salesLeadRequest = await StructureChangeRequestModel.create({
-      _id: new mongoose.Types.ObjectId(),
+    _id: new mongoose.Types.ObjectId(),
     requestNumber: 'SCR-2025-001',
     requestedByEmployeeId: employees.alice._id,
     requestType: StructureRequestType.NEW_POSITION,
@@ -348,7 +367,7 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
   });
 
   await StructureApprovalModel.create({
-      _id: new mongoose.Types.ObjectId(),
+    _id: new mongoose.Types.ObjectId(),
     changeRequestId: salesLeadRequest._id,
     approverEmployeeId: employees.bob._id,
     decision: ApprovalDecision.PENDING,
@@ -356,7 +375,7 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
   });
 
   await StructureChangeLogModel.create({
-      _id: new mongoose.Types.ObjectId(),
+    _id: new mongoose.Types.ObjectId(),
     action: ChangeLogAction.CREATED,
     entityType: 'Position',
     entityId: positions.salesRepPos._id,

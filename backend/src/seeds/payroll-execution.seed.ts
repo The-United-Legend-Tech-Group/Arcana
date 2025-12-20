@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import { SchemaFactory } from '@nestjs/mongoose';
-import { payrollRuns } from '../payroll-execution/models/payrollRuns.schema';
-import { employeePayrollDetailsSchema } from '../payroll-execution/models/employeePayrollDetails.schema';
-import { employeePenaltiesSchema } from '../payroll-execution/models/employeePenalties.schema';
-import { employeeSigningBonusSchema } from '../payroll-execution/models/EmployeeSigningBonus.schema';
-import { EmployeeTerminationResignationSchema } from '../payroll-execution/models/EmployeeTerminationResignation.schema';
-import { paySlipSchema } from '../payroll-execution/models/payslip.schema';
+import { payrollRuns } from '../payroll/execution/models/payrollRuns.schema';
+import { employeePayrollDetailsSchema } from '../payroll/execution/models/employeePayrollDetails.schema';
+import { employeePenaltiesSchema } from '../payroll/execution/models/employeePenalties.schema';
+import { employeeSigningBonusSchema } from '../payroll/execution/models/EmployeeSigningBonus.schema';
+import { EmployeeTerminationResignationSchema } from '../payroll/execution/models/EmployeeTerminationResignation.schema';
+import { paySlipSchema } from '../payroll/execution/models/payslip.schema';
 import {
   PayRollStatus,
   PayRollPaymentStatus,
@@ -13,7 +13,7 @@ import {
   PaySlipPaymentStatus,
   BonusStatus,
   BenefitStatus,
-} from '../payroll-execution/enums/payroll-execution-enum';
+} from '../payroll/execution/enums/payroll-execution-enum';
 import { ConfigStatus } from '../payroll-configuration/enums/payroll-configuration-enums';
 import { EmployeeProfileSchema } from '../employee-profile/models/employee-profile.schema';
 import { TerminationRequestSchema } from '../Recruitment/models/termination-request.schema';

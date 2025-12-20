@@ -19,6 +19,7 @@ import { ConfigSetupModule } from './payroll-configuration/payroll-configuration
 import { RecruitmentModule } from './Recruitment/recruitment.module';
 import { TimeManagementModule } from './time-management/time-management.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
 
 @Module({
   imports: [
@@ -40,12 +41,14 @@ import { ScheduleModule } from '@nestjs/schedule';
     // Feature modules (alphabetically organized)
     EmployeeSubsystemModule,
     LeavesModule,
+    TrackingModule,
     ConfigSetupModule,
     RecruitmentModule,
+    TimeManagementModule,
     TimeManagementModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppConfigService],
   exports: [AppConfigService],
 })
-export class AppModule { }
+export class AppModule {}

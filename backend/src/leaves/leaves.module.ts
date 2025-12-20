@@ -46,13 +46,17 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-profile/models/employee-system-role.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../employee-subsystem/employee/models/employee-system-role.schema';
 import { LeaveCategoryRepository } from './repository/leave-category.repository';
 import { ExecutionModule } from '../payroll/execution/execution.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    forwardRef(() => TimeManagementModule), // Use forwardRef to resolve circular dependency
     forwardRef(() => TimeManagementModule), // Use forwardRef to resolve circular dependency
     // ScheduleModule.forRoot() moved to AppModule
     MongooseModule.forFeature([

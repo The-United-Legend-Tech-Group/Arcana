@@ -7,7 +7,10 @@ import {
   employeePayrollDetailsDocument,
 } from '../models/employeePayrollDetails.schema';
 
-import { taxRules, taxRulesDocument } from '../../../payroll-configuration/models/taxRules.schema';
+import {
+  taxRules,
+  taxRulesDocument,
+} from '../../../payroll-configuration/models/taxRules.schema';
 
 import {
   insuranceBrackets,
@@ -28,12 +31,11 @@ import { BenefitStatus } from '../enums/payroll-execution-enum';
 import { BonusStatus, BankStatus } from '../enums/payroll-execution-enum';
 import { EmployeePenaltyService } from './EmployeePenalty.service';
 import { ConfigSetupService } from '../../../payroll-configuration/payroll-configuration.service';
-import { AttendanceService } from '../../../time-mangement/services/attendance.service';
+import { AttendanceService } from '../../../time-management/services/attendance.service';
 import {
   EmployeeTerminationResignation,
-  EmployeeTerminationResignationDocument
+  EmployeeTerminationResignationDocument,
 } from '../models/EmployeeTerminationResignation.schema';
-
 
 @Injectable()
 export class PayrollCalculationService {
@@ -68,7 +70,7 @@ export class PayrollCalculationService {
     private readonly employeePenaltyService: EmployeePenaltyService,
     private readonly configSetupService: ConfigSetupService,
     private readonly attendanceService: AttendanceService,
-  ) { }
+  ) {}
 
   //Leaves Ghoraba
   async getDailyRate(employeeId: string): Promise<number> {
@@ -77,7 +79,8 @@ export class PayrollCalculationService {
       .exec();
 
     const role = empRole ? empRole.roles?.[0] || '' : '';
-    const payGrade = await this.configSetupService.payGrade.getPayGradeByName(role);
+    const payGrade =
+      await this.configSetupService.payGrade.getPayGradeByName(role);
     if (!payGrade) {
       throw new Error(`No pay grade found for role: ${role}`);
     }
@@ -136,7 +139,11 @@ export class PayrollCalculationService {
   }
 
   private monthRange(payrollPeriod: Date) {
-    const start = new Date(payrollPeriod.getFullYear(), payrollPeriod.getMonth(), 1);
+    const start = new Date(
+      payrollPeriod.getFullYear(),
+      payrollPeriod.getMonth(),
+      1,
+    );
     const end = new Date(
       payrollPeriod.getFullYear(),
       payrollPeriod.getMonth() + 1,
@@ -160,18 +167,23 @@ export class PayrollCalculationService {
     const month = payrollPeriod.getMonth() + 1; // 1..12
     const year = payrollPeriod.getFullYear();
 
-    const attendanceData = await this.attendanceService.syncEmployeeAttendanceToPayroll(
-      employeeId,
-      month - 1, // attendance service expects 0-indexed month
-      year,
-    );
+    const attendanceData =
+      await this.attendanceService.syncEmployeeAttendanceToPayroll(
+        employeeId,
+        month - 1, // attendance service expects 0-indexed month
+        year,
+      );
 
     const expectedMinutesPerDay = 8 * 60;
     const daysPresent = attendanceData?.attendance?.daysPresent ?? 0;
     const totalExpectedMinutes = expectedMinutesPerDay * daysPresent;
-    const totalActualMinutes = attendanceData?.attendance?.totalWorkedMinutes ?? 0;
+    const totalActualMinutes =
+      attendanceData?.attendance?.totalWorkedMinutes ?? 0;
 
-    const missingMinutes = Math.max(0, totalExpectedMinutes - totalActualMinutes);
+    const missingMinutes = Math.max(
+      0,
+      totalExpectedMinutes - totalActualMinutes,
+    );
     const missingHours = missingMinutes / 60;
 
     const emp = await this.employeeSystemRoleModel
@@ -219,14 +231,18 @@ export class PayrollCalculationService {
     const role = empRole?.roles?.[0] ?? '';
 
     const defaultPayGrade = { baseSalary: 6000, grossSalary: 6000 };
-    const fetchedPayGrade = await this.configSetupService.payGrade.getPayGradeByName(role);
+    const fetchedPayGrade =
+      await this.configSetupService.payGrade.getPayGradeByName(role);
 
     const payGradeFound = !!fetchedPayGrade;
     const payGrade = fetchedPayGrade || defaultPayGrade;
 
     // Allowances (kept as-is)
     const allowancesList = await this.configSetupService.allowance.findAll();
-    const totalAllowances = allowancesList.reduce((sum, a) => sum + a.amount, 0);
+    const totalAllowances = allowancesList.reduce(
+      (sum, a) => sum + a.amount,
+      0,
+    );
 
     // Payroll month range (used for penalties already; we also use it to scope HR-event records)
     const { start, end } = this.monthRange(payrollPeriod);
@@ -244,14 +260,15 @@ export class PayrollCalculationService {
 
     // Termination/Resignation benefits (approved) -> "offboarding event inferred through benefits"
     // IMPORTANT: ensure your injected model name matches this property.
-    const terminationBenefitsList = await this.employeeTerminationResignationModel
-      .find({
-        employeeId,
-        status: BenefitStatus.APPROVED,
-        // If your schema doesn't have createdAt, remove this filter
-        createdAt: { $gte: start, $lte: end },
-      })
-      .exec();
+    const terminationBenefitsList =
+      await this.employeeTerminationResignationModel
+        .find({
+          employeeId,
+          status: BenefitStatus.APPROVED,
+          // If your schema doesn't have createdAt, remove this filter
+          createdAt: { $gte: start, $lte: end },
+        })
+        .exec();
     const totalTerminationResignationBenefit = terminationBenefitsList.reduce(
       (sum, b) => sum + (b.givenAmount ?? 0),
       0,
@@ -260,7 +277,8 @@ export class PayrollCalculationService {
     const benefit = totalTerminationResignationBenefit;
 
     // Gross (your current implementation style)
-    const grossSalary = payGrade.baseSalary + totalAllowances + totalBonus + benefit;
+    const grossSalary =
+      payGrade.baseSalary + totalAllowances + totalBonus + benefit;
 
     // ✅ Tax MUST be % of Base Salary (per spec)
     const taxRate = await this.getActiveTaxRate();
@@ -336,7 +354,6 @@ export class PayrollCalculationService {
       },
     };
   }
-
 
   async saveEmployeePayrollRecord(data: any) {
     return await this.employeePayrollDetailsModel.create(data);

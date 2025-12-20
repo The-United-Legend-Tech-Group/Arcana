@@ -9,7 +9,7 @@ import {
   CorrectionRequestStatus,
   TimeExceptionType,
   TimeExceptionStatus,
-} from '../time-mangement/models/enums';
+} from '../time-management/models/enums';
 import { config } from 'dotenv';
 
 // Load env
@@ -24,7 +24,7 @@ async function connect() {
   const uri = isTest
     ? 'mongodb://localhost:27017/payroll-test'
     : process.env.MONGO_URI || 'mongodb://localhost:27017/payroll-subsystems';
-  
+
   console.log(`Connecting to: ${uri.replace(/\/\/[^@]*@/, '//***:***@')}`); // Hide credentials in log
   return mongoose.connect(uri);
 }

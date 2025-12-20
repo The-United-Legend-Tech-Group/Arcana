@@ -2,12 +2,30 @@ import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { AppraisalRecord, AppraisalRecordSchema, } from './models/appraisal-record.schema';
-import { AppraisalCycle, AppraisalCycleSchema, } from './models/appraisal-cycle.schema';
-import { AppraisalTemplate, AppraisalTemplateSchema, } from './models/appraisal-template.schema';
-import { AppraisalAssignment, AppraisalAssignmentSchema, } from './models/appraisal-assignment.schema';
-import { AppraisalDispute, AppraisalDisputeSchema, } from './models/appraisal-dispute.schema';
-import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee/models/employee-system-role.schema';
+import {
+  AppraisalRecord,
+  AppraisalRecordSchema,
+} from './models/appraisal-record.schema';
+import {
+  AppraisalCycle,
+  AppraisalCycleSchema,
+} from './models/appraisal-cycle.schema';
+import {
+  AppraisalTemplate,
+  AppraisalTemplateSchema,
+} from './models/appraisal-template.schema';
+import {
+  AppraisalAssignment,
+  AppraisalAssignmentSchema,
+} from './models/appraisal-assignment.schema';
+import {
+  AppraisalDispute,
+  AppraisalDisputeSchema,
+} from './models/appraisal-dispute.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../employee/models/employee-system-role.schema';
 import { AppraisalCycleRepository } from './repository/appraisal-cycle.repository';
 import { AppraisalCycleService } from './appraisal-cycle.service';
 import { AppraisalCycleController } from './appraisal-cycle.controller';
@@ -29,10 +47,13 @@ import { AppraisalAssignmentController } from './appraisal-assignment.controller
 import { AppraisalAssignmentService } from './appraisal-assignment.service';
 import { NotificationModule } from '../notification/notification.module';
 import { EmployeeModule } from '../employee/employee.module';
-import { TimeMangementModule } from '../../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../../time-management/timemangment.module';
 import { RecruitmentModule } from '../../Recruitment/recruitment.module';
 import { ContractRepository } from '../../Recruitment/repositories/implementations/contract.repository';
-import { Contract, ContractSchema } from '../../Recruitment/models/contract.schema';
+import {
+  Contract,
+  ContractSchema,
+} from '../../Recruitment/models/contract.schema';
 
 @Module({
   imports: [
@@ -48,7 +69,7 @@ import { Contract, ContractSchema } from '../../Recruitment/models/contract.sche
     OrganizationStructureModule,
     NotificationModule,
     EmployeeModule,
-    TimeMangementModule,
+    TimeManagementModule,
     forwardRef(() => RecruitmentModule),
     ConfigModule,
     JwtModule.registerAsync({
@@ -84,4 +105,4 @@ import { Contract, ContractSchema } from '../../Recruitment/models/contract.sche
   ],
   exports: [MongooseModule, AppraisalRecordService],
 })
-export class PerformanceModule { }
+export class PerformanceModule {}

@@ -8,7 +8,7 @@ import {
   CorrectionRequestStatus,
   TimeExceptionType,
   TimeExceptionStatus,
-} from '../time-mangement/models/enums';
+} from '../time-management/models/enums';
 
 // Load environment variables
 config({ path: process.cwd() + '/.env' });

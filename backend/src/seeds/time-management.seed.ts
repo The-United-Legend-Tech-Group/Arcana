@@ -8,7 +8,6 @@ import { ScheduleRuleSchema } from '../time-management/models/schedule-rule.sche
 import { ShiftAssignmentSchema } from '../time-management/models/shift-assignment.schema';
 import { AttendanceRecordSchema } from '../time-management/models/attendance-record.schema';
 import { AttendanceCorrectionRequestSchema } from '../time-management/models/attendance-correction-request.schema';
-import { NotificationLogSchema } from '../time-management/models/notification-log.schema';
 import { TimeExceptionSchema } from '../time-management/models/time-exception.schema';
 import {
   PunchPolicy,
@@ -56,10 +55,6 @@ export async function seedTimeManagement(
     'AttendanceCorrectionRequest',
     AttendanceCorrectionRequestSchema,
   );
-  const NotificationLogModel = connection.model(
-    'NotificationLog',
-    NotificationLogSchema,
-  );
   const TimeExceptionModel = connection.model(
     'TimeException',
     TimeExceptionSchema,
@@ -75,7 +70,7 @@ export async function seedTimeManagement(
   await ShiftAssignmentModel.deleteMany({});
   await AttendanceRecordModel.deleteMany({});
   await AttendanceCorrectionRequestModel.deleteMany({});
-  await NotificationLogModel.deleteMany({});
+
   await TimeExceptionModel.deleteMany({});
 
   console.log('Seeding Shift Types...');
@@ -149,6 +144,7 @@ export async function seedTimeManagement(
   for (const day of workingDays.slice(0, 4)) {
     await AttendanceRecordModel.create({
       employeeId: employees.charlie._id,
+      date: new Date(`${day}T00:00:00Z`),
       punches: [
         { type: PunchType.IN, time: new Date(`${day}T09:00:00Z`) },
         { type: PunchType.OUT, time: new Date(`${day}T17:00:00Z`) },
@@ -161,6 +157,7 @@ export async function seedTimeManagement(
 
   await AttendanceRecordModel.create({
     employeeId: employees.charlie._id,
+    date: new Date('2025-12-05T00:00:00Z'),
     punches: [
       { type: PunchType.IN, time: new Date('2025-12-05T09:00:00Z') },
       { type: PunchType.OUT, time: new Date('2025-12-05T13:00:00Z') },
@@ -173,6 +170,7 @@ export async function seedTimeManagement(
   for (const day of workingDays.slice(5)) {
     await AttendanceRecordModel.create({
       employeeId: employees.charlie._id,
+      date: new Date(`${day}T00:00:00Z`),
       punches: [],
       totalWorkMinutes: 0,
       hasMissedPunch: true,

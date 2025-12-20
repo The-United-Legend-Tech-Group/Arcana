@@ -32,7 +32,7 @@ import { LeavesReportService } from './reports/leave-reports.service';
 import { EmployeeModule } from '../employee-subsystem/employee/employee.module';
 import { NotificationModule } from '../employee-subsystem/notification/notification.module';
 import { OrganizationStructureModule } from '../employee-subsystem/organization-structure/organization-structure.module';
-import { TimeMangementModule } from '../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../time-management/timemangment.module';
 import {
   LeavePolicyRepository,
   LeaveEntitlementRepository,
@@ -46,14 +46,17 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-subsystem/employee/models/employee-system-role.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../employee-subsystem/employee/models/employee-system-role.schema';
 import { LeaveCategoryRepository } from './repository/leave-category.repository';
 import { ExecutionModule } from '../payroll/execution/execution.module';
 
 @Module({
   imports: [
     DatabaseModule,
-    forwardRef(() => TimeMangementModule), // Use forwardRef to resolve circular dependency
+    forwardRef(() => TimeManagementModule), // Use forwardRef to resolve circular dependency
     // ScheduleModule.forRoot() moved to AppModule
     MongooseModule.forFeature([
       { name: Attachment.name, schema: AttachmentSchema },
@@ -101,4 +104,4 @@ import { ExecutionModule } from '../payroll/execution/execution.module';
   ],
   exports: [MongooseModule],
 })
-export class LeavesModule { }
+export class LeavesModule {}

@@ -14,10 +14,10 @@ import {
   OvertimeRecordDto,
   ExceptionRecordDto,
 } from './dto/analytics-report.dto';
-import { AttendanceRepository } from '../../time-mangement/repository/attendance.repository';
-import { HolidayRepository } from '../../time-mangement/repository/holiday.repository';
-import { ShiftRepository } from '../../time-mangement/repository/shift.repository';
-import { ShiftAssignmentRepository } from '../../time-mangement/repository/shift-assignment.repository';
+import { AttendanceRepository } from '../../time-management/repository/attendance.repository';
+import { HolidayRepository } from '../../time-management/repository/holiday.repository';
+import { ShiftRepository } from '../../time-management/repository/shift.repository';
+import { ShiftAssignmentRepository } from '../../time-management/repository/shift-assignment.repository';
 import { EmployeeProfileRepository } from '../employee/repository/employee-profile.repository';
 import { DepartmentRepository } from '../organization-structure/repository/department.repository';
 
@@ -39,7 +39,7 @@ export class AnalyticsService {
     private readonly shiftAssignmentRepo: ShiftAssignmentRepository,
     private readonly employeeProfileRepo: EmployeeProfileRepository,
     private readonly departmentRepo: DepartmentRepository,
-  ) { }
+  ) {}
 
   /**
    * Helper: Load all necessary context data in a single batch operation
@@ -185,7 +185,14 @@ export class AnalyticsService {
     );
 
     // Use provided context or load new one
-    const ctx = context || await this.loadContext(startDate, endDate, filters.employeeId, filters.departmentId);
+    const ctx =
+      context ||
+      (await this.loadContext(
+        startDate,
+        endDate,
+        filters.employeeId,
+        filters.departmentId,
+      ));
 
     // === PROCESS RECORDS using cached data ===
     const overtimeRecords: OvertimeRecordDto[] = [];
@@ -259,18 +266,16 @@ export class AnalyticsService {
 
         const holidayType = isHoliday
           ? ctx.holidays.find((h: any) => {
-            const holidayStart = new Date(h.startDate);
-            const holidayEnd = h.endDate
-              ? new Date(h.endDate)
-              : holidayStart;
-            return recordDate >= holidayStart && recordDate <= holidayEnd;
-          })?.type
+              const holidayStart = new Date(h.startDate);
+              const holidayEnd = h.endDate ? new Date(h.endDate) : holidayStart;
+              return recordDate >= holidayStart && recordDate <= holidayEnd;
+            })?.type
           : undefined;
 
         // Get department name from cache
         const departmentName = employee.primaryDepartmentId
-          ? ctx.departmentsMap.get(employee.primaryDepartmentId.toString())?.name ||
-          'Unknown'
+          ? ctx.departmentsMap.get(employee.primaryDepartmentId.toString())
+              ?.name || 'Unknown'
           : 'Unknown';
 
         // Get actual clock in/out times
@@ -324,14 +329,24 @@ export class AnalyticsService {
     );
 
     // Use provided context or load new one
-    const ctx = context || await this.loadContext(startDate, endDate, filters.employeeId, filters.departmentId);
+    const ctx =
+      context ||
+      (await this.loadContext(
+        startDate,
+        endDate,
+        filters.employeeId,
+        filters.departmentId,
+      ));
 
     // === PROCESS RECORDS using cached data ===
     const exceptionRecords: ExceptionRecordDto[] = [];
 
     for (const record of ctx.attendanceRecords) {
       // Exception logic filtering: hasMissedPunch OR exceptionIds assigned
-      if (!(record as any).hasMissedPunch && ((record as any).exceptionIds?.length || 0) === 0) {
+      if (
+        !(record as any).hasMissedPunch &&
+        ((record as any).exceptionIds?.length || 0) === 0
+      ) {
         // BUT wait, original logic was:
         // $or: [{ hasMissedPunch: true }, { exceptionIds: { $ne: [] } }]
         // So we must skip records that don't match this criteria
@@ -415,8 +430,8 @@ export class AnalyticsService {
 
       // Get department name from cache
       const departmentName = employee.primaryDepartmentId
-        ? ctx.departmentsMap.get(employee.primaryDepartmentId.toString())?.name ||
-        'Unknown'
+        ? ctx.departmentsMap.get(employee.primaryDepartmentId.toString())
+            ?.name || 'Unknown'
         : 'Unknown';
 
       exceptionRecords.push({
@@ -452,10 +467,20 @@ export class AnalyticsService {
     year?: number,
     departmentId?: string,
   ) {
-    const { startDate, endDate } = this.calculateDateRange(undefined, undefined, month, year);
+    const { startDate, endDate } = this.calculateDateRange(
+      undefined,
+      undefined,
+      month,
+      year,
+    );
 
     // Load context ONCE
-    const context = await this.loadContext(startDate, endDate, undefined, departmentId);
+    const context = await this.loadContext(
+      startDate,
+      endDate,
+      undefined,
+      departmentId,
+    );
 
     const overtimeFilters: OvertimeReportFilterDto = {
       month,
@@ -502,7 +527,6 @@ export class AnalyticsService {
       exceptionTop5: exceptionReport.records.slice(0, 5),
     };
   }
-
 
   /**
    * Export report in different formats (JSON, CSV, Excel)

@@ -11,17 +11,10 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigBackupService } from './config-backup.service';
 import { ConfigBackupSchedulerService } from './config-backup-scheduler.service';
-<<<<<<< HEAD:backend/src/payroll/config_setup/backup/config-backup.controller.ts
-import { AuthGuard } from '../../../common/guards/authentication.guard';
-import { authorizationGuard } from '../../../common/guards/authorization.guard';
-import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
-import { Roles as SystemRoles } from '../../../employee-profile/decorators/roles.decorator';
-=======
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
-import { Roles as SystemRoles } from '../../employee-subsystem/employee/decorators/roles.decorator';
->>>>>>> 2670e2ef0a6367832cc370e5aaba37b2ffc6dbb4:backend/src/payroll-configuration/backup/config-backup.controller.ts
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
+import { Roles as SystemRoles } from '../../employee-profile/decorators/roles.decorator';
 
 const Roles = (...roles: SystemRole[]) => SystemRoles(...(roles as any));
 

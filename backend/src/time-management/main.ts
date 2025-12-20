@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { TimeMangementModule } from './timemangment.module';
+import { TimeMangementModule } from './time-management.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export async function createTimeManagementApp() {

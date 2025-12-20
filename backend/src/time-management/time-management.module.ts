@@ -16,7 +16,7 @@ import {
   ScheduleRule,
   ScheduleRuleSchema,
 } from './models/schedule-rule.schema';
-import { TimeController } from './time.controller';
+import { TimeController } from './time-management.controller';
 import { ShiftService } from './services/shift.service';
 import { AttendanceService } from './services/attendance.service';
 import { ShiftAssignmentService } from './services/shift-assignment.service';

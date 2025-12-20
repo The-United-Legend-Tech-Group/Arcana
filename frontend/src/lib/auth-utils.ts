@@ -68,6 +68,35 @@ export function isAuthenticated(): boolean {
 }
 
 /**
+ * Get the access token for API calls.
+ * 
+ * This function attempts to retrieve the access token in the following order:
+ * 1. First checks for the access_token in cookies (preferred method)
+ * 2. Falls back to localStorage for backward compatibility during migration
+ * 
+ * Note: If the backend sets the access_token as httpOnly (recommended for security),
+ * this function won't be able to read it from cookies. In that case, the token
+ * will be automatically included in requests via credentials: 'include'.
+ * This fallback to localStorage ensures compatibility during the migration period.
+ * 
+ * @returns The access token string or null if not found
+ */
+export function getAccessToken(): string | null {
+    // Try to get from cookies first
+    const cookieToken = getCookie(COOKIE_ACCESS_TOKEN);
+    if (cookieToken) {
+        return cookieToken;
+    }
+
+    // Fallback to localStorage for backward compatibility
+    if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem('access_token');
+    }
+
+    return null;
+}
+
+/**
  * Get employee ID from cookie
  */
 export function getEmployeeIdFromCookie(): string | null {

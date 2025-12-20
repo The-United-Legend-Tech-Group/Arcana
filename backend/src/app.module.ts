@@ -17,7 +17,7 @@ import { EmployeeSubsystemModule } from './employee-subsystem/employee-subsystem
 import { LeavesModule } from './leaves/leaves.module';
 import { ConfigSetupModule } from './payroll-configuration/payroll-configuration.module';
 import { RecruitmentModule } from './Recruitment/recruitment.module';
-import { TimeMangementModule } from './time-management/time-management.module';
+import { TimeManagementModule } from './time-management/time-management.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -42,7 +42,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     LeavesModule,
     ConfigSetupModule,
     RecruitmentModule,
-    TimeMangementModule,
+    TimeManagementModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppConfigService],

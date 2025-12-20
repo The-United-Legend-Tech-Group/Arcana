@@ -79,13 +79,13 @@ import { refunds, refundsSchema } from '../tracking/models/refunds.schema';
 
 // Modules
 import { ConfigSetupModule } from '../../payroll-configuration/payroll-configuration.module';
-import { TimeMangementModule } from '../../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../../time-management/time-management.module';
 import { AuthModule } from '../../employee-profile/auth.module';
 
 @Module({
   imports: [
     ConfigSetupModule,
-    forwardRef(() => TimeMangementModule),
+    forwardRef(() => TimeManagementModule),
     AuthModule,
     MongooseModule.forFeature([
       // Execution schemas

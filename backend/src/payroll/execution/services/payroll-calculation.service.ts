@@ -28,7 +28,7 @@ import { BenefitStatus } from '../enums/payroll-execution-enum';
 import { BonusStatus, BankStatus } from '../enums/payroll-execution-enum';
 import { EmployeePenaltyService } from './EmployeePenalty.service';
 import { ConfigSetupService } from '../../../payroll-configuration/payroll-configuration.service';
-import { AttendanceService } from '../../../time-mangement/services/attendance.service';
+import { AttendanceService } from '../../../time-management/services/attendance.service';
 import {
   EmployeeTerminationResignation,
   EmployeeTerminationResignationDocument

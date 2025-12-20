@@ -14,7 +14,7 @@ import {
   LeaveRequestRepository,
 } from '../repository';
 import { EmployeeService } from '../../employee-profile/employee-profile.service';
-import { AttendanceService } from '../../time-mangement/services/attendance.service';
+import { AttendanceService } from '../../time-management/services/attendance.service';
 import { InitiatePolicyDto } from '../dtos/initiate-policy.dto';
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
 import { CreateLeaveTypeDto } from '../dtos/create-leave-type.dto';

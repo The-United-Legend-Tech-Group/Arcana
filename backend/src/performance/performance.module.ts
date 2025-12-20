@@ -43,7 +43,7 @@ import {
 import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
 import { NotificationModule } from '../notification/notification.module';
 import { EmployeeModule } from '../employee-profile/employee-profile.module';
-import { TimeMangementModule } from '../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../time-management/time-management.module';
 import { RecruitmentModule } from '../Recruitment/recruitment.module';
 
 @Module({
@@ -60,7 +60,7 @@ import { RecruitmentModule } from '../Recruitment/recruitment.module';
     OrganizationStructureModule,
     NotificationModule,
     EmployeeModule,
-    TimeMangementModule,
+    TimeManagementModule,
     forwardRef(() => RecruitmentModule),
     ConfigModule,
     JwtModule.registerAsync({

@@ -32,7 +32,7 @@ import { LeavesReportService } from './reports/leave-reports.service';
 import { EmployeeModule } from '../employee-profile/employee-profile.module';
 import { NotificationModule } from '../notification/notification.module';
 import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
-import { TimeMangementModule } from '../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../time-management/time-management.module';
 import {
   LeavePolicyRepository,
   LeaveEntitlementRepository,
@@ -53,7 +53,7 @@ import { ExecutionModule } from '../payroll/execution/execution.module';
 @Module({
   imports: [
     DatabaseModule,
-    forwardRef(() => TimeMangementModule), // Use forwardRef to resolve circular dependency
+    forwardRef(() => TimeManagementModule), // Use forwardRef to resolve circular dependency
     // ScheduleModule.forRoot() moved to AppModule
     MongooseModule.forFeature([
       { name: Attachment.name, schema: AttachmentSchema },

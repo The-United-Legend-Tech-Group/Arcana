@@ -42,7 +42,7 @@ import { TerminationInitiation } from '../Recruitment/enums/termination-initiati
 // Services
 import { NotificationService } from '../notification/notification.service';
 import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
-import { AttendanceService } from '../time-mangement/services/attendance.service';
+import { AttendanceService } from '../time-management/services/attendance.service';
 import { OffboardingService } from '../Recruitment/offboarding.service';
 
 // ==========================================

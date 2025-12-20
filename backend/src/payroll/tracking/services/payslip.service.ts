@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 const PDFDocument = require('pdfkit');
 import { PayslipDocument } from '../../execution/models/payslip.schema';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-subsystem/employee/models/employee-system-role.schema';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-profile/models/employee-system-role.schema';
 import { validateAndConvertObjectId } from './shared/validation.util';
 import { ExecutionService } from '../../execution/execution.service';
 
@@ -23,7 +23,7 @@ export class PayslipService {
     @InjectModel(EmployeeSystemRole.name)
     private employeeSystemRoleModel: Model<EmployeeSystemRoleDocument>,
     private readonly executionService: ExecutionService,
-  ) {}
+  ) { }
 
   /**
    * Checks if an employee has Payroll Manager or Payroll Specialist role
@@ -181,21 +181,21 @@ export class PayslipService {
    */
   private cleanItemsArray(items: any[], additionalFields: string[] = []): any[] {
     if (!Array.isArray(items)) return items;
-    
+
     return items.map((item: any) => {
       const cleaned: any = {
         ...item,
         name: this.cleanItemName(item.name),
         description: this.cleanDescription(item.description),
       };
-      
+
       // Clean additional fields if specified
       additionalFields.forEach(field => {
         if (item[field]) {
           cleaned[field] = this.cleanItemName(item[field]);
         }
       });
-      
+
       return cleaned;
     });
   }
@@ -262,16 +262,16 @@ export class PayslipService {
     if (roleChecked === undefined) {
       roleChecked = await this.isPayrollManagerOrSpecialist(employeeId);
     }
-    
+
     // validateAndConvertObjectId already validates, no need for redundant check
     const payslipObjectId = validateAndConvertObjectId(payslipId, 'Payslip ID');
-    const employeeObjectId = roleChecked 
-      ? undefined 
+    const employeeObjectId = roleChecked
+      ? undefined
       : validateAndConvertObjectId(employeeId, 'Employee ID');
 
     // Get payslip from execution service
     const payslip = await this.executionService.getPayslipById(
-      payslipObjectId, 
+      payslipObjectId,
       employeeObjectId
     );
 
@@ -285,7 +285,7 @@ export class PayslipService {
 
     // Clean the payslip data before returning
     const cleanedPayslip = this.cleanPayslipData(payslip);
-    
+
     // Return as PayslipDocument (cast needed since we're modifying the object)
     return cleanedPayslip as PayslipDocument;
   }
@@ -324,13 +324,13 @@ export class PayslipService {
   ): Promise<Buffer> {
     // validateAndConvertObjectId already validates, no need for redundant check
     const payslipObjectId = validateAndConvertObjectId(payslipId, 'Payslip ID');
-    const employeeObjectId = isManagerOrSpecialist 
-      ? undefined 
+    const employeeObjectId = isManagerOrSpecialist
+      ? undefined
       : validateAndConvertObjectId(employeeId, 'Employee ID');
 
     // Get payslip from execution service (minimal populate for PDF)
     const payslip = await this.executionService.getPayslipByIdForPDF(
-      payslipObjectId, 
+      payslipObjectId,
       employeeObjectId
     );
 
@@ -460,8 +460,8 @@ export class PayslipService {
         payslip.paymentStatus?.toLowerCase() === 'paid'
           ? '#2e7d32'
           : payslip.paymentStatus?.toLowerCase() === 'pending'
-          ? '#f57c00'
-          : '#000000';
+            ? '#f57c00'
+            : '#000000';
       doc.fillColor(statusColor);
       doc.text(payslip.paymentStatus || 'N/A', leftColX + 55, infoY + infoLineSpacing * 2);
 
@@ -608,9 +608,8 @@ export class PayslipService {
             doc.font('Helvetica').fillColor('#000000');
             let insuranceLabel = cleanName;
             if (insurance.employeeRate !== undefined) {
-              insuranceLabel += ` (${insurance.employeeRate}%${
-                insurance.employerRate !== undefined ? ` / ${insurance.employerRate}%` : ''
-              })`;
+              insuranceLabel += ` (${insurance.employeeRate}%${insurance.employerRate !== undefined ? ` / ${insurance.employerRate}%` : ''
+                })`;
             }
             doc.text(insuranceLabel, descriptionX, currentY);
             doc.font('Helvetica-Bold').fillColor('#d32f2f');

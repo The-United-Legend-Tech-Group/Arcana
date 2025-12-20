@@ -6,7 +6,7 @@ import {
   // EmployeeTerminationResignationRepository,
   ContractRepository
 } from './repositories';
-import { CandidateRepository } from '../employee-subsystem/employee/repository/candidate.repository';
+import { CandidateRepository } from '../employee-profile/repository/candidate.repository';
 import { OfferRepository } from './repositories/implementations/offer.repository';
 import { OfferResponseStatus } from './enums/offer-response-status.enum';
 import { InitiateTerminationReviewDto } from './offboardingDtos/initiate-termination-review.dto';
@@ -16,20 +16,20 @@ import { SubmitResignationDto } from './offboardingDtos/submit-resignation.dto';
 import { TrackResignationStatusDto } from './offboardingDtos/track-resignation-status.dto';
 import { RevokeSystemAccessDto } from './offboardingDtos/revoke-system-access.dto';
 import { DepartmentClearanceSignOffDto } from './offboardingDtos/department-clearance-signoff.dto';
-//import { Notification } from '../employee-subsystem/notification/models/notification.schema';
+//import { Notification } from '../notification/models/notification.schema';
 import { ApproveTerminationDto } from './offboardingDtos/approve-termination.dto';
 import { TerminationStatus } from './enums/termination-status.enum';
 import { TerminationInitiation } from './enums/termination-initiation.enum';
 import { ApprovalStatus } from './enums/approval-status.enum';
 import { TerminationRequest } from './models/termination-request.schema';
 import { ClearanceChecklist } from './models/clearance-checklist.schema';
-import { EmployeeStatus, SystemRole } from '../employee-subsystem/employee/enums/employee-profile.enums';
-import { EmployeeService } from '../employee-subsystem/employee/employee.service';
-import { NotificationService } from '../employee-subsystem/notification/notification.service';
-import { AppraisalRecordService } from 'src/employee-subsystem/performance/appraisal-record.service';
+import { EmployeeStatus, SystemRole } from '../employee-profile/enums/employee-profile.enums';
+import { EmployeeService } from '../employee-profile/employee.service';
+import { NotificationService } from '../notification/notification.service';
+import { AppraisalRecordService } from 'src/performance/appraisal-record.service';
 //import { LeavesRequestService } from 'src/leaves/request/leave-requests.service';
-import { UpdateEmployeeStatusDto } from 'src/employee-subsystem/employee/dto/update-employee-status.dto';
-import { OrganizationStructureService } from 'src/employee-subsystem/organization-structure/organization-structure.service';
+import { UpdateEmployeeStatusDto } from 'src/employee-profile/dto/update-employee-status.dto';
+import { OrganizationStructureService } from 'src/organization-structure/organization-structure.service';
 import { EmployeeTerminationResignationService } from '../payroll/execution/services/EmployeeTerminationResignation.service';
 @Injectable()
 export class OffboardingService {

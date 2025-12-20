@@ -10,22 +10,22 @@ import { payrollRuns, payrollRunsSchema } from '../execution/models/payrollRuns.
 import { employeePayrollDetails, employeePayrollDetailsSchema } from '../execution/models/employeePayrollDetails.schema';
 import { ConfigSetupModule } from '../config_setup/config_setup.module';
 import { ExecutionModule } from '../execution/execution.module';
-import { NotificationModule } from '../../employee-subsystem/notification/notification.module';
+import { NotificationModule } from '../../notification/notification.module';
 import {
   EmployeeSystemRole,
   EmployeeSystemRoleSchema,
-} from '../../employee-subsystem/employee/models/employee-system-role.schema';
+} from '../../employee-profile/models/employee-system-role.schema';
 import {
   EmployeeProfile,
   EmployeeProfileSchema,
-} from '../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../employee-profile/models/employee-profile.schema';
 import {
   Department,
   DepartmentSchema,
-} from '../../employee-subsystem/organization-structure/models/department.schema';
-import { AuthModule } from '../../employee-subsystem/employee/auth.module';
-import { Notification } from '../../employee-subsystem/notification/models/notification.schema';
-import { NotificationSchema } from '../../employee-subsystem/notification/models/notification.schema';
+} from '../../organization-structure/models/department.schema';
+import { AuthModule } from '../../employee-profile/auth.module';
+import { Notification } from '../../notification/models/notification.schema';
+import { NotificationSchema } from '../../notification/models/notification.schema';
 // Service imports
 import { DisputeService } from './services/dispute.service';
 import { ClaimService } from './services/claim.service';
@@ -71,4 +71,4 @@ import { NotificationUtil } from './services/shared/notification.util';
   ],
   exports: [TrackingService],
 })
-export class TrackingModule {}
+export class TrackingModule { }

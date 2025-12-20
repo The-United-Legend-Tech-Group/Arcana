@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import {
   EmployeeProfile,
   EmployeeProfileDocument,
-} from '../../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../../employee-profile/models/employee-profile.schema';
 import { PayslipService } from './payslip.service';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class CompensationService {
     @InjectModel(EmployeeProfile.name)
     private employeeProfileModel: Model<EmployeeProfileDocument>,
     private payslipService: PayslipService,
-  ) {}
+  ) { }
 
   async getBaseSalary(employeeId: Types.ObjectId): Promise<any> {
     const employee = await this.employeeProfileModel
@@ -124,14 +124,14 @@ export class CompensationService {
 
       insurances.forEach((insurance: any) => {
         const employerContribution = (insuranceBase * (insurance.employerRate || 0)) / 100;
-        
+
         allEmployerContributions.push({
           payslipId: payslip._id,
           payslipPeriod: (payslip.payrollRunId as any)?.payrollPeriod
             ? new Date((payslip.payrollRunId as any).payrollPeriod).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-              })
+              year: 'numeric',
+              month: 'long',
+            })
             : 'Unknown Period',
           name: insurance.name || 'Unknown Insurance',
           employerContribution: employerContribution,

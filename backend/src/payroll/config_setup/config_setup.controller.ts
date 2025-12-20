@@ -24,10 +24,10 @@ import { ConfigSetupService } from './config_setup.service';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { AuthGuard } from '../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../common/guards/authorization.guard';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
 
 // Use SystemRole-compatible Roles decorator with type casting
-import { Roles as SystemRoles } from '../../employee-subsystem/employee/decorators/roles.decorator';
+import { Roles as SystemRoles } from '../../employee-profile/decorators/roles.decorator';
 const Roles = (...roles: SystemRole[]) => SystemRoles(...(roles as any));
 
 import { Query } from '@nestjs/common';

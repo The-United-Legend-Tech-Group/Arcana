@@ -14,11 +14,11 @@ import {
 import {
   EmployeeProfile,
   EmployeeProfileDocument,
-} from '../../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../../employee-profile/models/employee-profile.schema';
 import {
   Department,
   DepartmentDocument,
-} from '../../../employee-subsystem/organization-structure/models/department.schema';
+} from '../../../organization-structure/models/department.schema';
 import { PayRollStatus } from '../../execution/enums/payroll-execution-enum';
 import { CreateTaxDocumentDto } from '../dto/create-tax-document.dto';
 import { CreatePayrollSummaryDto } from '../dto/create-payroll-summary.dto';
@@ -35,7 +35,7 @@ export class ReportingService {
     @InjectModel(Department.name)
     private departmentModel: Model<DepartmentDocument>,
     private executionService: ExecutionService,
-  ) {}
+  ) { }
 
   /**
    * Validates CreateTaxDocumentDto
@@ -1175,7 +1175,7 @@ export class ReportingService {
     const payslipsForYear = allPayslips.filter((payslip) => {
       const payslipDate = new Date(
         (payslip as any).createdAt ||
-          (payslip as any).payrollRunId?.payrollPeriod,
+        (payslip as any).payrollRunId?.payrollPeriod,
       );
       return payslipDate >= yearStart && payslipDate <= yearEnd;
     });
@@ -1348,7 +1348,7 @@ export class ReportingService {
       doc.font('Helvetica-Bold').fillColor('#000000');
       doc.text(
         `${employee.firstName || ''} ${employee.lastName || ''}`.trim() ||
-          'N/A',
+        'N/A',
         leftColX + 110,
         infoY,
       );
@@ -1530,7 +1530,7 @@ export class ReportingService {
         payslipsForYear.forEach((payslip) => {
           const payslipDate = new Date(
             (payslip as any).createdAt ||
-              (payslip as any).payrollRunId?.payrollPeriod,
+            (payslip as any).payrollRunId?.payrollPeriod,
           );
           const monthKey = `${payslipDate.getFullYear()}-${String(payslipDate.getMonth() + 1).padStart(2, '0')}`;
 

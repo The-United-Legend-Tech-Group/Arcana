@@ -13,8 +13,8 @@ import { ConfigBackupService } from './config-backup.service';
 import { ConfigBackupSchedulerService } from './config-backup-scheduler.service';
 import { AuthGuard } from '../../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../../common/guards/authorization.guard';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
-import { Roles as SystemRoles } from '../../../employee-subsystem/employee/decorators/roles.decorator';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
+import { Roles as SystemRoles } from '../../../employee-profile/decorators/roles.decorator';
 
 const Roles = (...roles: SystemRole[]) => SystemRoles(...(roles as any));
 

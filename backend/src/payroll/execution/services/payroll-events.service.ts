@@ -20,7 +20,7 @@ import {
 import {
   EmployeeProfile,
   EmployeeProfileDocument,
-} from '../../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../../employee-profile/models/employee-profile.schema';
 
 import { BenefitStatus, BonusStatus } from '../enums/payroll-execution-enum';
 
@@ -40,7 +40,7 @@ export class PayrollEventsService {
 
     @InjectModel(EmployeeTerminationResignation.name)
     private readonly terminationModel: Model<EmployeeTerminationResignationDocument>,
-  ) {}
+  ) { }
 
 
   // helpers
@@ -72,7 +72,7 @@ export class PayrollEventsService {
       .exec();
   }
 
- 
+
   // Penalties
   async getEmployeePenalties(
     employeeId: Types.ObjectId,
@@ -106,7 +106,7 @@ export class PayrollEventsService {
       .exec();
   }
 
- 
+
   // Termination / resignation benefits (approved)
   async getTerminationBenefits(
     employeeId: Types.ObjectId,
@@ -145,7 +145,7 @@ export class PayrollEventsService {
     const bonusDoc = await this.getEmployeeBonusesForPeriod(id, payrollPeriod);
     if (bonusDoc) {
       events.push('NEW_HIRE');
-    
+
     }
 
     // RESIGNED / TERMINATED: inferred from approved termination/resignation benefit

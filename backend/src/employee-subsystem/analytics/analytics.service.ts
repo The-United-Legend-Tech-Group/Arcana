@@ -18,8 +18,8 @@ import { AttendanceRepository } from '../../time-mangement/repository/attendance
 import { HolidayRepository } from '../../time-mangement/repository/holiday.repository';
 import { ShiftRepository } from '../../time-mangement/repository/shift.repository';
 import { ShiftAssignmentRepository } from '../../time-mangement/repository/shift-assignment.repository';
-import { EmployeeProfileRepository } from '../employee/repository/employee-profile.repository';
-import { DepartmentRepository } from '../organization-structure/repository/department.repository';
+import { EmployeeProfileRepository } from '../../employee-profile/repository/employee-profile.repository';
+import { DepartmentRepository } from '../../organization-structure/repository/department.repository';
 
 interface AnalyticsContext {
   employeesMap: Map<string, any>;

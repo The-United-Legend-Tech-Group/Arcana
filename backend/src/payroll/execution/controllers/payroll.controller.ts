@@ -15,7 +15,7 @@ import { PayrollExceptionsQueryService } from '../services/payroll-exceptions-qu
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../../common/guards/authentication.guard';
 import { authorizationGuard } from '../../../common/guards/authorization.guard';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
 import { Roles } from '../../../common/decorators/roles.decorator';
 
 @ApiTags('Payroll Execution')
@@ -26,7 +26,7 @@ export class PayrollController {
   constructor(
     private readonly payrollRunService: PayrollRunService,
     private readonly payrollExceptionsQueryService: PayrollExceptionsQueryService,
-  ) {}
+  ) { }
   @Roles(SystemRole.PAYROLL_SPECIALIST)
   @Post('generate-draft')
   async generateDraft(@Body() dto: GenerateDraftDto) {

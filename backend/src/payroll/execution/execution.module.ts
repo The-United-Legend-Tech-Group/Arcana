@@ -46,11 +46,11 @@ import {
 import {
   EmployeeProfile,
   EmployeeProfileSchema,
-} from '../../employee-subsystem/employee/models/employee-profile.schema';
+} from '../../employee-profile/models/employee-profile.schema';
 import {
   EmployeeSystemRole,
   EmployeeSystemRoleSchema,
-} from '../../employee-subsystem/employee/models/employee-system-role.schema';
+} from '../../employee-profile/models/employee-system-role.schema';
 
 // Schemas - Config Setup
 import {
@@ -80,12 +80,12 @@ import { refunds, refundsSchema } from '../tracking/models/refunds.schema';
 // Modules
 import { ConfigSetupModule } from '../config_setup/config_setup.module';
 import { TimeMangementModule } from '../../time-mangement/timemangment.module';
-import { AuthModule } from '../../employee-subsystem/employee/auth.module';
+import { AuthModule } from '../../employee-profile/auth.module';
 
 @Module({
   imports: [
-  ConfigSetupModule,
-  forwardRef(() => TimeMangementModule),
+    ConfigSetupModule,
+    forwardRef(() => TimeMangementModule),
     AuthModule,
     MongooseModule.forFeature([
       // Execution schemas

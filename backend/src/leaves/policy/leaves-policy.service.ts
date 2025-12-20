@@ -13,7 +13,7 @@ import {
   CalendarRepository,
   LeaveRequestRepository,
 } from '../repository';
-import { EmployeeService } from '../../employee-subsystem/employee/employee.service';
+import { EmployeeService } from '../../employee-profile/employee.service';
 import { AttendanceService } from '../../time-mangement/services/attendance.service';
 import { InitiatePolicyDto } from '../dtos/initiate-policy.dto';
 import { ConfigureLeaveParametersDto } from '../dtos/configure-leave-parameters.dto';
@@ -31,7 +31,7 @@ import { RoundingRule } from '../enums/rounding-rule.enum';
 import { AnnualResetDto } from '../dtos/annual-reset.dto';
 import { LeaveCategoryRepository } from '../repository/leave-category.repository';
 import { LeaveCategory } from '../models/leave-category.schema';
-import { SystemRole } from '../../employee-subsystem/employee/enums/employee-profile.enums';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
 import { LeaveStatus } from '../enums/leave-status.enum';
 
 @Injectable()
@@ -64,7 +64,7 @@ export class LeavesPolicyService {
     private readonly attendanceService: AttendanceService,
     private readonly leaveCategoryRepository: LeaveCategoryRepository,
     private readonly leaveRequestRepository: LeaveRequestRepository,
-  ) {}
+  ) { }
   //private readonly approvalWorkflowService: ApprovalWorkflowService
 
   // REQ-001: Initiate a leave policy
@@ -79,7 +79,7 @@ export class LeavesPolicyService {
     return policy;
   }
 
- // REQ-001: Manage All Policies
+  // REQ-001: Manage All Policies
   async managePolicy(): Promise<LeavePolicy[]> {
     // return plain objects and enrich with leave type code-derived name: "<code> Policy"
     const docs = await this.leavePolicyRepository.find();
@@ -287,8 +287,8 @@ export class LeavesPolicyService {
       policy.roundingRule,
     );
 
-  entitlement.accruedActual = accrualActual;
-  entitlement.accruedRounded = accrualRounded;
+    entitlement.accruedActual = accrualActual;
+    entitlement.accruedRounded = accrualRounded;
 
     /** ---------------------
      * 3. HANDLE CARRY FORWARD
@@ -426,7 +426,7 @@ export class LeavesPolicyService {
       const positionsAllowed: string[] = Array.isArray(eligibility.positionsAllowed)
         ? eligibility.positionsAllowed.map(String)
         : [];
-      
+
       // If positionsAllowed is empty or not defined, don't show this leave type
       if (positionsAllowed.length === 0) {
         return false;
@@ -574,17 +574,17 @@ export class LeavesPolicyService {
       updateData,
     );
 
-    let amount=0;
+    let amount = 0;
     if (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining)
       amount = updateFields.remaining - oldRemaining
     else
-      (oldRemaining && updateFields.remaining)? amount = oldRemaining - updateFields.remaining : 0
-    
+      (oldRemaining && updateFields.remaining) ? amount = oldRemaining - updateFields.remaining : 0
+
     // 3. Store adjustment audit log
     await this.leaveAdjustmentRepository.create({
       employeeId: new Types.ObjectId(employeeId),
       leaveTypeId: new Types.ObjectId(leaveTypeId),
-      adjustmentType: (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining)? AdjustmentType.ADD : AdjustmentType.DEDUCT, // Default to ADD for assignment
+      adjustmentType: (oldRemaining && updateFields.remaining && oldRemaining < updateFields.remaining) ? AdjustmentType.ADD : AdjustmentType.DEDUCT, // Default to ADD for assignment
       amount,
       reason,
       hrUserId: new Types.ObjectId(hrUserId),

@@ -7,8 +7,8 @@ import { DisputeStatus } from '../enums/payroll-tracking-enum';
 import { CreatePayslipDisputeDto } from '../dto/create-payslip-dispute.dto';
 import { ApproveRejectDisputeDto } from '../dto/approve-reject-dispute.dto';
 import { ConfirmApprovalDto } from '../dto/confirm-approval.dto';
-import { SystemRole } from '../../../employee-subsystem/employee/enums/employee-profile.enums';
-import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-subsystem/employee/models/employee-system-role.schema';
+import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
+import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../../../employee-profile/models/employee-system-role.schema';
 import { generateEntityId } from './shared/id-generator.util';
 import { NotificationUtil } from './shared/notification.util';
 
@@ -20,7 +20,7 @@ export class DisputeService {
     @InjectModel(EmployeeSystemRole.name)
     private employeeSystemRoleModel: Model<EmployeeSystemRoleDocument>,
     private notificationUtil: NotificationUtil,
-  ) {}
+  ) { }
 
   /**
    * Validates that dispute has not already been processed (approved or rejected)
@@ -54,11 +54,11 @@ export class DisputeService {
     dispute.status = DisputeStatus.REJECTED;
     dispute.rejectionReason = rejectionReason.trim();
 
-    const managerComment = comment 
-      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}` 
+    const managerComment = comment
+      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}`
       : `Manager rejected. Reason: ${rejectionReason}`;
-    
-    dispute.resolutionComment = dispute.resolutionComment 
+
+    dispute.resolutionComment = dispute.resolutionComment
       ? `${dispute.resolutionComment}\n${managerComment}`
       : managerComment;
 
@@ -82,7 +82,7 @@ export class DisputeService {
     // Use native MongoDB query to handle ObjectId conversion properly
     const db = this.payslipModel.db;
     const collection = db.collection('payslips');
-    
+
     // Query with ObjectId only
     const payslipDoc = await collection.findOne({
       _id: payslipId,
@@ -125,14 +125,14 @@ export class DisputeService {
 
   async getDisputeById(disputeId: string, employeeId: Types.ObjectId): Promise<disputesDocument> {
     const cleanDisputeId = disputeId.trim();
-    
+
     // Check if employee has special roles that can view any dispute
     const employeeRole = await this.employeeSystemRoleModel.findOne({
       employeeProfileId: employeeId,
       isActive: true,
     });
 
-    const canViewAnyDispute = employeeRole?.roles?.some(role => 
+    const canViewAnyDispute = employeeRole?.roles?.some(role =>
       [SystemRole.PAYROLL_SPECIALIST, SystemRole.FINANCE_STAFF, SystemRole.PAYROLL_MANAGER].includes(role)
     );
 
@@ -165,23 +165,23 @@ export class DisputeService {
     return await this.disputesModel.find({
       status: DisputeStatus.UNDER_REVIEW,
     })
-    .sort({ createdAt: -1 })
-    .populate('employeeId')
-    .populate('payslipId');
+      .sort({ createdAt: -1 })
+      .populate('employeeId')
+      .populate('payslipId');
   }
 
   async getDisputesPendingManagerApproval(): Promise<disputesDocument[]> {
     return await this.disputesModel.find({
       status: DisputeStatus.PENDING_MANAGER_APPROVAL,
     })
-    .sort({ createdAt: -1 })
-    .populate('employeeId')
-    .populate({
-      path: 'payslipId',
-      populate: {
-        path: 'payrollRunId',
-      },
-    });
+      .sort({ createdAt: -1 })
+      .populate('employeeId')
+      .populate({
+        path: 'payslipId',
+        populate: {
+          path: 'payrollRunId',
+        },
+      });
   }
 
   async approveRejectDispute(
@@ -203,11 +203,11 @@ export class DisputeService {
 
     // Prevent approving/rejecting if already processed
     this.validateDisputeNotProcessed(dispute);
-    
+
     if (dispute.status === DisputeStatus.PENDING_MANAGER_APPROVAL) {
       throw new BadRequestException('Dispute has already been approved by a Payroll Specialist and is awaiting manager confirmation');
     }
-    
+
     this.validateDisputeStatus(
       dispute,
       DisputeStatus.UNDER_REVIEW,
@@ -229,7 +229,7 @@ export class DisputeService {
       } else {
         dispute.resolutionComment = `Payroll Specialist: Approved for manager review (Proposed refund amount: ${approveRejectDto.approvedRefundAmount})`;
       }
-      
+
       try {
         await this.notificationUtil.notifyEmployeeAboutStatus(
           dispute.employeeId,
@@ -242,7 +242,7 @@ export class DisputeService {
       } catch (error) {
         // Continue even if notification fails
       }
-      
+
       try {
         await this.notificationUtil.notifyPayrollManager(
           'dispute',
@@ -257,7 +257,7 @@ export class DisputeService {
       if (!approveRejectDto.rejectionReason) {
         throw new BadRequestException('Rejection reason is required when rejecting a dispute');
       }
-      
+
       await this.handleDisputeRejection(
         dispute,
         approveRejectDto.rejectionReason,
@@ -282,11 +282,11 @@ export class DisputeService {
     }
 
     this.validateDisputeNotProcessed(dispute);
-    
+
     if (dispute.status === DisputeStatus.APPROVED) {
       throw new BadRequestException('Dispute has already been approved and confirmed');
     }
-    
+
     this.validateDisputeStatus(
       dispute,
       DisputeStatus.PENDING_MANAGER_APPROVAL,
@@ -317,11 +317,11 @@ export class DisputeService {
       }
     }
 
-    const managerComment = confirmDto.comment 
-      ? `Manager confirmed: ${confirmDto.comment}` 
+    const managerComment = confirmDto.comment
+      ? `Manager confirmed: ${confirmDto.comment}`
       : 'Manager confirmed approval';
-    
-    dispute.resolutionComment = dispute.resolutionComment 
+
+    dispute.resolutionComment = dispute.resolutionComment
       ? `${dispute.resolutionComment}\n${managerComment}`
       : managerComment;
 
@@ -339,7 +339,7 @@ export class DisputeService {
     } catch (error) {
       // Continue even if notification fails
     }
-    
+
     try {
       await this.notificationUtil.notifyFinanceStaff(
         'dispute',
@@ -373,7 +373,7 @@ export class DisputeService {
     }
 
     this.validateDisputeNotProcessed(dispute);
-    
+
     this.validateDisputeStatus(
       dispute,
       DisputeStatus.PENDING_MANAGER_APPROVAL,
@@ -393,9 +393,9 @@ export class DisputeService {
     return await this.disputesModel.find({
       status: DisputeStatus.APPROVED,
     })
-    .sort({ updatedAt: -1 })
-    .populate('employeeId')
-    .populate('payslipId');
+      .sort({ updatedAt: -1 })
+      .populate('employeeId')
+      .populate('payslipId');
   }
 }
 

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { disputes, disputesDocument } from '../models/disputes.schema';
-import { paySlip, PayslipDocument } from '../../payroll/execution/models/payslip.schema';
+import { paySlip, PayslipDocument } from '../../payroll-execution/models/payslip.schema';
 import { DisputeStatus } from '../enums/payroll-tracking-enum';
 import { CreatePayslipDisputeDto } from '../dto/create-payslip-dispute.dto';
 import { ApproveRejectDisputeDto } from '../dto/approve-reject-dispute.dto';

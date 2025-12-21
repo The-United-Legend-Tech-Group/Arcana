@@ -23,7 +23,7 @@ import {
   LeavePolicyRepository,
   CalendarRepository,
 } from '../repository';
-import { PayrollCalculationService } from '../../payroll/execution/services/payroll-calculation.service';
+import { PayrollCalculationService } from '../../payroll-execution/services/payroll-calculation.service';
 
 @Injectable()
 export class LeavesRequestService {

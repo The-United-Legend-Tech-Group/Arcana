@@ -51,7 +51,7 @@ import {
   EmployeeSystemRoleSchema,
 } from '../employee-profile/models/employee-system-role.schema';
 import { LeaveCategoryRepository } from './repository/leave-category.repository';
-import { ExecutionModule } from '../payroll/execution/execution.module';
+import { ExecutionModule } from '../payroll-execution/payroll-execution.module';
 
 @Module({
   imports: [

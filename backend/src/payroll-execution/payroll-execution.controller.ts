@@ -13,7 +13,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuthGuard } from '../common/guards/authentication.guard';
 import { authorizationGuard } from '../common/guards/authorization.guard';
-import { ExecutionService } from './execution.service';
+import { ExecutionService } from './payroll-execution.service';
 import { PublishPayrollDto } from './dto/publish-payroll.dto';
 import { ApprovePayrollManagerDto } from './dto/approve-payroll-manager.dto';
 import { RejectPayrollDto } from './dto/reject-payroll.dto';
@@ -37,7 +37,7 @@ export class ExecutionController {
     private readonly executionService: ExecutionService,
     private readonly payrollRunService: PayrollRunService,
     private readonly payrollExceptionsQueryService: PayrollExceptionsQueryService,
-  ) {}
+  ) { }
 
   // ==================== PHASE 3: REVIEW & APPROVAL ====================
   // NOTE: Specific routes MUST come before parameterized routes in NestJS

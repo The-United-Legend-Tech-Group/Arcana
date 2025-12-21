@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ExecutionController } from './execution.controller';
-import { ExecutionService } from './execution.service';
+import { ExecutionController } from './payroll-execution.controller';
+import { ExecutionService } from './payroll-execution.service';
 
 describe('ExecutionController', () => {
   let controller: ExecutionController;

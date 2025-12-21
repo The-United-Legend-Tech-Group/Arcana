@@ -4,10 +4,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 // Controllers
 import { PayrollController } from './controllers/payroll.controller';
 import { PayRollDraftController } from './controllers/payRollDraft.controller';
-import { ExecutionController } from './execution.controller';
+import { ExecutionController } from './payroll-execution.controller';
 
 // Services
-import { ExecutionService } from './execution.service';
+import { ExecutionService } from './payroll-execution.service';
 import { EmailService } from './email.service';
 import { PayrollRunService } from './services/payroll-run.service';
 import { PayrollEventsService } from './services/payroll-events.service';
@@ -74,21 +74,12 @@ import {
 } from '../payroll-configuration/models/terminationAndResignationBenefits';
 
 // Schemas - Tracking
-<<<<<<< Updated upstream:backend/src/payroll/execution/execution.module.ts
-import { refunds, refundsSchema } from '../../payroll-tracking/models/refunds.schema';
-
-// Modules
-import { ConfigSetupModule } from '../../payroll-configuration/payroll-configuration.module';
-import { TimeManagementModule } from '../../time-management/timemangment.module';
-import { AuthModule } from '../../employee-subsystem/employee/auth.module';
-=======
 import { refunds, refundsSchema } from '../payroll-tracking/models/refunds.schema';
 
 // Modules
 import { ConfigSetupModule } from '../payroll-configuration/payroll-configuration.module';
-import { TimeMangementModule } from '../time-mangement/timemangment.module';
+import { TimeManagementModule } from '../time-management/timemangment.module';
 import { AuthModule } from '../employee-profile/auth.module';
->>>>>>> Stashed changes:backend/src/payroll-execution/execution.module.ts
 
 @Module({
   imports: [
@@ -162,4 +153,4 @@ import { AuthModule } from '../employee-profile/auth.module';
     EmployeeTerminationResignationService,
   ],
 })
-export class ExecutionModule {}
+export class ExecutionModule { }

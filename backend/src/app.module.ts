@@ -16,7 +16,8 @@ import { AppService } from './app.service';
 import { EmployeeSubsystemModule } from './employee-subsystem/employee-subsystem.module';
 import { LeavesModule } from './leaves/leaves.module';
 import { ConfigSetupModule } from './payroll-configuration/payroll-configuration.module';
-import { RecruitmentModule } from './Recruitment/recruitment.module';
+import { ExecutionModule } from './payroll-execution/payroll-execution.module';
+import { RecruitmentModule } from './recruitment/recruitment.module';
 import { TimeManagementModule } from './time-management/time-management.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
@@ -41,8 +42,9 @@ import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
     // Feature modules (alphabetically organized)
     EmployeeSubsystemModule,
     LeavesModule,
-    TrackingModule,
     ConfigSetupModule,
+    ExecutionModule,
+    TrackingModule,
     RecruitmentModule,
     TimeManagementModule,
     TimeManagementModule,
@@ -51,4 +53,4 @@ import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
   providers: [AppService, AppConfigService],
   exports: [AppConfigService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -186,6 +186,7 @@ export class DisputeService {
 
   async approveRejectDispute(
     disputeId: string,
+    payrollSpecialistId: string | Types.ObjectId,
     approveRejectDto: ApproveRejectDisputeDto,
   ): Promise<disputesDocument> {
     if (!approveRejectDto.action || !['approve', 'reject'].includes(approveRejectDto.action)) {
@@ -223,6 +224,7 @@ export class DisputeService {
       }
 
       dispute.approvedRefundAmount = approveRejectDto.approvedRefundAmount;
+      dispute.payrollSpecialistId = new Types.ObjectId(payrollSpecialistId);
       dispute.status = DisputeStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
         dispute.resolutionComment = `Payroll Specialist: ${approveRejectDto.comment} (Proposed refund amount: ${approveRejectDto.approvedRefundAmount})`;
@@ -270,6 +272,7 @@ export class DisputeService {
 
   async confirmDisputeApproval(
     disputeId: string,
+    payrollManagerId: string | Types.ObjectId,
     confirmDto: ConfirmApprovalDto,
   ): Promise<disputesDocument> {
     const cleanDisputeId = disputeId.trim();
@@ -305,6 +308,7 @@ export class DisputeService {
     }
 
     dispute.status = DisputeStatus.APPROVED;
+    dispute.payrollManagerId = new Types.ObjectId(payrollManagerId);
 
     if (confirmDto.approvedRefundAmount !== undefined && confirmDto.approvedRefundAmount !== null) {
       if (confirmDto.approvedRefundAmount < 0) {
@@ -357,6 +361,7 @@ export class DisputeService {
 
   async rejectDispute(
     disputeId: string,
+    payrollManagerId: string | Types.ObjectId,
     rejectDto: { rejectionReason: string; comment?: string },
   ): Promise<disputesDocument> {
     const cleanDisputeId = disputeId.trim();
@@ -367,6 +372,8 @@ export class DisputeService {
     if (!dispute) {
       throw new NotFoundException('Dispute not found');
     }
+
+    dispute.payrollManagerId = new Types.ObjectId(payrollManagerId);
 
     if (!rejectDto.rejectionReason || rejectDto.rejectionReason.trim() === '') {
       throw new BadRequestException('Rejection reason is required when rejecting a dispute');

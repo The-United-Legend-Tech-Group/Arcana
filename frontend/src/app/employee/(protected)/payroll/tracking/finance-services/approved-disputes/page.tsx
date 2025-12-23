@@ -48,6 +48,9 @@ interface Dispute {
     firstName?: string;
     lastName?: string;
     employeeNumber?: string;
+  };
+  payrollSpecialistId?: string | { _id: string; firstName?: string; lastName?: string };
+  payrollManagerId?: string | { _id: string; firstName?: string; lastName?: string };
     fullName?: string;
   };
 }
@@ -530,6 +533,30 @@ export default function ApprovedDisputesPage() {
                           : 'N/A'}
                       </Typography>
                     </Box>
+                    {selectedDispute.payrollSpecialistId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Reviewed by Specialist
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedDispute.payrollSpecialistId === 'string'
+                            ? selectedDispute.payrollSpecialistId
+                            : `${selectedDispute.payrollSpecialistId.firstName || ''} ${selectedDispute.payrollSpecialistId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
+                    {selectedDispute.payrollManagerId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Approved by Manager
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedDispute.payrollManagerId === 'string'
+                            ? selectedDispute.payrollManagerId
+                            : `${selectedDispute.payrollManagerId.firstName || ''} ${selectedDispute.payrollManagerId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                   {selectedDispute.approvedRefundAmount && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>

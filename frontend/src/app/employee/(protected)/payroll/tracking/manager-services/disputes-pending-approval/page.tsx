@@ -49,6 +49,8 @@ interface Dispute {
   createdAt: string;
   approvedRefundAmount?: number;
   employeeId?: string | { _id: string; firstName?: string; lastName?: string; employeeNumber?: string };
+  payrollSpecialistId?: string | { _id: string; firstName?: string; lastName?: string };
+  resolutionComment?: string;
 }
 
 export default function DisputesPendingApprovalPage() {
@@ -780,6 +782,18 @@ export default function DisputesPendingApprovalPage() {
                         </Typography>
                       </Box>
                     )}
+                    {selectedDispute.payrollSpecialistId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Payroll Specialist
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedDispute.payrollSpecialistId === 'string'
+                            ? selectedDispute.payrollSpecialistId
+                            : `${selectedDispute.payrollSpecialistId.firstName || ''} ${selectedDispute.payrollSpecialistId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                   {selectedDispute.approvedRefundAmount && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
@@ -796,6 +810,18 @@ export default function DisputesPendingApprovalPage() {
                         Please set an approved refund amount below.
                       </Typography>
                     </Alert>
+                  )}
+                  {selectedDispute.resolutionComment && (
+                    <Card sx={{ mt: 2, backgroundColor: alpha(theme.palette.info.main, 0.05) }}>
+                      <CardContent sx={{ py: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          Specialist's Comments:
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>
+                          {selectedDispute.resolutionComment}
+                        </Typography>
+                      </CardContent>
+                    </Card>
                   )}
                 </CardContent>
               </Card>

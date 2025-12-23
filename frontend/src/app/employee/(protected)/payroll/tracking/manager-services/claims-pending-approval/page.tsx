@@ -46,6 +46,7 @@ interface Claim {
   createdAt: string;
   resolutionComment?: string;
   employeeId?: string | { _id: string; firstName?: string; lastName?: string; employeeNumber?: string };
+  payrollSpecialistId?: string | { _id: string; firstName?: string; lastName?: string };
 }
 
 export default function ClaimsPendingApprovalPage() {
@@ -797,6 +798,18 @@ export default function ClaimsPendingApprovalPage() {
                         </Typography>
                       </Box>
                     )}
+                    {selectedClaim.payrollSpecialistId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Payroll Specialist
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedClaim.payrollSpecialistId === 'string'
+                            ? selectedClaim.payrollSpecialistId
+                            : `${selectedClaim.payrollSpecialistId.firstName || ''} ${selectedClaim.payrollSpecialistId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                   {selectedClaim.approvedAmount && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
@@ -813,6 +826,18 @@ export default function ClaimsPendingApprovalPage() {
                         The claim must be approved by a Payroll Specialist first before you can confirm it.
                       </Typography>
                     </Alert>
+                  )}
+                  {selectedClaim.resolutionComment && (
+                    <Card sx={{ mt: 2, backgroundColor: alpha(theme.palette.info.main, 0.05) }}>
+                      <CardContent sx={{ py: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          Specialist's Comments:
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>
+                          {selectedClaim.resolutionComment}
+                        </Typography>
+                      </CardContent>
+                    </Card>
                   )}
                 </CardContent>
               </Card>

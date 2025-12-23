@@ -66,26 +66,26 @@ export class TrackingService {
 
   async approveRejectDispute(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     approveRejectDto: ApproveRejectDisputeDto,
   ): Promise<disputesDocument> {
-    return this.disputeService.approveRejectDispute(disputeId, approveRejectDto);
+    return this.disputeService.approveRejectDispute(disputeId, employeeId, approveRejectDto);
   }
 
   async confirmDisputeApproval(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     confirmDto: ConfirmApprovalDto,
   ): Promise<disputesDocument> {
-    return this.disputeService.confirmDisputeApproval(disputeId, confirmDto);
+    return this.disputeService.confirmDisputeApproval(disputeId, employeeId, confirmDto);
   }
 
   async rejectDispute(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     rejectDto: { rejectionReason: string; comment?: string },
   ): Promise<disputesDocument> {
-    return this.disputeService.rejectDispute(disputeId, rejectDto);
+    return this.disputeService.rejectDispute(disputeId, employeeId, rejectDto);
   }
 
   async getApprovedDisputes(): Promise<disputesDocument[]> {
@@ -124,10 +124,10 @@ export class TrackingService {
 
   async approveRejectClaim(
     claimId: string,
-    _employeeId: string,
+    employeeId: string,
     approveRejectDto: ApproveRejectClaimDto,
   ): Promise<claimsDocument> {
-    return this.claimService.approveRejectClaim(claimId, approveRejectDto);
+    return this.claimService.approveRejectClaim(claimId, employeeId, approveRejectDto);
   }
 
   async getClaimsPendingManagerApproval(): Promise<claimsDocument[]> {
@@ -136,10 +136,10 @@ export class TrackingService {
 
   async confirmClaimApproval(
     claimId: string,
-    _employeeId: string,
+    employeeId: string,
     confirmDto: ConfirmApprovalDto,
   ): Promise<claimsDocument> {
-    return this.claimService.confirmClaimApproval(claimId, confirmDto);
+    return this.claimService.confirmClaimApproval(claimId, employeeId, confirmDto);
   }
 
   async getApprovedClaims(): Promise<claimsDocument[]> {

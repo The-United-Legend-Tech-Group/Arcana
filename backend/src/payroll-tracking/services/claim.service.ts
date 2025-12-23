@@ -184,6 +184,7 @@ export class ClaimService {
 
   async approveRejectClaim(
     claimId: string,
+    payrollSpecialistId: string | Types.ObjectId,
     approveRejectDto: ApproveRejectClaimDto,
   ): Promise<claimsDocument> {
     if (!approveRejectDto.action || !['approve', 'reject'].includes(approveRejectDto.action)) {
@@ -223,6 +224,7 @@ export class ClaimService {
       }
 
       claim.approvedAmount = approveRejectDto.approvedAmount;
+      claim.payrollSpecialistId = new Types.ObjectId(payrollSpecialistId);
       claim.status = ClaimStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
         claim.resolutionComment = `Payroll Specialist: ${approveRejectDto.comment} (Proposed approved amount: ${approveRejectDto.approvedAmount})`;
@@ -278,6 +280,7 @@ export class ClaimService {
 
   async confirmClaimApproval(
     claimId: string,
+    payrollManagerId: string | Types.ObjectId,
     confirmDto: ConfirmApprovalDto,
   ): Promise<claimsDocument> {
     const cleanClaimId = claimId.trim();
@@ -288,6 +291,8 @@ export class ClaimService {
     if (!claim) {
       throw new NotFoundException('Claim not found');
     }
+
+    claim.payrollManagerId = new Types.ObjectId(payrollManagerId);
 
     if (confirmDto.action === 'reject') {
       if (!confirmDto.rejectionReason || confirmDto.rejectionReason.trim() === '') {

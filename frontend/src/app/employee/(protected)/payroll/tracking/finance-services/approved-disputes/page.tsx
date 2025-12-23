@@ -20,6 +20,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import { useTheme, alpha } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -60,6 +61,7 @@ export default function ApprovedDisputesPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedDispute, setSelectedDispute] = React.useState<Dispute | null>(null);
   const [openDialog, setOpenDialog] = React.useState(false);
+  const [refundAmount, setRefundAmount] = React.useState<string>('');
   const [processing, setProcessing] = React.useState(false);
 
   // Table filters
@@ -114,10 +116,18 @@ export default function ApprovedDisputesPage() {
   const handleGenerateRefund = (dispute: Dispute) => {
     setSelectedDispute(dispute);
     setOpenDialog(true);
+    // Pre-fill refund amount if backend provides a suggested value; otherwise empty
+    setRefundAmount(dispute.approvedRefundAmount ? dispute.approvedRefundAmount.toString() : '');
   };
 
   const handleSubmitRefund = async () => {
     if (!selectedDispute) return;
+
+    const parsedAmount = parseFloat(refundAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Please enter a valid refund amount greater than 0.');
+      return;
+    }
 
     setProcessing(true);
     setError(null);
@@ -138,7 +148,7 @@ export default function ApprovedDisputesPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            refundAmount: selectedDispute.approvedRefundAmount || 0,
+            refundAmount: parsedAmount,
             comment: `Refund processed for approved dispute ${selectedDispute.disputeId}`,
           }),
         }
@@ -147,6 +157,7 @@ export default function ApprovedDisputesPage() {
       if (response.ok) {
         setOpenDialog(false);
         setSelectedDispute(null);
+        setRefundAmount('');
         fetchApprovedDisputes();
       } else {
         const errorData = await response.json();
@@ -538,6 +549,19 @@ export default function ApprovedDisputesPage() {
                   )}
                 </CardContent>
               </Card>
+
+              <Box sx={{ mt: 1 }}>
+                <TextField
+                  label="Refund Amount"
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  fullWidth
+                  required
+                  inputProps={{ min: 0, step: 0.01 }}
+                  helperText="Enter the refund amount that should be paid to the employee"
+                />
+              </Box>
             </>
           )}
         </DialogContent>
@@ -558,7 +582,12 @@ export default function ApprovedDisputesPage() {
           <Button
             onClick={handleSubmitRefund}
             variant="contained"
-            disabled={processing || !selectedDispute?.approvedRefundAmount}
+            disabled={
+              processing ||
+              !refundAmount ||
+              isNaN(parseFloat(refundAmount)) ||
+              parseFloat(refundAmount) <= 0
+            }
             sx={{
               minWidth: 140,
               borderRadius: 2,

@@ -62,7 +62,6 @@ export default function DisputesPendingApprovalPage() {
   const [openRejectDialog, setOpenRejectDialog] = React.useState(false);
   const [comment, setComment] = React.useState('');
   const [rejectionReason, setRejectionReason] = React.useState('');
-  const [approvedRefundAmount, setApprovedRefundAmount] = React.useState<string>('');
   const [processing, setProcessing] = React.useState(false);
   const [success, setSuccess] = React.useState<string | null>(null);
 
@@ -119,9 +118,6 @@ export default function DisputesPendingApprovalPage() {
     setSelectedDispute(dispute);
     setOpenDialog(true);
     setComment('');
-    // Always pre-fill with payroll specialist's approved amount if it exists, otherwise leave empty
-    // The field remains editable so the manager can change it if needed
-    setApprovedRefundAmount(dispute.approvedRefundAmount ? dispute.approvedRefundAmount.toString() : '');
   };
 
   const handleRejectDispute = (dispute: Dispute) => {
@@ -164,7 +160,6 @@ export default function DisputesPendingApprovalPage() {
           },
           body: JSON.stringify({
             comment: comment || undefined,
-            approvedRefundAmount: approvedRefundAmount ? parseFloat(approvedRefundAmount) : undefined,
           }),
         }
       );
@@ -176,7 +171,6 @@ export default function DisputesPendingApprovalPage() {
         setOpenDialog(false);
         setSelectedDispute(null);
         setComment('');
-        setApprovedRefundAmount('');
         fetchDisputes();
         setTimeout(() => setSuccess(null), 5000);
       } else {
@@ -770,66 +764,11 @@ export default function DisputesPendingApprovalPage() {
                         {selectedDispute.description || 'No description'}
                       </Typography>
                     </Box>
-                    {selectedDispute.approvedRefundAmount && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Proposed Refund Amount (by Payroll Specialist)
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          {formatCurrency(selectedDispute.approvedRefundAmount)}
-                        </Typography>
-                      </Box>
-                    )}
                   </Box>
-                  {selectedDispute.approvedRefundAmount && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
-                      You can override this amount below if needed.
-                    </Typography>
-                  )}
-                  {!selectedDispute.approvedRefundAmount && (
-                    <Alert severity="warning" sx={{ mt: 2 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                        Missing Refund Amount
-                      </Typography>
-                      <Typography variant="body2">
-                        This dispute does not have a refund amount set by the Payroll Specialist.
-                        Please set an approved refund amount below.
-                      </Typography>
-                    </Alert>
-                  )}
                 </CardContent>
               </Card>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <TextField
-                  label="Approved Refund Amount"
-                  type="number"
-                  value={approvedRefundAmount}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow empty, numbers, and one decimal point
-                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                      setApprovedRefundAmount(value);
-                    }
-                  }}
-                  fullWidth
-                  required
-                  inputProps={{ min: 0, step: 0.01 }}
-                  placeholder="0.00"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  helperText={
-                    selectedDispute.approvedRefundAmount
-                      ? `Pre-filled with Payroll Specialist's approved amount (${formatCurrency(selectedDispute.approvedRefundAmount)}). You can change this value if needed.`
-                      : "Required: Set the approved refund amount for this dispute"
-                  }
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      fontSize: '0.95rem',
-                    },
-                  }}
-                />
                 <Box>
                   <TextField
                     label="Confirmation Comment (Optional)"
@@ -879,7 +818,6 @@ export default function DisputesPendingApprovalPage() {
           <Button
             onClick={() => {
               setOpenDialog(false);
-              setApprovedRefundAmount('');
               setComment('');
             }}
             disabled={processing}
@@ -897,7 +835,7 @@ export default function DisputesPendingApprovalPage() {
             onClick={handleSubmitConfirmation}
             variant="contained"
             color="success"
-            disabled={processing || !approvedRefundAmount || isNaN(parseFloat(approvedRefundAmount)) || parseFloat(approvedRefundAmount) <= 0}
+            disabled={processing}
             startIcon={processing ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
             sx={{
               minWidth: 140,

@@ -62,11 +62,20 @@ interface Dispute {
   status: string;
   rejectionReason?: string;
   resolutionComment?: string;
-  approvedRefundAmount?: number;
   createdAt: string;
   updatedAt: string;
   employeeId?: string | { firstName?: string; lastName?: string; employeeNumber?: string };
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function SpecialistDisputesPage() {
   const router = useRouter();
@@ -81,7 +90,7 @@ export default function SpecialistDisputesPage() {
   const [processing, setProcessing] = React.useState(false);
 
   // Form state for approve/reject
-  const [approvedRefundAmount, setApprovedRefundAmount] = React.useState('');
+  const [specialistRefundAmount, setSpecialistRefundAmount] = React.useState('');
   const [comment, setComment] = React.useState('');
 
   // Table filters
@@ -159,7 +168,6 @@ export default function SpecialistDisputesPage() {
         status: dispute.status || 'Unknown',
         rejectionReason: dispute.rejectionReason || null,
         resolutionComment: dispute.resolutionComment || null,
-        approvedRefundAmount: dispute.approvedRefundAmount || null,
         createdAt: dispute.createdAt || dispute.created_at || '',
         updatedAt: dispute.updatedAt || dispute.updated_at || '',
         employeeId: dispute.employeeId || null,
@@ -184,7 +192,7 @@ export default function SpecialistDisputesPage() {
     setActionType(action);
     setActionDialogOpen(true);
     // Reset form fields
-    setApprovedRefundAmount('');
+    setSpecialistRefundAmount('');
     setComment('');
     setRejectionReason('');
   };
@@ -197,13 +205,13 @@ export default function SpecialistDisputesPage() {
     if (!selectedDispute || !actionType) return;
 
     // Validation
-    if (actionType === 'approve' && !approvedRefundAmount) {
-      setError('Please provide an approved refund amount when approving a dispute.');
+    if (actionType === 'approve' && !specialistRefundAmount) {
+      setError('Please provide a proposed refund amount when approving a dispute.');
       return;
     }
-    const approvedRefundAmountNum = parseFloat(approvedRefundAmount);
-    if (actionType === 'approve' && (isNaN(approvedRefundAmountNum) || approvedRefundAmountNum < 0)) {
-      setError('Please provide a valid approved refund amount (must be >= 0).');
+    const specialistRefundAmountNum = parseFloat(specialistRefundAmount);
+    if (actionType === 'approve' && (isNaN(specialistRefundAmountNum) || specialistRefundAmountNum < 0)) {
+      setError('Please provide a valid proposed refund amount (must be >= 0).');
       return;
     }
     if (actionType === 'reject' && !rejectionReason.trim()) {
@@ -228,14 +236,23 @@ export default function SpecialistDisputesPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
       // Prepare request body according to ApproveRejectDisputeDto
+      let finalComment = comment.trim();
+
+      if (actionType === 'approve') {
+        // Embed the proposed amount in the comment
+        const amountStr = `Proposed refund amount: ${specialistRefundAmount}`;
+        finalComment = finalComment
+          ? `${finalComment}\n${amountStr}`
+          : amountStr;
+      }
+
       const requestBody: any = {
         action: actionType,
       };
 
       if (actionType === 'approve') {
-        requestBody.approvedRefundAmount = approvedRefundAmountNum;
-        if (comment.trim()) {
-          requestBody.comment = comment.trim();
+        if (finalComment) {
+          requestBody.comment = finalComment;
         }
       } else {
         requestBody.rejectionReason = rejectionReason.trim();
@@ -285,7 +302,7 @@ export default function SpecialistDisputesPage() {
       // Reset form
       setSelectedDispute(null);
       setActionType(null);
-      setApprovedRefundAmount('');
+      setSpecialistRefundAmount('');
       setComment('');
       setRejectionReason('');
     } catch (err) {
@@ -737,10 +754,16 @@ export default function SpecialistDisputesPage() {
             {actionType === 'approve' ? (
               <>
                 <TextField
-                  label="Approved Refund Amount"
+                  label="Proposed Refund Amount"
                   type="number"
-                  value={approvedRefundAmount}
-                  onChange={(e) => setApprovedRefundAmount(e.target.value)}
+                  value={specialistRefundAmount}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty, numbers, and one decimal point
+                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                      setSpecialistRefundAmount(value);
+                    }
+                  }}
                   required
                   fullWidth
                   inputProps={{ min: 0, step: 0.01 }}
@@ -748,7 +771,7 @@ export default function SpecialistDisputesPage() {
                   InputLabelProps={{
                     shrink: true,
                   }}
-                  helperText="Amount to be refunded to the employee"
+                  helperText="Proposed amount to be refunded to the employee (Manager can override)"
                   sx={{
                     '& .MuiInputBase-root': {
                       fontSize: '0.95rem',
@@ -911,7 +934,7 @@ export default function SpecialistDisputesPage() {
             onClick={handleSubmitAction}
             variant="contained"
             color={actionType === 'approve' ? 'success' : 'error'}
-            disabled={processing || (actionType === 'approve' && (!approvedRefundAmount || isNaN(parseFloat(approvedRefundAmount)) || parseFloat(approvedRefundAmount) < 0)) || (actionType === 'reject' && (!rejectionReason.trim() || rejectionReason.trim().length < 20))}
+            disabled={processing || (actionType === 'approve' && (!specialistRefundAmount || isNaN(parseFloat(specialistRefundAmount)) || parseFloat(specialistRefundAmount) < 0)) || (actionType === 'reject' && (!rejectionReason.trim() || rejectionReason.trim().length < 20))}
             sx={{
               minWidth: 120,
               borderRadius: 2,

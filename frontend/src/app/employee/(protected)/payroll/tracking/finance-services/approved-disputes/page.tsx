@@ -41,7 +41,6 @@ interface Dispute {
   status: string;
   createdAt: string;
   updatedAt: string;
-  approvedRefundAmount?: number;
   resolutionComment?: string;
   employeeId?: string | {
     _id: string;
@@ -54,6 +53,16 @@ interface Dispute {
     fullName?: string;
   };
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function ApprovedDisputesPage() {
   const router = useRouter();
@@ -132,6 +141,7 @@ export default function ApprovedDisputesPage() {
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+      const refundAmount = extractRefundAmount(selectedDispute.resolutionComment) || 0;
       const response = await fetch(
         `${apiUrl}/tracking/disputes/${selectedDispute.disputeId}/generate-refund`,
         {
@@ -141,7 +151,7 @@ export default function ApprovedDisputesPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            refundAmount: selectedDispute.approvedRefundAmount || 0,
+            refundAmount,
             comment: `Refund processed for approved dispute ${selectedDispute.disputeId}`,
           }),
         }
@@ -393,8 +403,8 @@ export default function ApprovedDisputesPage() {
                               color: 'success.main',
                             }}
                           >
-                            {dispute.approvedRefundAmount
-                              ? formatCurrency(dispute.approvedRefundAmount)
+                            {extractRefundAmount(dispute.resolutionComment)
+                              ? formatCurrency(extractRefundAmount(dispute.resolutionComment) || 0)
                               : 'N/A'}
                           </Typography>
                         </TableCell>
@@ -528,8 +538,8 @@ export default function ApprovedDisputesPage() {
                         Approved Refund Amount
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                        {selectedDispute.approvedRefundAmount
-                          ? formatCurrency(selectedDispute.approvedRefundAmount)
+                        {extractRefundAmount(selectedDispute.resolutionComment)
+                          ? formatCurrency(extractRefundAmount(selectedDispute.resolutionComment) || 0)
                           : 'N/A'}
                       </Typography>
                     </Box>
@@ -558,7 +568,7 @@ export default function ApprovedDisputesPage() {
                       </Box>
                     )}
                   </Box>
-                  {selectedDispute.approvedRefundAmount && (
+                  {extractRefundAmount(selectedDispute.resolutionComment) && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
                       This amount will be included in the next payroll cycle
                     </Typography>
@@ -585,7 +595,7 @@ export default function ApprovedDisputesPage() {
           <Button
             onClick={handleSubmitRefund}
             variant="contained"
-            disabled={processing || !selectedDispute?.approvedRefundAmount}
+            disabled={processing || !selectedDispute || extractRefundAmount(selectedDispute.resolutionComment) === null}
             sx={{
               minWidth: 140,
               borderRadius: 2,

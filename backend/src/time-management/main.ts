@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { TimeMangementModule } from './time-management.module';
+import { TimeManagementModule } from './time-management.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export async function createTimeManagementApp() {
-  const app = await NestFactory.create(TimeMangementModule);
+  const app = await NestFactory.create(TimeManagementModule);
 
   const config = new DocumentBuilder()
     .setTitle('Arcana - Time Management')

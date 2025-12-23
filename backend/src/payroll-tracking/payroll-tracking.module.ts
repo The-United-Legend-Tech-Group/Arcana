@@ -5,11 +5,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { refunds, refundsSchema } from './models/refunds.schema';
 import { claims, claimsSchema } from './models/claims.schema';
 import { disputes, disputesSchema } from './models/disputes.schema';
-import { paySlip, paySlipSchema } from '../payroll/execution/models/payslip.schema';
-import { payrollRuns, payrollRunsSchema } from '../payroll/execution/models/payrollRuns.schema';
-import { employeePayrollDetails, employeePayrollDetailsSchema } from '../payroll/execution/models/employeePayrollDetails.schema';
+import { paySlip, paySlipSchema } from '../payroll-execution/models/payslip.schema';
+import { payrollRuns, payrollRunsSchema } from '../payroll-execution/models/payrollRuns.schema';
+import { employeePayrollDetails, employeePayrollDetailsSchema } from '../payroll-execution/models/employeePayrollDetails.schema';
 import { ConfigSetupModule } from '../payroll-configuration/payroll-configuration.module';
-import { ExecutionModule } from '../payroll/execution/execution.module';
+import { ExecutionModule } from '../payroll-execution/payroll-execution.module';
 import { NotificationModule } from '../notification/notification.module';
 import {
   EmployeeSystemRole,

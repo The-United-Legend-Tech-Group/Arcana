@@ -80,7 +80,7 @@ export default function SpecialistClaimsPage() {
   const [processing, setProcessing] = React.useState(false);
 
   // Form state for approve/reject
-  const [approvedAmount, setApprovedAmount] = React.useState('');
+  const [specialistApprovedAmount, setSpecialistApprovedAmount] = React.useState('');
   const [comment, setComment] = React.useState('');
 
   // Table filters
@@ -177,8 +177,8 @@ export default function SpecialistClaimsPage() {
     setSelectedClaim(claim);
     setActionType(action);
     setActionDialogOpen(true);
-    // Reset form fields
-    setApprovedAmount(claim.amount.toString());
+    // Reset form fields - pre-fill with claimed amount as default
+    setSpecialistApprovedAmount(claim.amount.toString());
     setComment('');
     setRejectionReason('');
   };
@@ -191,12 +191,12 @@ export default function SpecialistClaimsPage() {
     if (!selectedClaim || !actionType) return;
 
     // Validation
-    if (actionType === 'approve' && !approvedAmount) {
+    if (actionType === 'approve' && !specialistApprovedAmount) {
       setError('Please provide an approved amount when approving a claim.');
       return;
     }
-    const approvedAmountNum = parseFloat(approvedAmount);
-    if (actionType === 'approve' && (isNaN(approvedAmountNum) || approvedAmountNum < 0)) {
+    const specialistApprovedAmountNum = parseFloat(specialistApprovedAmount);
+    if (actionType === 'approve' && (isNaN(specialistApprovedAmountNum) || specialistApprovedAmountNum < 0)) {
       setError('Please provide a valid approved amount (must be >= 0).');
       return;
     }
@@ -218,14 +218,23 @@ export default function SpecialistClaimsPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
 
       // Prepare request body according to ApproveRejectClaimDto
+      let finalComment = comment.trim();
+
+      if (actionType === 'approve') {
+        // Embed the proposed amount in the comment
+        const amountStr = `Proposed refund amount: ${specialistApprovedAmount}`;
+        finalComment = finalComment
+          ? `${finalComment}\n${amountStr}`
+          : amountStr;
+      }
+
       const requestBody: any = {
         action: actionType,
       };
 
       if (actionType === 'approve') {
-        requestBody.approvedAmount = approvedAmountNum;
-        if (comment.trim()) {
-          requestBody.comment = comment.trim();
+        if (finalComment) {
+          requestBody.comment = finalComment;
         }
       } else {
         requestBody.rejectionReason = rejectionReason.trim();
@@ -276,7 +285,7 @@ export default function SpecialistClaimsPage() {
       // Reset form
       setSelectedClaim(null);
       setActionType(null);
-      setApprovedAmount('');
+      setSpecialistApprovedAmount('');
       setComment('');
       setRejectionReason('');
     } catch (err) {
@@ -737,8 +746,14 @@ export default function SpecialistClaimsPage() {
                 <TextField
                   label="Approved Amount"
                   type="number"
-                  value={approvedAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApprovedAmount(e.target.value)}
+                  value={specialistApprovedAmount}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = e.target.value;
+                    // Allow empty, numbers, and one decimal point
+                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                      setSpecialistApprovedAmount(value);
+                    }
+                  }}
                   required
                   fullWidth
                   inputProps={{ min: 0, step: 0.01 }}
@@ -746,7 +761,7 @@ export default function SpecialistClaimsPage() {
                   InputLabelProps={{
                     shrink: true,
                   }}
-                  helperText="Amount to be approved (can be less than claimed amount)"
+                  helperText="Proposed amount to be approved (can be less than claimed amount - Manager can override)"
                   sx={{
                     '& .MuiInputBase-root': {
                       fontSize: '0.95rem',
@@ -909,7 +924,7 @@ export default function SpecialistClaimsPage() {
             onClick={handleSubmitAction}
             variant="contained"
             color={actionType === 'approve' ? 'success' : 'error'}
-            disabled={processing || (actionType === 'approve' && (!approvedAmount || isNaN(parseFloat(approvedAmount)) || parseFloat(approvedAmount) < 0)) || (actionType === 'reject' && (!rejectionReason.trim() || rejectionReason.trim().length < 20))}
+            disabled={processing || (actionType === 'approve' && (!specialistApprovedAmount || isNaN(parseFloat(specialistApprovedAmount)) || parseFloat(specialistApprovedAmount) < 0)) || (actionType === 'reject' && (!rejectionReason.trim() || rejectionReason.trim().length < 20))}
             sx={{
               minWidth: 120,
               borderRadius: 2,

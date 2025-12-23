@@ -10,7 +10,7 @@ import { AppraisalTemplateRepository } from './repository/appraisal-template.rep
 import { DepartmentRepository } from '../organization-structure/repository/department.repository';
 import { EmployeeProfileRepository } from '../employee-profile/repository/employee-profile.repository';
 import { CandidateRepository } from '../employee-profile/repository/candidate.repository';
-import { ContractRepository } from '../Recruitment/repositories/implementations/contract.repository';
+import { ContractRepository } from '../recruitment/repositories/implementations/contract.repository';
 
 // DTOs
 import { GetAssignmentsQueryDto, BulkAssignDto, AppraisalProgressQueryDto, SendReminderDto } from './dto/appraisal-assignment.dto';
@@ -37,13 +37,13 @@ import { AppraisalTemplate } from './models/appraisal-template.schema';
 // Enums
 import { AppraisalAssignmentStatus, AppraisalRecordStatus, AppraisalDisputeStatus } from './enums/performance.enums';
 import { EmployeeStatus, SystemRole } from '../employee-profile/enums/employee-profile.enums';
-import { TerminationInitiation } from '../Recruitment/enums/termination-initiation.enum';
+import { TerminationInitiation } from '../recruitment/enums/termination-initiation.enum';
 
 // Services
 import { NotificationService } from '../notification/notification.service';
 import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
-import { AttendanceService } from '../time-mangement/services/attendance.service';
-import { OffboardingService } from '../Recruitment/offboarding.service';
+import { AttendanceService } from '../time-management/services/attendance.service';
+import { OffboardingService } from '../recruitment/offboarding.service';
 
 // ==========================================
 // APPRAISAL ASSIGNMENT SERVICE

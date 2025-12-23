@@ -10,7 +10,7 @@ import { AppraisalTemplate, AppraisalTemplateSchema } from './models/appraisal-t
 import { AppraisalAssignment, AppraisalAssignmentSchema } from './models/appraisal-assignment.schema';
 import { AppraisalDispute, AppraisalDisputeSchema } from './models/appraisal-dispute.schema';
 import { EmployeeSystemRole, EmployeeSystemRoleSchema } from '../employee-profile/models/employee-system-role.schema';
-import { Contract, ContractSchema } from '../Recruitment/models/contract.schema';
+import { Contract, ContractSchema } from '../recruitment/models/contract.schema';
 
 // Repositories
 import { AppraisalCycleRepository } from './repository/appraisal-cycle.repository';
@@ -18,7 +18,7 @@ import { AppraisalTemplateRepository } from './repository/appraisal-template.rep
 import { AppraisalRecordRepository } from './repository/appraisal-record.repository';
 import { AppraisalDisputeRepository } from './repository/appraisal-dispute.repository';
 import { AppraisalAssignmentRepository } from './repository/appraisal-assignment.repository';
-import { ContractRepository } from '../Recruitment/repositories/implementations/contract.repository';
+import { ContractRepository } from '../recruitment/repositories/implementations/contract.repository';
 
 // Consolidated Services and Controllers
 import {
@@ -43,8 +43,8 @@ import {
 import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
 import { NotificationModule } from '../notification/notification.module';
 import { EmployeeModule } from '../employee-profile/employee-profile.module';
-import { TimeMangementModule } from '../time-mangement/timemangment.module';
-import { RecruitmentModule } from '../Recruitment/recruitment.module';
+import { TimeManagementModule } from '../time-management/time-management.module';
+import { RecruitmentModule } from '../recruitment/recruitment.module';
 
 @Module({
   imports: [
@@ -60,7 +60,7 @@ import { RecruitmentModule } from '../Recruitment/recruitment.module';
     OrganizationStructureModule,
     NotificationModule,
     EmployeeModule,
-    TimeMangementModule,
+    TimeManagementModule,
     forwardRef(() => RecruitmentModule),
     ConfigModule,
     JwtModule.registerAsync({

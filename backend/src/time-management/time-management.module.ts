@@ -106,4 +106,4 @@ import { TimeExceptionRepository } from './repository/time-exception.repository'
     PermissionDurationConfigRepository,
   ],
 })
-export class TimeMangementModule {}
+export class TimeManagementModule {}

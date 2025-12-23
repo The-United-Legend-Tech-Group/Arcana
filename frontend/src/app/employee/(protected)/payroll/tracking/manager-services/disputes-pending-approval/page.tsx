@@ -47,11 +47,20 @@ interface Dispute {
   description: string;
   status: string;
   createdAt: string;
-  approvedRefundAmount?: number;
   employeeId?: string | { _id: string; firstName?: string; lastName?: string; employeeNumber?: string };
   payrollSpecialistId?: string | { _id: string; firstName?: string; lastName?: string };
   resolutionComment?: string;
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function DisputesPendingApprovalPage() {
   const router = useRouter();
@@ -64,7 +73,7 @@ export default function DisputesPendingApprovalPage() {
   const [openRejectDialog, setOpenRejectDialog] = React.useState(false);
   const [comment, setComment] = React.useState('');
   const [rejectionReason, setRejectionReason] = React.useState('');
-  const [approvedRefundAmount, setApprovedRefundAmount] = React.useState<string>('');
+  const [managerRefundAmount, setManagerRefundAmount] = React.useState<string>('');
   const [processing, setProcessing] = React.useState(false);
   const [success, setSuccess] = React.useState<string | null>(null);
 
@@ -121,9 +130,9 @@ export default function DisputesPendingApprovalPage() {
     setSelectedDispute(dispute);
     setOpenDialog(true);
     setComment('');
-    // Always pre-fill with payroll specialist's approved amount if it exists, otherwise leave empty
-    // The field remains editable so the manager can change it if needed
-    setApprovedRefundAmount(dispute.approvedRefundAmount ? dispute.approvedRefundAmount.toString() : '');
+    // Extract the specialist's proposed amount from resolutionComment
+    const proposedAmount = extractRefundAmount(dispute.resolutionComment);
+    setManagerRefundAmount(proposedAmount ? proposedAmount.toString() : '');
   };
 
   const handleRejectDispute = (dispute: Dispute) => {
@@ -150,10 +159,20 @@ export default function DisputesPendingApprovalPage() {
       // Trim disputeId to ensure no whitespace issues
       const cleanDisputeId = selectedDispute.disputeId.trim();
 
+      // Build the comment with final refund amount
+      let finalComment = comment || '';
+      if (managerRefundAmount && !isNaN(parseFloat(managerRefundAmount))) {
+        const amountStr = `Final refund amount: ${managerRefundAmount}`;
+        finalComment = finalComment
+          ? `${finalComment}\n${amountStr}`
+          : amountStr;
+      }
+
       console.log('🔍 [DisputesPendingApproval] Confirming dispute:', {
         disputeId: cleanDisputeId,
         status: selectedDispute.status,
-        approvedRefundAmount: selectedDispute.approvedRefundAmount,
+        managerRefundAmount,
+        finalComment,
       });
 
       const response = await fetch(
@@ -165,8 +184,7 @@ export default function DisputesPendingApprovalPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            comment: comment || undefined,
-            approvedRefundAmount: approvedRefundAmount ? parseFloat(approvedRefundAmount) : undefined,
+            comment: finalComment || undefined,
           }),
         }
       );
@@ -178,7 +196,7 @@ export default function DisputesPendingApprovalPage() {
         setOpenDialog(false);
         setSelectedDispute(null);
         setComment('');
-        setApprovedRefundAmount('');
+        setManagerRefundAmount('');
         fetchDisputes();
         setTimeout(() => setSuccess(null), 5000);
       } else {
@@ -193,7 +211,7 @@ export default function DisputesPendingApprovalPage() {
           console.log('Error Message:', errorMessage);
           console.log('Dispute ID:', selectedDispute.disputeId);
           console.log('Dispute Status:', selectedDispute.status);
-          console.log('Approved Refund Amount:', selectedDispute.approvedRefundAmount);
+          console.log('Manager Refund Amount:', managerRefundAmount);
           console.log('Full Error Object:', JSON.stringify(errorData, null, 2));
           console.log('❌ [DisputesPendingApproval] ====================================');
         } catch (parseError) {
@@ -616,8 +634,8 @@ export default function DisputesPendingApprovalPage() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>
-                        {dispute.approvedRefundAmount
-                          ? formatCurrency(dispute.approvedRefundAmount)
+                        {extractRefundAmount(dispute.resolutionComment)
+                          ? formatCurrency(extractRefundAmount(dispute.resolutionComment) || 0)
                           : 'N/A'}
                       </Typography>
                     </TableCell>
@@ -772,13 +790,13 @@ export default function DisputesPendingApprovalPage() {
                         {selectedDispute.description || 'No description'}
                       </Typography>
                     </Box>
-                    {selectedDispute.approvedRefundAmount && (
+                    {extractRefundAmount(selectedDispute.resolutionComment) && (
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Proposed Refund Amount (by Payroll Specialist)
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          {formatCurrency(selectedDispute.approvedRefundAmount)}
+                          {formatCurrency(extractRefundAmount(selectedDispute.resolutionComment) || 0)}
                         </Typography>
                       </Box>
                     )}
@@ -794,20 +812,30 @@ export default function DisputesPendingApprovalPage() {
                         </Typography>
                       </Box>
                     )}
+                    {extractRefundAmount(selectedDispute.resolutionComment) && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Proposed Refund Amount (by Payroll Specialist)
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                          {formatCurrency(extractRefundAmount(selectedDispute.resolutionComment) || 0)}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
-                  {selectedDispute.approvedRefundAmount && (
+                  {extractRefundAmount(selectedDispute.resolutionComment) && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
                       You can override this amount below if needed.
                     </Typography>
                   )}
-                  {!selectedDispute.approvedRefundAmount && (
+                  {!extractRefundAmount(selectedDispute.resolutionComment) && (
                     <Alert severity="warning" sx={{ mt: 2 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                         Missing Refund Amount
                       </Typography>
                       <Typography variant="body2">
                         This dispute does not have a refund amount set by the Payroll Specialist.
-                        Please set an approved refund amount below.
+                        Please set a refund amount below.
                       </Typography>
                     </Alert>
                   )}
@@ -828,14 +856,14 @@ export default function DisputesPendingApprovalPage() {
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 <TextField
-                  label="Approved Refund Amount"
+                  label="Refund Amount (Final)"
                   type="number"
-                  value={approvedRefundAmount}
+                  value={managerRefundAmount}
                   onChange={(e) => {
                     const value = e.target.value;
                     // Allow empty, numbers, and one decimal point
                     if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                      setApprovedRefundAmount(value);
+                      setManagerRefundAmount(value);
                     }
                   }}
                   fullWidth
@@ -846,9 +874,11 @@ export default function DisputesPendingApprovalPage() {
                     shrink: true,
                   }}
                   helperText={
-                    selectedDispute.approvedRefundAmount
-                      ? `Pre-filled with Payroll Specialist's approved amount (${formatCurrency(selectedDispute.approvedRefundAmount)}). You can change this value if needed.`
-                      : "Required: Set the approved refund amount for this dispute"
+                    extractRefundAmount(selectedDispute?.resolutionComment)
+                      ? `Pre-filled with Payroll Specialist's proposed amount (${formatCurrency(
+                          extractRefundAmount(selectedDispute?.resolutionComment) || 0
+                        )}). You can change this value if needed.`
+                      : "Required: Set the final refund amount for this dispute"
                   }
                   sx={{
                     '& .MuiInputBase-root': {
@@ -905,7 +935,7 @@ export default function DisputesPendingApprovalPage() {
           <Button
             onClick={() => {
               setOpenDialog(false);
-              setApprovedRefundAmount('');
+              setManagerRefundAmount('');
               setComment('');
             }}
             disabled={processing}
@@ -923,7 +953,7 @@ export default function DisputesPendingApprovalPage() {
             onClick={handleSubmitConfirmation}
             variant="contained"
             color="success"
-            disabled={processing || !approvedRefundAmount || isNaN(parseFloat(approvedRefundAmount)) || parseFloat(approvedRefundAmount) <= 0}
+            disabled={processing || !managerRefundAmount || isNaN(parseFloat(managerRefundAmount)) || parseFloat(managerRefundAmount) <= 0}
             startIcon={processing ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
             sx={{
               minWidth: 140,
@@ -1017,13 +1047,13 @@ export default function DisputesPendingApprovalPage() {
                         {selectedDispute.description || 'No description'}
                       </Typography>
                     </Box>
-                    {selectedDispute.approvedRefundAmount && (
+                    {extractRefundAmount(selectedDispute.resolutionComment) && (
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Proposed Refund Amount (by Payroll Specialist)
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                          {formatCurrency(selectedDispute.approvedRefundAmount)}
+                          {formatCurrency(extractRefundAmount(selectedDispute.resolutionComment) || 0)}
                         </Typography>
                       </Box>
                     )}

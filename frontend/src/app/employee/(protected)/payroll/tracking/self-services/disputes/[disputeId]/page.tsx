@@ -41,10 +41,19 @@ interface DisputeDetails {
   status: string;
   rejectionReason?: string;
   resolutionComment?: string;
-  approvedRefundAmount?: number;
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function DisputeDetailsPage() {
   const router = useRouter();
@@ -489,7 +498,7 @@ export default function DisputeDetailsPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {dispute.approvedRefundAmount !== undefined && dispute.approvedRefundAmount !== null && (
+                {extractRefundAmount(dispute.resolutionComment) !== null && (
                   <TableRow
                     sx={{
                       '& td': {
@@ -498,7 +507,7 @@ export default function DisputeDetailsPage() {
                     }}
                   >
                     <TableCell sx={{ fontWeight: 600 }}>
-                      Approved Refund Amount
+                      Refund Amount
                     </TableCell>
                     <TableCell>
                       <Typography 
@@ -506,7 +515,7 @@ export default function DisputeDetailsPage() {
                         fontWeight={600}
                         color="text.primary"
                       >
-                        {formatCurrency(dispute.approvedRefundAmount)}
+                        {formatCurrency(extractRefundAmount(dispute.resolutionComment) || 0)}
                       </Typography>
                     </TableCell>
                   </TableRow>

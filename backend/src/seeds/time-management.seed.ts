@@ -8,6 +8,7 @@ import { ScheduleRuleSchema } from '../time-management/models/schedule-rule.sche
 import { ShiftAssignmentSchema } from '../time-management/models/shift-assignment.schema';
 import { AttendanceRecordSchema } from '../time-management/models/attendance-record.schema';
 import { AttendanceCorrectionRequestSchema } from '../time-management/models/attendance-correction-request.schema';
+import { NotificationLogSchema } from '../time-management/models/notification-log.schema';
 import { TimeExceptionSchema } from '../time-management/models/time-exception.schema';
 import {
   PunchPolicy,

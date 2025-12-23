@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { disputes, disputesDocument } from '../models/disputes.schema';
-import { paySlip, PayslipDocument } from '../../payroll/execution/models/payslip.schema';
+import { paySlip, PayslipDocument } from '../../payroll-execution/models/payslip.schema';
 import { DisputeStatus } from '../enums/payroll-tracking-enum';
 import { CreatePayslipDisputeDto } from '../dto/create-payslip-dispute.dto';
 import { ApproveRejectDisputeDto } from '../dto/approve-reject-dispute.dto';
@@ -217,13 +217,12 @@ export class DisputeService {
 
     if (approveRejectDto.action === 'approve') {
       if (approveRejectDto.approvedRefundAmount === undefined || approveRejectDto.approvedRefundAmount === null) {
-        throw new BadRequestException('Approved refund amount is required when approving a dispute');
+        throw new BadRequestException('Proposed refund amount is required when approving a dispute');
       }
       if (approveRejectDto.approvedRefundAmount < 0) {
-        throw new BadRequestException('Approved refund amount cannot be negative');
+        throw new BadRequestException('Proposed refund amount cannot be negative');
       }
 
-      dispute.approvedRefundAmount = approveRejectDto.approvedRefundAmount;
       dispute.payrollSpecialistId = new Types.ObjectId(payrollSpecialistId);
       dispute.status = DisputeStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
@@ -310,20 +309,26 @@ export class DisputeService {
     dispute.status = DisputeStatus.APPROVED;
     dispute.payrollManagerId = new Types.ObjectId(payrollManagerId);
 
+    // Store manager's final refund amount in resolution comment if provided
+    let finalRefundAmount = confirmDto.approvedRefundAmount;
+    
     if (confirmDto.approvedRefundAmount !== undefined && confirmDto.approvedRefundAmount !== null) {
       if (confirmDto.approvedRefundAmount < 0) {
-        throw new BadRequestException('Approved refund amount cannot be negative');
+        throw new BadRequestException('Refund amount cannot be negative');
       }
-      dispute.approvedRefundAmount = confirmDto.approvedRefundAmount;
     } else {
-      if (!dispute.approvedRefundAmount || dispute.approvedRefundAmount === null) {
-        console.warn(`⚠️ [DisputeService] Dispute ${cleanDisputeId} confirmed without approvedRefundAmount. Finance Staff will need to set this before generating refund.`);
+      // Extract proposed amount from specialist comment if manager didn't override
+      const proposedMatch = dispute.resolutionComment?.match(/Proposed refund amount: ([\d.]+)/);
+      if (proposedMatch && proposedMatch[1]) {
+        finalRefundAmount = parseFloat(proposedMatch[1]);
+      } else {
+        console.warn(`⚠️ [DisputeService] Dispute ${cleanDisputeId} confirmed without a refund amount. Finance Staff must specify amount when generating refund.`);
       }
     }
 
     const managerComment = confirmDto.comment
-      ? `Manager confirmed: ${confirmDto.comment}`
-      : 'Manager confirmed approval';
+      ? `Manager confirmed: ${confirmDto.comment}${finalRefundAmount ? ` (Final refund amount: ${finalRefundAmount})` : ''}`
+      : `Manager confirmed approval${finalRefundAmount ? ` (Final refund amount: ${finalRefundAmount})` : ''}`;
 
     dispute.resolutionComment = dispute.resolutionComment
       ? `${dispute.resolutionComment}\n${managerComment}`
@@ -345,11 +350,25 @@ export class DisputeService {
     }
 
     try {
+      // Extract refund amount from resolution comment for notification
+      let refundAmount = 0;
+      if (dispute.resolutionComment) {
+        const finalMatch = dispute.resolutionComment.match(/Final refund amount: ([\d.]+)/);
+        if (finalMatch && finalMatch[1]) {
+          refundAmount = parseFloat(finalMatch[1]);
+        } else {
+          const proposedMatch = dispute.resolutionComment.match(/Proposed refund amount: ([\d.]+)/);
+          if (proposedMatch && proposedMatch[1]) {
+            refundAmount = parseFloat(proposedMatch[1]);
+          }
+        }
+      }
+      
       await this.notificationUtil.notifyFinanceStaff(
         'dispute',
         dispute.disputeId,
         dispute.disputeId,
-        dispute.approvedRefundAmount || 0,
+        refundAmount,
         dispute._id.toString(),
       );
     } catch (error) {

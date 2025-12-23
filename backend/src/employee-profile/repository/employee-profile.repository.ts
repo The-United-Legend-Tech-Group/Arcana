@@ -21,7 +21,12 @@ export class EmployeeProfileRepository extends BaseRepository<EmployeeProfileDoc
             throw new Error("Invalid email value for lookup.");
         }
         return this.model
-            .findOne({ personalEmail: { $eq: email } })
+            .findOne({
+                $or: [
+                    { personalEmail: { $eq: email } },
+                    { workEmail: { $eq: email } }
+                ]
+            })
             .select('+password')
             .exec();
     }

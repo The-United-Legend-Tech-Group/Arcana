@@ -341,6 +341,9 @@ export class ClaimService {
 
     claim.status = ClaimStatus.APPROVED;
 
+    // Store manager's final approved amount in resolution comment if provided
+    let finalApprovedAmount = confirmDto.approvedRefundAmount;
+    
     if (confirmDto.approvedRefundAmount !== undefined && confirmDto.approvedRefundAmount !== null) {
       if (confirmDto.approvedRefundAmount < 0) {
         throw new BadRequestException('Approved amount cannot be negative');
@@ -350,14 +353,19 @@ export class ClaimService {
       }
       claim.approvedAmount = confirmDto.approvedRefundAmount;
     } else {
-      if (!claim.approvedAmount || claim.approvedAmount === null) {
-        console.warn(`⚠️ [ClaimService] Claim ${cleanClaimId} confirmed without approvedAmount. Finance Staff will need to set this before processing refund.`);
+      // Extract proposed amount from specialist comment if manager didn't override
+      const proposedMatch = claim.resolutionComment?.match(/Proposed approved amount: ([\d.]+)/);
+      if (proposedMatch && proposedMatch[1]) {
+        finalApprovedAmount = parseFloat(proposedMatch[1]);
+        claim.approvedAmount = finalApprovedAmount;
+      } else if (!claim.approvedAmount || claim.approvedAmount === null) {
+        console.warn(`⚠️ [ClaimService] Claim ${cleanClaimId} confirmed without approvedAmount. Finance Staff must specify amount when generating refund.`);
       }
     }
 
     const managerComment = confirmDto.comment
-      ? `Manager confirmed: ${confirmDto.comment}`
-      : 'Manager confirmed approval';
+      ? `Manager confirmed: ${confirmDto.comment}${finalApprovedAmount ? ` (Final approved amount: ${finalApprovedAmount})` : ''}`
+      : `Manager confirmed approval${finalApprovedAmount ? ` (Final approved amount: ${finalApprovedAmount})` : ''}`;
 
     claim.resolutionComment = claim.resolutionComment
       ? `${claim.resolutionComment}\n${managerComment}`
@@ -466,13 +474,46 @@ export class ClaimService {
       throw new BadRequestException('A pending refund already exists for this claim. The finance staff ID can be found in the refund record.');
     }
 
-    const approvedAmount = claim.approvedAmount || claim.amount;
-
-    if (!approvedAmount || approvedAmount === null) {
-      throw new BadRequestException('This claim does not have an approved amount. The Payroll Specialist must set an approved amount when approving the claim.');
+    // Extract approved amount from resolution comment or use stored value
+    let approvedAmount: number | null = null;
+    
+    if (claim.resolutionComment) {
+      // Try to extract final approved amount first (set by manager)
+      const finalMatch = claim.resolutionComment.match(/Final approved amount: ([\d.]+)/);
+      if (finalMatch && finalMatch[1]) {
+        approvedAmount = parseFloat(finalMatch[1]);
+      } else {
+        // Fall back to proposed amount (set by specialist)
+        const proposedMatch = claim.resolutionComment.match(/Proposed approved amount: ([\d.]+)/);
+        if (proposedMatch && proposedMatch[1]) {
+          approvedAmount = parseFloat(proposedMatch[1]);
+        }
+      }
     }
-    if (approvedAmount <= 0) {
-      throw new BadRequestException('Approved amount must be greater than zero');
+    
+    // Use stored value if not found in comment
+    if (approvedAmount === null && claim.approvedAmount) {
+      approvedAmount = claim.approvedAmount;
+    }
+    
+    // Allow finance staff to override with generateRefundDto amount if needed
+    if (generateRefundDto.amount !== undefined && generateRefundDto.amount !== null) {
+      if (generateRefundDto.amount < 0) {
+        throw new BadRequestException('Refund amount cannot be negative');
+      }
+      if (generateRefundDto.amount > claim.amount) {
+        throw new BadRequestException(`Refund amount (${generateRefundDto.amount}) cannot exceed the claimed amount (${claim.amount}).`);
+      }
+      approvedAmount = generateRefundDto.amount;
+    }
+
+    // Fall back to claimed amount if still not set
+    if (approvedAmount === null || approvedAmount === undefined) {
+      approvedAmount = claim.amount;
+    }
+
+    if (!approvedAmount || approvedAmount === null || approvedAmount <= 0) {
+      throw new BadRequestException('No valid approved amount found. The Payroll Manager must set the approved amount when confirming the claim.');
     }
 
     claim.financeStaffId = employeeId;

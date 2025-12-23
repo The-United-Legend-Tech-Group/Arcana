@@ -64,12 +64,36 @@ export class RefundService {
       throw new BadRequestException('A pending refund already exists for this dispute. The finance staff ID can be found in the refund record.');
     }
 
-    if (!dispute.approvedRefundAmount || dispute.approvedRefundAmount === null) {
-      throw new BadRequestException('This dispute does not have an approved refund amount. The Payroll Manager must set the approved refund amount when confirming the dispute.');
+    // Extract refund amount from resolution comment
+    let refundAmount: number | null = null;
+    
+    if (dispute.resolutionComment) {
+      // Try to extract final refund amount first (set by manager)
+      const finalMatch = dispute.resolutionComment.match(/Final refund amount: ([\d.]+)/);
+      if (finalMatch && finalMatch[1]) {
+        refundAmount = parseFloat(finalMatch[1]);
+      } else {
+        // Fall back to proposed amount (set by specialist)
+        const proposedMatch = dispute.resolutionComment.match(/Proposed refund amount: ([\d.]+)/);
+        if (proposedMatch && proposedMatch[1]) {
+          refundAmount = parseFloat(proposedMatch[1]);
+        }
+      }
     }
 
-    if (dispute.approvedRefundAmount <= 0) {
-      throw new BadRequestException('Approved refund amount must be greater than zero');
+    // Allow finance staff to override with generateRefundDto amount if needed
+    if (generateRefundDto.amount !== undefined && generateRefundDto.amount !== null) {
+      if (generateRefundDto.amount < 0) {
+        throw new BadRequestException('Refund amount cannot be negative');
+      }
+      refundAmount = generateRefundDto.amount;
+    }
+
+    if (refundAmount === null || refundAmount === undefined || refundAmount <= 0) {
+      throw new BadRequestException(
+        'No valid refund amount found. The Payroll Manager must set the refund amount when confirming the dispute. ' +
+        'You can also provide an amount in the refund generation request.'
+      );
     }
 
     dispute.financeStaffId = employeeId;
@@ -81,7 +105,7 @@ export class RefundService {
       financeStaffId: employeeId,
       refundDetails: {
         description: generateRefundDto.description || `Refund for approved dispute ${dispute.disputeId}`,
-        amount: dispute.approvedRefundAmount,
+        amount: refundAmount,
       },
       status: RefundStatus.PENDING,
     });

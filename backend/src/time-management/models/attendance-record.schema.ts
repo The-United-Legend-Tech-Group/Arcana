@@ -12,15 +12,14 @@ export type AttendanceRecordDocument = HydratedDocument<AttendanceRecord>;
 
 @Schema()
 export class AttendanceRecord {
-    @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-    employeeId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
+  employeeId: Types.ObjectId;
 
-    @Prop({ required: true })
-    date: Date;
+  @Prop({ default: Date.now() })
+  date: Date;
 
-
-    @Prop({ default: [] })
-    punches: Punch[];
+  @Prop({ default: [] })
+  punches: Punch[];
 
   @Prop({ default: 0 }) // to be computed after creating an instance
   totalWorkMinutes: number;

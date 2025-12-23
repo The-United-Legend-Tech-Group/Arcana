@@ -39,13 +39,22 @@ interface ClaimDetails {
   description: string;
   claimType: string;
   amount: number;
-  approvedAmount?: number;
   status: string;
   rejectionReason?: string;
   resolutionComment?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function ClaimDetailsPage() {
   const router = useRouter();
@@ -479,6 +488,28 @@ export default function ClaimDetailsPage() {
                     </TableCell>
                   </TableRow>
                 )}
+                {extractRefundAmount(claim.resolutionComment) !== null && (
+                  <TableRow
+                    sx={{
+                      '& td': {
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                      },
+                    }}
+                  >
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      Proposed Amount
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        color="text.primary"
+                      >
+                        {formatCurrency(extractRefundAmount(claim.resolutionComment) || 0)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {claim.rejectionReason && (
                   <TableRow
                     sx={{
@@ -650,6 +681,11 @@ export default function ClaimDetailsPage() {
                 {claim.resolutionComment && (
                   <Typography variant="body2" color="text.secondary">
                     {claim.resolutionComment}
+                  </Typography>
+                )}
+                {extractRefundAmount(claim.resolutionComment) && (
+                  <Typography variant="body2" color="text.primary" fontWeight={600} mt={1}>
+                    Proposed Amount: {formatCurrency(extractRefundAmount(claim.resolutionComment) || 0)}
                   </Typography>
                 )}
                 {claim.approvedAmount && (

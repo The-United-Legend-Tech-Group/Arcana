@@ -39,7 +39,7 @@ import { AppraisalRecordService } from '../performance/performance.service';
 //import { LeavesRequestService } from 'src/leaves/request/leave-requests.service';
 import { UpdateEmployeeStatusDto } from 'src/employee-profile/dto/update-employee-status.dto';
 import { OrganizationStructureService } from 'src/organization-structure/organization-structure.service';
-import { EmployeeTerminationResignationService } from '../payroll/execution/services/EmployeeTerminationResignation.service';
+import { EmployeeTerminationResignationService } from '../payroll-execution/services/EmployeeTerminationResignation.service';
 @Injectable()
 export class OffboardingService {
   constructor(

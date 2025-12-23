@@ -36,7 +36,7 @@ import { LeaveEntitlement, LeaveEntitlementSchema } from '../leaves/models/leave
 import { LeaveType, LeaveTypeSchema } from '../leaves/models/leave-type.schema';
 
 // Payroll schemas
-import { EmployeeTerminationResignation, EmployeeTerminationResignationSchema } from '../payroll/execution/models/EmployeeTerminationResignation.schema';
+import { EmployeeTerminationResignation, EmployeeTerminationResignationSchema } from '../payroll-execution/models/EmployeeTerminationResignation.schema';
 import { signingBonus, signingBonusSchema } from '../payroll-configuration/models/signingBonus.schema';
 import { payGrade, payGradeSchema } from '../payroll-configuration/models/payGrades.schema';
 
@@ -65,7 +65,8 @@ import { NotificationModule } from '../notification/notification.module';
 import { LeavesModule } from '../leaves/leaves.module';
 import { PerformanceModule } from '../performance/performance.module';
 import { OrganizationStructureModule } from '../organization-structure/organization-structure.module';
-import { PayrollModule } from '../payroll/payroll.module';
+import { ExecutionModule } from '../payroll-execution/payroll-execution.module';
+import { ConfigSetupModule } from '../payroll-configuration/payroll-configuration.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -107,7 +108,8 @@ import { PayrollModule } from '../payroll/payroll.module';
     forwardRef(() => PerformanceModule),
     OrganizationStructureModule,
     LeavesModule,
-    PayrollModule,
+    ExecutionModule,
+    ConfigSetupModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'default-secret-key',
       signOptions: { expiresIn: '24h' },

@@ -13,10 +13,10 @@ import { PayrollRunService } from '../services/payroll-run.service';
 import { GenerateDraftDto } from '../dto/generateDraft.dto';
 import { PayrollExceptionsQueryService } from '../services/payroll-exceptions-query.service';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '../../../common/guards/authentication.guard';
-import { authorizationGuard } from '../../../common/guards/authorization.guard';
-import { SystemRole } from '../../../employee-profile/enums/employee-profile.enums';
-import { Roles } from '../../../common/decorators/roles.decorator';
+import { AuthGuard } from '../../common/guards/authentication.guard';
+import { authorizationGuard } from '../../common/guards/authorization.guard';
+import { SystemRole } from '../../employee-profile/enums/employee-profile.enums';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Payroll Execution')
 @ApiBearerAuth()

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppConfigService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   // Application Configuration
   get port(): number {
@@ -37,4 +37,31 @@ export class AppConfigService {
     }
     return uri;
   }
+
+  // JWT Configuration
+  get jwtSecret(): string {
+    return this.configService.get<string>('jwt.secret')!;
+  }
+
+  get jwtAccessTokenSecret(): string {
+    return this.configService.get<string>('jwt.accessTokenSecret')!;
+  }
+
+  get jwtAccessTokenExpiresIn(): string {
+    return this.configService.get<string>('jwt.accessTokenExpiresIn')!;
+  }
+
+  get jwtRefreshTokenSecret(): string {
+    return this.configService.get<string>('jwt.refreshTokenSecret')!;
+  }
+
+  get jwtRefreshTokenExpiresIn(): string {
+    return this.configService.get<string>('jwt.refreshTokenExpiresIn')!;
+  }
+
+  // Gemini AI Configuration
+  get geminiApiKey(): string {
+    return this.configService.get<string>('gemini.apiKey') || '';
+  }
 }
+

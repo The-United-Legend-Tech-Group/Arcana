@@ -13,6 +13,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 // Feature modules (alphabetically organized)
+import { ChatbotModule } from './chatbot/chatbot.module';
 import { EmployeeSubsystemModule } from './employee-subsystem/employee-subsystem.module';
 import { LeavesModule } from './leaves/leaves.module';
 import { ConfigSetupModule } from './payroll-configuration/payroll-configuration.module';
@@ -21,6 +22,7 @@ import { RecruitmentModule } from './recruitment/recruitment.module';
 import { TimeManagementModule } from './time-management/time-management.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
+
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { TrackingModule } from './payroll-tracking/payroll-tracking.module';
     ScheduleModule.forRoot(),
 
     // Feature modules (alphabetically organized)
+    ChatbotModule,
     EmployeeSubsystemModule,
     LeavesModule,
     ConfigSetupModule,

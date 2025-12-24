@@ -49,18 +49,19 @@ export class DisputeService {
   private async handleDisputeRejection(
     dispute: disputesDocument,
     rejectionReason: string,
+    roleLabel: string,
     comment?: string,
   ): Promise<void> {
     dispute.status = DisputeStatus.REJECTED;
     dispute.rejectionReason = rejectionReason.trim();
 
-    const managerComment = comment
-      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}`
-      : `Manager rejected. Reason: ${rejectionReason}`;
+    const rejectionComment = comment
+      ? `${roleLabel} rejected: ${comment}. Reason: ${rejectionReason}`
+      : `${roleLabel} rejected. Reason: ${rejectionReason}`;
 
     dispute.resolutionComment = dispute.resolutionComment
-      ? `${dispute.resolutionComment}\n${managerComment}`
-      : managerComment;
+      ? `${dispute.resolutionComment}\n${rejectionComment}`
+      : rejectionComment;
 
     await dispute.save();
 
@@ -186,6 +187,7 @@ export class DisputeService {
 
   async approveRejectDispute(
     disputeId: string,
+    payrollSpecialistId: Types.ObjectId,
     approveRejectDto: ApproveRejectDisputeDto,
   ): Promise<disputesDocument> {
     if (!approveRejectDto.action || !['approve', 'reject'].includes(approveRejectDto.action)) {
@@ -215,19 +217,13 @@ export class DisputeService {
     );
 
     if (approveRejectDto.action === 'approve') {
-      if (approveRejectDto.approvedRefundAmount === undefined || approveRejectDto.approvedRefundAmount === null) {
-        throw new BadRequestException('Approved refund amount is required when approving a dispute');
-      }
-      if (approveRejectDto.approvedRefundAmount < 0) {
-        throw new BadRequestException('Approved refund amount cannot be negative');
-      }
-
-      dispute.approvedRefundAmount = approveRejectDto.approvedRefundAmount;
+      // Record the acting Payroll Specialist
+      dispute.payrollSpecialistId = payrollSpecialistId;
       dispute.status = DisputeStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
-        dispute.resolutionComment = `Payroll Specialist: ${approveRejectDto.comment} (Proposed refund amount: ${approveRejectDto.approvedRefundAmount})`;
+        dispute.resolutionComment = `Payroll Specialist: ${approveRejectDto.comment}`;
       } else {
-        dispute.resolutionComment = `Payroll Specialist: Approved for manager review (Proposed refund amount: ${approveRejectDto.approvedRefundAmount})`;
+        dispute.resolutionComment = `Payroll Specialist: Approved for manager review`;
       }
 
       try {
@@ -258,9 +254,13 @@ export class DisputeService {
         throw new BadRequestException('Rejection reason is required when rejecting a dispute');
       }
 
+      // Record the acting Payroll Specialist
+      dispute.payrollSpecialistId = payrollSpecialistId;
+
       await this.handleDisputeRejection(
         dispute,
         approveRejectDto.rejectionReason,
+        'Payroll Specialist',
         approveRejectDto.comment
       );
     }
@@ -270,6 +270,7 @@ export class DisputeService {
 
   async confirmDisputeApproval(
     disputeId: string,
+    payrollManagerId: Types.ObjectId,
     confirmDto: ConfirmApprovalDto,
   ): Promise<disputesDocument> {
     const cleanDisputeId = disputeId.trim();
@@ -305,17 +306,8 @@ export class DisputeService {
     }
 
     dispute.status = DisputeStatus.APPROVED;
-
-    if (confirmDto.approvedRefundAmount !== undefined && confirmDto.approvedRefundAmount !== null) {
-      if (confirmDto.approvedRefundAmount < 0) {
-        throw new BadRequestException('Approved refund amount cannot be negative');
-      }
-      dispute.approvedRefundAmount = confirmDto.approvedRefundAmount;
-    } else {
-      if (!dispute.approvedRefundAmount || dispute.approvedRefundAmount === null) {
-        console.warn(`⚠️ [DisputeService] Dispute ${cleanDisputeId} confirmed without approvedRefundAmount. Finance Staff will need to set this before generating refund.`);
-      }
-    }
+    // Record the acting Payroll Manager
+    dispute.payrollManagerId = payrollManagerId;
 
     const managerComment = confirmDto.comment
       ? `Manager confirmed: ${confirmDto.comment}`
@@ -345,7 +337,7 @@ export class DisputeService {
         'dispute',
         dispute.disputeId,
         dispute.disputeId,
-        dispute.approvedRefundAmount || 0,
+        undefined, // Disputes don't have a predefined amount; finance staff determines it during refund generation
         dispute._id.toString(),
       );
     } catch (error) {
@@ -357,6 +349,7 @@ export class DisputeService {
 
   async rejectDispute(
     disputeId: string,
+    payrollManagerId: Types.ObjectId,
     rejectDto: { rejectionReason: string; comment?: string },
   ): Promise<disputesDocument> {
     const cleanDisputeId = disputeId.trim();
@@ -380,9 +373,12 @@ export class DisputeService {
       `Dispute ${cleanDisputeId} must be in "pending payroll Manager approval" status to be rejected by a manager. Current status: ${dispute.status}`
     );
 
+    // Record the acting Payroll Manager
+    dispute.payrollManagerId = payrollManagerId;
     await this.handleDisputeRejection(
       dispute,
       rejectDto.rejectionReason,
+      'Manager',
       rejectDto.comment
     );
 

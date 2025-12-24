@@ -101,7 +101,7 @@ export class NotificationUtil {
     _entityType: 'dispute' | 'claim',
     _entityId: string,
     entityDisplayId: string,
-    amount: number,
+    amount: number | undefined,
     relatedEntityId: string,
   ): Promise<void> {
     const financeStaffRoles = await this.employeeSystemRoleModel.find({
@@ -118,7 +118,9 @@ export class NotificationUtil {
     );
 
     const messages = {
-      dispute: `Dispute ${entityDisplayId} has been approved and confirmed. Approved refund amount: ${amount}. Please process the refund.`,
+      dispute: amount !== undefined
+        ? `Dispute ${entityDisplayId} has been approved and confirmed. Approved refund amount: ${amount}. Please process the refund.`
+        : `Dispute ${entityDisplayId} has been approved and confirmed. Please review and generate the refund.`,
       claim: `Expense claim ${entityDisplayId} has been approved and confirmed. Approved amount: ${amount}. Please process the refund.`,
     };
 

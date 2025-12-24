@@ -25,5 +25,10 @@ export default () => ({
   gemini: {
     apiKey: process.env.GOOGLE_GEMINI_API_KEY || '',
   },
+
+  // Groq AI Configuration
+  groq: {
+    apiKey: process.env.GROQ_API_KEY || '',
+  },
 });
 

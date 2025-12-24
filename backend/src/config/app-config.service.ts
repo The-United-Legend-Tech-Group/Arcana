@@ -63,5 +63,10 @@ export class AppConfigService {
   get geminiApiKey(): string {
     return this.configService.get<string>('gemini.apiKey') || '';
   }
+
+  // Groq AI Configuration
+  get groqApiKey(): string {
+    return this.configService.get<string>('groq.apiKey') || '';
+  }
 }
 

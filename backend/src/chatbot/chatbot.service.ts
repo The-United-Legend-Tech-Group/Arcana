@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
 // Import schemas for database access
 import { EmployeeProfile, EmployeeProfileDocument } from '../employee-profile/models/employee-profile.schema';
@@ -25,8 +25,8 @@ interface QueryResult {
 
 @Injectable()
 export class ChatbotService {
-    private genAI: GoogleGenerativeAI;
-    private model: any;
+    private groq: Groq | null = null;
+    private modelName = 'llama-3.3-70b-versatile';
 
     constructor(
         private configService: ConfigService,
@@ -36,12 +36,14 @@ export class ChatbotService {
         @InjectModel(Position.name) private positionModel: Model<PositionDocument>,
         @InjectModel(LeaveRequest.name) private leaveRequestModel: Model<LeaveRequestDocument>,
     ) {
-        // Get API key from structured config or fall back to direct env var
-        const apiKey = this.configService.get<string>('gemini.apiKey') ||
-            this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
+        // Get Groq API key from config
+        const apiKey = this.configService.get<string>('groq.apiKey') ||
+            this.configService.get<string>('GROQ_API_KEY');
         if (apiKey) {
-            this.genAI = new GoogleGenerativeAI(apiKey);
-            this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            this.groq = new Groq({ apiKey });
+            console.log('Groq AI initialized successfully');
+        } else {
+            console.error('No API key found for Groq AI. Please set GROQ_API_KEY in your .env file.');
         }
     }
 
@@ -273,7 +275,7 @@ export class ChatbotService {
     }
 
     /**
-     * Generate a response using Gemini AI
+     * Generate a response using Groq AI
      */
     private async generateResponse(
         message: string,
@@ -281,34 +283,35 @@ export class ChatbotService {
         userProfile: any,
         queryResults: QueryResult[]
     ): Promise<string> {
-        // If Gemini is not configured, use fallback
-        if (!this.model) {
-            return this.generateFallbackResponse(message, userProfile, queryResults);
+        // If Groq is not configured, throw error
+        if (!this.groq) {
+            throw new Error('Groq AI is not configured. Please set GROQ_API_KEY in your .env file.');
         }
 
-        try {
-            // Build context for Gemini
-            const contextInfo = this.buildContextString(userProfile, queryResults);
+        // Build context for the AI
+        const contextInfo = this.buildContextString(userProfile, queryResults);
 
-            const prompt = `You are Arcana, a helpful AI assistant for an HR management system. 
+        const systemPrompt = `You are Arcana, a helpful AI assistant for an HR management system. 
 You have access to the following information about the user and their organization:
 
 ${contextInfo}
-
-User's question: "${message}"
 
 Provide a helpful, concise, and friendly response based on the available data. 
 If you don't have enough information to answer, say so politely.
 Keep responses under 150 words unless detailed information is specifically requested.
 Do not make up information that is not in the provided context.`;
 
-            const result = await this.model.generateContent(prompt);
-            const response = result.response;
-            return response.text();
-        } catch (error) {
-            console.error('Gemini API error:', error);
-            return this.generateFallbackResponse(message, userProfile, queryResults);
-        }
+        const completion = await this.groq.chat.completions.create({
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: message }
+            ],
+            model: this.modelName,
+            temperature: 0.7,
+            max_tokens: 500,
+        });
+
+        return completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.';
     }
 
     /**

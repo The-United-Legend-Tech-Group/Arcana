@@ -13,7 +13,7 @@
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(99, 102, 241, 0.4),
     0 4px 16px rgba(139, 92, 246, 0.3);
   cursor: pointer;
@@ -27,7 +27,7 @@
 
 .chatbot-fab:hover {
   transform: scale(1.1) translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(99, 102, 241, 0.5),
     0 6px 20px rgba(139, 92, 246, 0.4);
 }
@@ -87,11 +87,14 @@
 }
 
 @keyframes sparkle {
-  0%, 100% { 
+
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(0.8);
   }
-  50% { 
+
+  50% {
     opacity: 1;
     transform: scale(1.2);
   }
@@ -108,7 +111,7 @@
   backdrop-filter: blur(20px);
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
+  box-shadow:
     0 25px 60px rgba(0, 0, 0, 0.4),
     0 10px 30px rgba(99, 102, 241, 0.2);
   display: flex;
@@ -122,6 +125,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -211,8 +215,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chatbot-message.user {
@@ -251,12 +262,25 @@
   animation: bounce 1.4s infinite ease-in-out;
 }
 
-.chatbot-typing span:nth-child(1) { animation-delay: -0.32s; }
-.chatbot-typing span:nth-child(2) { animation-delay: -0.16s; }
+.chatbot-typing span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.chatbot-typing span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 @keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+
+  40% {
+    transform: scale(1);
+  }
 }
 
 /* Input Area */
@@ -319,6 +343,116 @@
   height: 20px;
 }
 
+/* Microphone Button */
+.chatbot-mic-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chatbot-mic-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.chatbot-mic-btn.listening {
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  color: white;
+  animation: pulse-mic 1.5s infinite;
+}
+
+@keyframes pulse-mic {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+}
+
+.chatbot-mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chatbot-mic-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* TTS Toggle Button in Header */
+.chatbot-tts-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.chatbot-tts-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.chatbot-tts-toggle.enabled {
+  color: #10b981;
+}
+
+.chatbot-tts-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Speaker Button on Messages */
+.chatbot-speak-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  vertical-align: middle;
+  opacity: 0;
+}
+
+.chatbot-message.bot:hover .chatbot-speak-btn {
+  opacity: 1;
+}
+
+.chatbot-speak-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chatbot-speak-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .chatbot-window {
@@ -326,5 +460,9 @@
     height: calc(100vh - 140px);
     bottom: 76px;
     right: -8px;
+  }
+
+  .chatbot-speak-btn {
+    opacity: 1;
   }
 }

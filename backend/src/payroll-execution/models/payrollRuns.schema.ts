@@ -48,7 +48,6 @@ export class payrollRuns {
   paymentStatus: PayRollPaymentStatus;
 
   @Prop({
-    required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: Employee.name,
   })

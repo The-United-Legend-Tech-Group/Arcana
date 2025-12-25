@@ -66,26 +66,29 @@ export class TrackingService {
 
   async approveRejectDispute(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     approveRejectDto: ApproveRejectDisputeDto,
   ): Promise<disputesDocument> {
-    return this.disputeService.approveRejectDispute(disputeId, approveRejectDto);
+    const employeeObjectId = validateAndConvertObjectId(employeeId, 'Employee ID');
+    return this.disputeService.approveRejectDispute(disputeId, employeeObjectId, approveRejectDto);
   }
 
   async confirmDisputeApproval(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     confirmDto: ConfirmApprovalDto,
   ): Promise<disputesDocument> {
-    return this.disputeService.confirmDisputeApproval(disputeId, confirmDto);
+    const employeeObjectId = validateAndConvertObjectId(employeeId, 'Employee ID');
+    return this.disputeService.confirmDisputeApproval(disputeId, employeeObjectId, confirmDto);
   }
 
   async rejectDispute(
     disputeId: string,
-    _employeeId: string,
+    employeeId: string,
     rejectDto: { rejectionReason: string; comment?: string },
   ): Promise<disputesDocument> {
-    return this.disputeService.rejectDispute(disputeId, rejectDto);
+    const employeeObjectId = validateAndConvertObjectId(employeeId, 'Employee ID');
+    return this.disputeService.rejectDispute(disputeId, employeeObjectId, rejectDto);
   }
 
   async getApprovedDisputes(): Promise<disputesDocument[]> {
@@ -124,10 +127,11 @@ export class TrackingService {
 
   async approveRejectClaim(
     claimId: string,
-    _employeeId: string,
+    employeeId: string,
     approveRejectDto: ApproveRejectClaimDto,
   ): Promise<claimsDocument> {
-    return this.claimService.approveRejectClaim(claimId, approveRejectDto);
+    const employeeObjectId = validateAndConvertObjectId(employeeId, 'Employee ID');
+    return this.claimService.approveRejectClaim(claimId, employeeObjectId, approveRejectDto);
   }
 
   async getClaimsPendingManagerApproval(): Promise<claimsDocument[]> {
@@ -136,10 +140,11 @@ export class TrackingService {
 
   async confirmClaimApproval(
     claimId: string,
-    _employeeId: string,
+    employeeId: string,
     confirmDto: ConfirmApprovalDto,
   ): Promise<claimsDocument> {
-    return this.claimService.confirmClaimApproval(claimId, confirmDto);
+    const employeeObjectId = validateAndConvertObjectId(employeeId, 'Employee ID');
+    return this.claimService.confirmClaimApproval(claimId, employeeObjectId, confirmDto);
   }
 
   async getApprovedClaims(): Promise<claimsDocument[]> {

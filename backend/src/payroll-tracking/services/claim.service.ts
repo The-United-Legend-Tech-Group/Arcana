@@ -52,18 +52,19 @@ export class ClaimService {
   private async handleClaimRejection(
     claim: claimsDocument,
     rejectionReason: string,
+    roleLabel: string,
     comment?: string,
   ): Promise<void> {
     claim.status = ClaimStatus.REJECTED;
     claim.rejectionReason = rejectionReason.trim();
 
-    const managerComment = comment
-      ? `Manager rejected: ${comment}. Reason: ${rejectionReason}`
-      : `Manager rejected. Reason: ${rejectionReason}`;
+    const rejectionComment = comment
+      ? `${roleLabel} rejected: ${comment}. Reason: ${rejectionReason}`
+      : `${roleLabel} rejected. Reason: ${rejectionReason}`;
 
     claim.resolutionComment = claim.resolutionComment
-      ? `${claim.resolutionComment}\n${managerComment}`
-      : managerComment;
+      ? `${claim.resolutionComment}\n${rejectionComment}`
+      : rejectionComment;
 
     await claim.save();
 
@@ -184,6 +185,7 @@ export class ClaimService {
 
   async approveRejectClaim(
     claimId: string,
+    payrollSpecialistId: Types.ObjectId,
     approveRejectDto: ApproveRejectClaimDto,
   ): Promise<claimsDocument> {
     if (!approveRejectDto.action || !['approve', 'reject'].includes(approveRejectDto.action)) {
@@ -223,6 +225,8 @@ export class ClaimService {
       }
 
       claim.approvedAmount = approveRejectDto.approvedAmount;
+      // Record the acting Payroll Specialist
+      claim.payrollSpecialistId = payrollSpecialistId;
       claim.status = ClaimStatus.PENDING_MANAGER_APPROVAL;
       if (approveRejectDto.comment) {
         claim.resolutionComment = `Payroll Specialist: ${approveRejectDto.comment} (Proposed approved amount: ${approveRejectDto.approvedAmount})`;
@@ -258,9 +262,13 @@ export class ClaimService {
         throw new BadRequestException('Rejection reason is required when rejecting a claim');
       }
 
+      // Record the acting Payroll Specialist
+      claim.payrollSpecialistId = payrollSpecialistId;
+
       await this.handleClaimRejection(
         claim,
         approveRejectDto.rejectionReason,
+        'Payroll Specialist',
         approveRejectDto.comment
       );
     }
@@ -278,6 +286,7 @@ export class ClaimService {
 
   async confirmClaimApproval(
     claimId: string,
+    payrollManagerId: Types.ObjectId,
     confirmDto: ConfirmApprovalDto,
   ): Promise<claimsDocument> {
     const cleanClaimId = claimId.trim();
@@ -302,9 +311,13 @@ export class ClaimService {
         `Claim ${cleanClaimId} must be in "pending payroll Manager approval" status to be rejected by a manager. Current status: ${claim.status}`
       );
 
+      // Record the acting Payroll Manager
+      claim.payrollManagerId = payrollManagerId;
+
       await this.handleClaimRejection(
         claim,
         confirmDto.rejectionReason,
+        'Manager',
         confirmDto.comment
       );
 
@@ -335,6 +348,8 @@ export class ClaimService {
     }
 
     claim.status = ClaimStatus.APPROVED;
+    // Record the acting Payroll Manager
+    claim.payrollManagerId = payrollManagerId;
 
     if (confirmDto.approvedRefundAmount !== undefined && confirmDto.approvedRefundAmount !== null) {
       if (confirmDto.approvedRefundAmount < 0) {

@@ -45,16 +45,6 @@ export class RefundService {
       throw new BadRequestException('Refund can only be generated for approved disputes');
     }
 
-    if (!dispute.financeStaffId) {
-      const anyRefund = await this.refundsModel.findOne({
-        disputeId: dispute._id,
-      });
-      if (anyRefund?.financeStaffId) {
-        dispute.financeStaffId = anyRefund.financeStaffId;
-        await dispute.save();
-      }
-    }
-
     const existingRefund = await this.refundsModel.findOne({
       disputeId: dispute._id,
       status: RefundStatus.PENDING,
@@ -64,14 +54,15 @@ export class RefundService {
       throw new BadRequestException('A pending refund already exists for this dispute. The finance staff ID can be found in the refund record.');
     }
 
-    if (!dispute.approvedRefundAmount || dispute.approvedRefundAmount === null) {
-      throw new BadRequestException('This dispute does not have an approved refund amount. The Payroll Manager must set the approved refund amount when confirming the dispute.');
+    if (generateRefundDto.refundAmount === undefined || generateRefundDto.refundAmount === null) {
+      throw new BadRequestException('Refund amount is required when generating a refund for a dispute');
     }
 
-    if (dispute.approvedRefundAmount <= 0) {
-      throw new BadRequestException('Approved refund amount must be greater than zero');
+    if (generateRefundDto.refundAmount <= 0) {
+      throw new BadRequestException('Refund amount must be greater than zero');
     }
 
+    // Record the finance staff who generated this refund on the dispute
     dispute.financeStaffId = employeeId;
     await dispute.save();
 
@@ -81,7 +72,7 @@ export class RefundService {
       financeStaffId: employeeId,
       refundDetails: {
         description: generateRefundDto.description || `Refund for approved dispute ${dispute.disputeId}`,
-        amount: dispute.approvedRefundAmount,
+        amount: generateRefundDto.refundAmount,
       },
       status: RefundStatus.PENDING,
     });

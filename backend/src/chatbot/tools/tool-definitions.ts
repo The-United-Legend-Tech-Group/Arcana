@@ -17,18 +17,18 @@ export interface ToolDefinition {
 }
 
 export const toolDefinitions: ToolDefinition[] = [
-    // ==================== RAG SEARCH ====================
+    // ==================== RAG SEMANTIC SEARCH ====================
     {
         type: 'function',
         function: {
             name: 'searchPolicies',
-            description: 'Search HR policies by keywords or natural language question. Use this when users ask about rules, policies, consequences, procedures, or "what happens if".',
+            description: 'SEMANTIC SEARCH: Use this when user asks QUESTIONS about policies like "what happens if I am late?", "what is the consequence of...", "tell me about leave rules". This searches by MEANING, not exact keywords. Returns relevant policies with relevance scores.',
             parameters: {
                 type: 'object',
                 properties: {
                     query: {
                         type: 'string',
-                        description: 'The search query (e.g., "late to work", "misconduct", "leave policy", "what happens if...")',
+                        description: 'Natural language question or keywords',
                     },
                 },
                 required: ['query'],
@@ -82,12 +82,12 @@ export const toolDefinitions: ToolDefinition[] = [
         },
     },
 
-    // ==================== PAYROLL POLICIES ====================
+    // ==================== PAYROLL POLICIES (EXACT LIST) ====================
     {
         type: 'function',
         function: {
             name: 'findAllPayrollPolicies',
-            description: 'Get all HR/payroll policies. Can filter by status (draft, approved, rejected)',
+            description: 'EXACT LIST: Use this when user wants to LIST or COUNT policies like "show all policies", "how many policies exist?", "list approved policies". Returns the exact database records, NOT semantic search.',
             parameters: {
                 type: 'object',
                 properties: {

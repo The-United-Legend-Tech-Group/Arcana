@@ -6,9 +6,12 @@ import { ChatbotService } from './chatbot.service';
 // Import chatbot-specific services
 import { ConversationService } from './services/conversation.service';
 import { ToolExecutorService } from './services/tool-executor.service';
+import { RagService } from './services/rag.service';
+import { EmbeddingService } from './services/embedding.service';
 
-// Import conversation schema for message storage
+// Import schemas
 import { Conversation, ConversationSchema } from './models/conversation.schema';
+import { payrollPolicies, payrollPoliciesSchema } from '../payroll-configuration/models/payrollPolicies.schema';
 
 // Import modules that EXPORT their services
 // Check each module's exports to ensure services are available
@@ -24,9 +27,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
     imports: [
-        // Conversation storage schema
+        // Schemas for chatbot
         MongooseModule.forFeature([
             { name: Conversation.name, schema: ConversationSchema },
+            { name: payrollPolicies.name, schema: payrollPoliciesSchema }, // For RAG search
         ]),
         // JWT for authentication
         JwtModule.registerAsync({
@@ -49,6 +53,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         ChatbotService,
         ConversationService,
         ToolExecutorService,
+        RagService,
+        EmbeddingService,
         AuthGuard,
     ],
     exports: [ChatbotService],

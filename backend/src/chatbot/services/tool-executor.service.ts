@@ -3,6 +3,7 @@ import { EmployeeService } from '../../employee-profile/employee-profile.service
 import { OrganizationStructureService } from '../../organization-structure/organization-structure.service';
 import { NotificationService } from '../../notification/notification.service';
 import { ConfigSetupService } from '../../payroll-configuration/payroll-configuration.service';
+import { RagService } from './rag.service';
 
 interface UserContext {
     employeeId: string;
@@ -25,6 +26,7 @@ interface ToolResult {
 @Injectable()
 export class ToolExecutorService {
     constructor(
+        private readonly ragService: RagService,
         @Optional() @Inject(forwardRef(() => EmployeeService))
         private readonly employeeService: EmployeeService,
         @Optional() @Inject(forwardRef(() => OrganizationStructureService))
@@ -34,12 +36,7 @@ export class ToolExecutorService {
         @Optional() @Inject(forwardRef(() => ConfigSetupService))
         private readonly configSetupService: ConfigSetupService,
     ) {
-        console.log('[ToolExecutor] Services available:', {
-            employee: !!this.employeeService,
-            orgStructure: !!this.orgStructureService,
-            notification: !!this.notificationService,
-            configSetup: !!this.configSetupService,
-        });
+        console.log('[ToolExecutor] Initialized with RAG support');
     }
 
     /**
@@ -54,6 +51,9 @@ export class ToolExecutorService {
 
         try {
             switch (toolName) {
+                // RAG Search Tool
+                case 'searchPolicies': return await this.searchPolicies(args.query);
+
                 // Employee Tools
                 case 'getProfile': return await this.getProfile(userContext);
                 case 'findAllEmployees': return await this.findAllEmployees();
@@ -82,6 +82,37 @@ export class ToolExecutorService {
                 success: false,
                 error: error instanceof Error ? error.message : 'Tool execution failed'
             };
+        }
+    }
+
+    // ==================== RAG SEARCH ====================
+
+    private async searchPolicies(query: string): Promise<ToolResult> {
+        try {
+            const results = await this.ragService.searchPolicies(query);
+
+            if (results.length === 0) {
+                return {
+                    success: true,
+                    data: { message: 'No policies found matching your query.', policies: [] },
+                };
+            }
+
+            return {
+                success: true,
+                data: {
+                    count: results.length,
+                    policies: results.map(p => ({
+                        name: p.policyName,
+                        type: p.policyType,
+                        status: p.status,
+                        description: p.description,
+                        relevance: p.score ? Math.round(p.score * 100) / 100 : undefined,
+                    })),
+                },
+            };
+        } catch {
+            return { success: false, error: 'Failed to search policies' };
         }
     }
 

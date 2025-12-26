@@ -4,17 +4,12 @@ import Groq from 'groq-sdk';
 import { ConversationService } from './services/conversation.service';
 import { ToolExecutorService } from './services/tool-executor.service';
 import { getToolDefinitions } from './tools/tool-definitions';
-
-interface UserContext {
-    employeeId: string;
-    roles: string[];
-    name?: string;
-}
+import { buildSystemPrompt, ERROR_MESSAGES, UserContext } from './config/prompts';
 
 @Injectable()
 export class ChatbotService {
     private groq: Groq | null = null;
-    private readonly modelName = 'llama-3.3-70b-versatile';
+    private readonly modelName: string;
     private readonly MAX_TOOL_ITERATIONS = 5;
 
     constructor(
@@ -22,13 +17,16 @@ export class ChatbotService {
         private conversationService: ConversationService,
         private toolExecutor: ToolExecutorService,
     ) {
+        // Configurable model name via environment variable
+        this.modelName = this.configService.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile';
+
         const apiKey = this.configService.get<string>('groq.apiKey') ||
             this.configService.get<string>('GROQ_API_KEY');
         if (apiKey) {
             this.groq = new Groq({ apiKey });
-            console.log('[ChatbotService] Groq AI initialized with', getToolDefinitions().length, 'tools');
+            console.log(`[ChatbotService] Groq AI initialized (model: ${this.modelName}, tools: ${getToolDefinitions().length})`);
         } else {
-            console.error('[ChatbotService] No GROQ_API_KEY found');
+            console.error('[ChatbotService] ❌ No GROQ_API_KEY found');
         }
     }
 
@@ -37,7 +35,7 @@ export class ChatbotService {
      */
     async processMessage(message: string, userContext: UserContext): Promise<string> {
         if (!this.groq) {
-            throw new Error('Groq AI is not configured. Please set GROQ_API_KEY in your .env file.');
+            return ERROR_MESSAGES.NO_API_KEY;
         }
 
         try {
@@ -53,7 +51,7 @@ export class ChatbotService {
 
             // Step 3: Build messages array for Groq
             const messages: any[] = [
-                { role: 'system', content: this.buildSystemPrompt(userContext) },
+                { role: 'system', content: buildSystemPrompt(userContext) },
                 ...recentMessages.map(m => ({
                     role: m.role,
                     content: m.content,
@@ -131,9 +129,27 @@ export class ChatbotService {
             await this.conversationService.trimMessages(conversation._id.toString(), 20);
 
             return finalResponse;
-        } catch (error) {
-            console.error('[ChatbotService] Error:', error);
-            throw error;
+        } catch (error: any) {
+            console.error('[ChatbotService] ❌ Error:', error);
+
+            // Handle specific Groq API errors with clear logging
+            if (error?.error?.error?.code === 'tool_use_failed') {
+                console.error('[ChatbotService] ⚠️ TOOL_USE_FAILED - Model generated malformed tool call');
+                console.error('[ChatbotService] Failed generation:', error?.error?.error?.failed_generation);
+                return `${ERROR_MESSAGES.TOOL_FAILED}\n\n(Error: tool_use_failed - the AI tried to call a function but the format was incorrect)`;
+            }
+
+            if (error?.status === 429) {
+                console.error('[ChatbotService] ⚠️ RATE_LIMIT - Too many requests');
+                return 'I\'m receiving too many requests right now. Please wait a moment and try again.';
+            }
+
+            if (error?.status === 503 || error?.status === 502) {
+                return ERROR_MESSAGES.LLM_UNAVAILABLE;
+            }
+
+            // For any other error, log it and return user-friendly message
+            return `${ERROR_MESSAGES.UNKNOWN_ERROR}\n\n(Error: ${error?.message || 'Unknown'})`;
         }
     }
 
@@ -144,75 +160,39 @@ export class ChatbotService {
         content: string | null;
         toolCalls: Array<{ id: string; name: string; arguments: any }> | null;
     }> {
-        try {
-            const tools = getToolDefinitions();
+        const tools = getToolDefinitions();
 
-            const completion = await this.groq!.chat.completions.create({
-                messages,
-                model: this.modelName,
-                tools: tools as any,
-                tool_choice: 'auto',
-                temperature: 0.7,
-                max_tokens: 1000,
-            });
+        const completion = await this.groq!.chat.completions.create({
+            messages,
+            model: this.modelName,
+            tools: tools as any,
+            tool_choice: 'auto',
+            temperature: 0.7,
+            max_tokens: 1000,
+        });
 
-            const choice = completion.choices[0];
-            const assistantMessage = choice.message;
+        const choice = completion.choices[0];
+        const assistantMessage = choice.message;
 
-            // Check for tool calls
-            if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-                console.log('[ChatbotService] LLM requested tool calls:',
-                    assistantMessage.tool_calls.map(tc => tc.function.name));
-
-                return {
-                    content: assistantMessage.content,
-                    toolCalls: assistantMessage.tool_calls.map(tc => ({
-                        id: tc.id,
-                        name: tc.function.name,
-                        arguments: JSON.parse(tc.function.arguments || '{}'),
-                    })),
-                };
-            }
+        // Check for tool calls
+        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+            console.log('[ChatbotService] LLM requested tool calls:',
+                assistantMessage.tool_calls.map(tc => tc.function.name));
 
             return {
                 content: assistantMessage.content,
-                toolCalls: null,
+                toolCalls: assistantMessage.tool_calls.map(tc => ({
+                    id: tc.id,
+                    name: tc.function.name,
+                    arguments: JSON.parse(tc.function.arguments || '{}'),
+                })),
             };
-        } catch (error) {
-            console.error('[ChatbotService] LLM call error:', error);
-            throw error;
         }
-    }
 
-    /**
-     * Build system prompt with user context
-     */
-    private buildSystemPrompt(userContext: UserContext): string {
-        return `You are Arcana, an intelligent HR assistant for an organization.
-
-You have access to tools that fetch real data. ALWAYS USE TOOLS when users ask about:
-- Their profile or personal info → use getProfile
-- Employees count → use findAllEmployees
-- Departments → use getOpenDepartments
-- Positions/roles → use getOpenPositions
-- Notifications → use findByRecipientId
-- Policies → use findAllPayrollPolicies or getPayrollPoliciesByType
-- Allowances → use findAllAllowances
-- Tax rules → use findAllTaxRules
-- Pay grades → use findAllPayGrades
-- Pending approvals → use getPendingApprovals
-
-GUIDELINES:
-1. ALWAYS call a tool when the user asks for data - don't guess or make up information
-2. After getting tool results, summarize the data in a friendly, conversational way
-3. Keep responses concise (under 150 words unless more detail needed)
-4. If a tool fails, explain the issue politely
-5. Remember context from the conversation
-
-Current user:
-- ID: ${userContext.employeeId}
-- Name: ${userContext.name || 'Employee'}
-- Roles: ${userContext.roles.join(', ') || 'Standard User'}`;
+        return {
+            content: assistantMessage.content,
+            toolCalls: null,
+        };
     }
 
     /**

@@ -13,7 +13,7 @@ import { seedLeaves } from './leaves.seed';
 import { seedRecruitment } from './recruitment.seed';
 
 async function seed() {
-  const mongoUri = 'mongodb://localhost:27017/hr-management';
+  const mongoUri = `mongodb+srv://mostafaabdalrahman_db_user:X66iHwU5sOl5EekP@cluster0.z7sqndr.mongodb.net/`;
 
   console.log(`Connecting to MongoDB at ${mongoUri}...`);
   await mongoose.connect(mongoUri);

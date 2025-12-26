@@ -17,6 +17,25 @@ export interface ToolDefinition {
 }
 
 export const toolDefinitions: ToolDefinition[] = [
+    // ==================== RAG SEARCH ====================
+    {
+        type: 'function',
+        function: {
+            name: 'searchPolicies',
+            description: 'Search HR policies by keywords or natural language question. Use this when users ask about rules, policies, consequences, procedures, or "what happens if".',
+            parameters: {
+                type: 'object',
+                properties: {
+                    query: {
+                        type: 'string',
+                        description: 'The search query (e.g., "late to work", "misconduct", "leave policy", "what happens if...")',
+                    },
+                },
+                required: ['query'],
+            },
+        },
+    },
+
     // ==================== EMPLOYEE PROFILE ====================
     {
         type: 'function',

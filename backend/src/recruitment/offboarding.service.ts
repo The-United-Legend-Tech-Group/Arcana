@@ -288,7 +288,7 @@ export class OffboardingService {
       if (!employeeNumber || !employeeNumber.startsWith('EMP')) {
         throw new Error(`Invalid employee number format: ${employeeNumber}`);
       }
-      const candidateNumber = 'CAN' + employeeNumber.substring(3);
+      const candidateNumber = 'CAND' + employeeNumber.substring(3);
       console.log(`Converted to candidate number: ${candidateNumber}`);
 
       // Step 1.3: Find candidate by candidate number
@@ -1420,7 +1420,7 @@ ${dto.additionalMessage ? `--- ADDITIONAL NOTES ---\n${dto.additionalMessage}\n\
       if (!employeeNumber || !employeeNumber.startsWith('EMP')) {
         throw new Error(`Invalid employee number format: ${employeeNumber}`);
       }
-      const candidateNumber = 'CAN' + employeeNumber.substring(3);
+      const candidateNumber = 'CAND' + employeeNumber.substring(3);
       console.log(`Converted to candidate number: ${candidateNumber}`);
 
       // Step 1.3: Find candidate by candidate number

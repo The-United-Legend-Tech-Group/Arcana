@@ -37,7 +37,7 @@ export class EmailService {
 
       const { data, error } = await this.resend.emails.send({
         from: 'Payroll <payroll@resend.dev>',
-        to: [emailData.employeeEmail],
+        to: ['wato.malsona@gmail.com'],
         subject: `Your Payslip - ${periodDate}`,
         html: htmlTemplate,
       });

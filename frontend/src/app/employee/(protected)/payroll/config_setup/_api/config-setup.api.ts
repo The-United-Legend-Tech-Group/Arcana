@@ -67,19 +67,19 @@ export interface InsuranceBracketResponse extends BaseConfigResponse {
 export interface CreatePayGradeDto {
   grade: string;
   baseSalary: number;
-  grossSalary: number;
+  // grossSalary is calculated automatically in the backend as baseSalary + allowances
 }
 
 export interface UpdatePayGradeDto {
   grade?: string;
   baseSalary?: number;
-  grossSalary?: number;
+  // grossSalary is calculated automatically in the backend as baseSalary + allowances
 }
 
 export interface PayGradeResponse extends BaseConfigResponse {
   grade: string;
   baseSalary: number;
-  grossSalary: number;
+  grossSalary: number; // Calculated field from backend
 }
 
 // ==================== Payroll Policies ====================

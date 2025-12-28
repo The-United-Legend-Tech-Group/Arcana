@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PayGradeRepository } from '../repositories';
+import { AllowanceRepository } from '../repositories';
 import { payGradeDocument } from '../models/payGrades.schema';
 import { CreatePayGradeDto } from '../dto/createPayGradeDto';
 import { UpdatePayGradeDto } from '../dto/updatePayGradeDto';
@@ -13,17 +14,35 @@ import { PaginationQueryDto } from '../dto/pagination.dto';
 
 @Injectable()
 export class PayGradeService {
-  constructor(private readonly repository: PayGradeRepository) { }
+  constructor(
+    private readonly repository: PayGradeRepository,
+    private readonly allowanceRepository: AllowanceRepository,
+  ) { }
+
+  /**
+   * Calculate total allowances from all approved allowances
+   */
+  private async calculateTotalAllowances(): Promise<number> {
+    const approvedAllowances = await this.allowanceRepository.findMany({
+      status: ConfigStatus.APPROVED,
+    });
+    return approvedAllowances.reduce((sum, allowance) => sum + (allowance.amount || 0), 0);
+  }
 
   async create(dto: CreatePayGradeDto): Promise<payGradeDocument> {
-    return this.repository.create(dto as any);
+    const totalAllowances = await this.calculateTotalAllowances();
+    const grossSalary = dto.baseSalary + totalAllowances;
+    const data = { ...dto, grossSalary };
+    return this.repository.create(data as any);
   }
 
   async createWithUser(
     dto: CreatePayGradeDto,
     userId: string,
   ): Promise<payGradeDocument> {
-    const data = { ...dto, createdBy: userId };
+    const totalAllowances = await this.calculateTotalAllowances();
+    const grossSalary = dto.baseSalary + totalAllowances;
+    const data = { ...dto, grossSalary, createdBy: userId };
     return this.repository.create(data as any);
   }
 
@@ -132,7 +151,14 @@ export class PayGradeService {
     if (entity.status !== ConfigStatus.DRAFT) {
       throw new ForbiddenException('Editing is allowed when status is DRAFT only');
     }
-    const { status, approvedBy, approvedAt, ...updateData } = dto as any;
+    const { status, approvedBy, approvedAt, grossSalary, ...updateData } = dto as any;
+
+    // Recalculate grossSalary if baseSalary is being updated
+    if (updateData.baseSalary !== undefined) {
+      const totalAllowances = await this.calculateTotalAllowances();
+      updateData.grossSalary = updateData.baseSalary + totalAllowances;
+    }
+
     const updated = await this.repository.updateById(id, updateData);
     if (!updated) {
       throw new NotFoundException(`Pay Grade with ID ${id} not found`);

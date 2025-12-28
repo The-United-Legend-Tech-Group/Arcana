@@ -64,7 +64,6 @@ export default function PayGradesPage() {
   const [formData, setFormData] = React.useState<CreatePayGradeDto>({
     grade: '',
     baseSalary: 0,
-    grossSalary: 0,
   });
 
   // Pagination & Filter states
@@ -135,11 +134,10 @@ export default function PayGradesPage() {
       setFormData({
         grade: item.grade,
         baseSalary: item.baseSalary,
-        grossSalary: item.grossSalary,
       });
     } else {
       setEditingItem(null);
-      setFormData({ grade: '', baseSalary: 0, grossSalary: 0 });
+      setFormData({ grade: '', baseSalary: 0 });
     }
     setDialogOpen(true);
   };
@@ -147,7 +145,7 @@ export default function PayGradesPage() {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setEditingItem(null);
-    setFormData({ grade: '', baseSalary: 0, grossSalary: 0 });
+    setFormData({ grade: '', baseSalary: 0 });
   };
 
   const handleSubmit = async () => {
@@ -159,7 +157,6 @@ export default function PayGradesPage() {
         const updateDto: UpdatePayGradeDto = {
           grade: formData.grade,
           baseSalary: formData.baseSalary,
-          grossSalary: formData.grossSalary,
         };
         const response = await payGradesApi.update(editingItem._id, updateDto);
         if (response.error) {
@@ -468,18 +465,9 @@ export default function PayGradesPage() {
             inputProps={{ min: 0 }}
             required
           />
-          <TextField
-            label="Gross Salary"
-            type="number"
-            fullWidth
-            value={formData.grossSalary}
-            onChange={(e) => setFormData({ ...formData, grossSalary: Math.max(0, Number(e.target.value)) })}
-            InputProps={{
-              startAdornment: <Typography color="text.secondary" sx={{ mr: 1 }}>$</Typography>,
-            }}
-            inputProps={{ min: 0 }}
-            required
-          />
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mt: 1 }}>
+            Note: Gross salary is automatically calculated as Base Salary + Sum of approved allowances.
+          </Typography>
         </Stack>
       </ConfigDialog>
 

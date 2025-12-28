@@ -19,15 +19,7 @@ export class CreatePayGradeDto {
   @Min(6000)
   baseSalary: number;
 
-  @ApiProperty({
-    description: 'Gross salary',
-    example: 10000,
-    minimum: 6000,
-  })
-  @IsNumber()
-  @Min(6000)
-  grossSalary: number;
-
   // Status will be set to DRAFT by default in schema
   // createdBy will be set from authenticated user
+  // grossSalary is calculated automatically as baseSalary + sum of approved allowances
 }

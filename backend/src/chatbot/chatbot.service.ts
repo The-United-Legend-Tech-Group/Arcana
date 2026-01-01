@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Groq from 'groq-sdk';
+import { ChatGroq } from '@langchain/groq';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
+import { HumanMessage, AIMessage, ToolMessage } from '@langchain/core/messages';
 import { ConversationService } from './services/conversation.service';
-import { ToolExecutorService } from './services/tool-executor.service';
-import { getToolDefinitions } from './tools/tool-definitions';
-import { buildSystemPrompt, ERROR_MESSAGES, UserContext } from './config/prompts';
+import { ToolExecutorService, UserContext } from './services/tool-executor.service';
+import { buildSystemPrompt, ERROR_MESSAGES } from './config/prompts';
 
 @Injectable()
 export class ChatbotService {
-    private groq: Groq | null = null;
+    private model: ChatGroq | null = null;
     private readonly modelName: string;
     private readonly MAX_TOOL_ITERATIONS = 5;
 
@@ -17,189 +19,207 @@ export class ChatbotService {
         private conversationService: ConversationService,
         private toolExecutor: ToolExecutorService,
     ) {
-        // Configurable model name via environment variable
-        this.modelName = this.configService.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile';
+        // Use llama-3.1-8b-instant for faster responses and higher rate limits
+        // 70B models have 12K TPM limit, 8B has 30K TPM
+        this.modelName = this.configService.get<string>('GROQ_MODEL') || 'llama-3.1-8b-instant';
 
-        const apiKey = this.configService.get<string>('groq.apiKey') ||
-            this.configService.get<string>('GROQ_API_KEY');
+        const apiKey = this.configService.get<string>('GROQ_API_KEY');
         if (apiKey) {
-            this.groq = new Groq({ apiKey });
-            console.log(`[ChatbotService] Groq AI initialized (model: ${this.modelName}, tools: ${getToolDefinitions().length})`);
+            this.model = new ChatGroq({
+                apiKey,
+                model: this.modelName,
+                temperature: 0.7,
+                maxTokens: 1024,
+            });
+            console.log(`[ChatbotService] LangChain + Groq initialized (model: ${this.modelName})`);
         } else {
             console.error('[ChatbotService] ❌ No GROQ_API_KEY found');
         }
     }
 
     /**
-     * Process a chat message with conversation context and tool calling
+     * Create LangChain tools bound to user context
+     */
+    private createTools(userContext: UserContext): DynamicStructuredTool[] {
+        return [
+            new DynamicStructuredTool({
+                name: 'searchPolicies',
+                description: 'Search HR policies database. Input: search query string. Returns matching policies.',
+                schema: z.object({ query: z.string().describe('Search query') }),
+                func: async ({ query }) => JSON.stringify(await this.toolExecutor.searchPolicies(query)),
+            }),
+            new DynamicStructuredTool({
+                name: 'getProfile',
+                description: 'Retrieves the logged-in user profile from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.getProfile(userContext)),
+            }),
+            new DynamicStructuredTool({
+                name: 'findAllEmployees',
+                description: 'Retrieves total employee count from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.findAllEmployees()),
+            }),
+            new DynamicStructuredTool({
+                name: 'getOpenDepartments',
+                description: 'Retrieves list of departments from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.getOpenDepartments()),
+            }),
+            new DynamicStructuredTool({
+                name: 'getOpenPositions',
+                description: 'Retrieves list of job positions from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.getOpenPositions()),
+            }),
+            new DynamicStructuredTool({
+                name: 'findByRecipientId',
+                description: 'Retrieves notifications for current user from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.findByRecipientId(userContext)),
+            }),
+            new DynamicStructuredTool({
+                name: 'findAllPayrollPolicies',
+                description: 'Retrieves payroll policies from database. Optional status filter.',
+                schema: z.object({ status: z.enum(['draft', 'approved', 'rejected']).optional().describe('Optional filter') }),
+                func: async ({ status }) => JSON.stringify(await this.toolExecutor.findAllPayrollPolicies({ status })),
+            }),
+            new DynamicStructuredTool({
+                name: 'getPayrollPoliciesByType',
+                description: 'Retrieves policies filtered by type from database.',
+                schema: z.object({ policyType: z.enum(['Misconduct', 'Deduction', 'Allowance', 'Benefit', 'Leave']).describe('Policy type to filter') }),
+                func: async ({ policyType }) => JSON.stringify(await this.toolExecutor.getPayrollPoliciesByType({ policyType })),
+            }),
+            new DynamicStructuredTool({
+                name: 'findAllAllowances',
+                description: 'Retrieves allowance configs from database. Optional status filter.',
+                schema: z.object({ status: z.enum(['draft', 'approved', 'rejected']).optional().describe('Optional filter') }),
+                func: async ({ status }) => JSON.stringify(await this.toolExecutor.findAllAllowances({ status })),
+            }),
+            new DynamicStructuredTool({
+                name: 'findAllTaxRules',
+                description: 'Retrieves tax rules from database. Optional status filter.',
+                schema: z.object({ status: z.enum(['draft', 'approved', 'rejected']).optional().describe('Optional filter') }),
+                func: async ({ status }) => JSON.stringify(await this.toolExecutor.findAllTaxRules({ status })),
+            }),
+            new DynamicStructuredTool({
+                name: 'findAllPayGrades',
+                description: 'Retrieves pay grades from database. Optional status filter.',
+                schema: z.object({ status: z.enum(['draft', 'approved', 'rejected']).optional().describe('Optional filter') }),
+                func: async ({ status }) => JSON.stringify(await this.toolExecutor.findAllPayGrades({ status })),
+            }),
+            new DynamicStructuredTool({
+                name: 'getPendingApprovals',
+                description: 'Retrieves pending approval counts from database. No input required. Call with empty object {}.',
+                schema: z.object({}),
+                func: async () => JSON.stringify(await this.toolExecutor.getPendingApprovals()),
+            }),
+        ];
+    }
+
+    /**
+     * Load conversation history as LangChain messages
+     */
+    private async loadConversationMessages(
+        conversationId: string
+    ): Promise<Array<HumanMessage | AIMessage>> {
+        const recentMessages = await this.conversationService.getRecentMessages(conversationId);
+        return recentMessages.map(m =>
+            m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
+        );
+    }
+
+    /**
+     * Handle API errors consistently
+     */
+    private handleError(error: any): string {
+        console.error('[ChatbotService] ❌ Error:', error);
+
+        if (error?.status === 429) {
+            return 'I\'m receiving too many requests. Please wait a moment and try again.';
+        }
+        if (error?.status === 503 || error?.status === 502) {
+            return ERROR_MESSAGES.LLM_UNAVAILABLE;
+        }
+        if (error?.message?.includes('tool_use_failed')) {
+            return 'I had trouble processing that request. Could you rephrase your question?';
+        }
+        return `${ERROR_MESSAGES.UNKNOWN_ERROR}\n\n(Error: ${error?.message || 'Unknown'})`;
+    }
+
+    /**
+     * Process a chat message using direct tool binding (avoids createAgent issues)
      */
     async processMessage(message: string, userContext: UserContext): Promise<string> {
-        if (!this.groq) {
+        if (!this.model) {
             return ERROR_MESSAGES.NO_API_KEY;
         }
 
         try {
-            // Step 1: Get or create conversation
+            // Get conversation
             const conversation = await this.conversationService.getOrCreateConversation(
                 userContext.employeeId
             );
+            const conversationId = conversation._id.toString();
 
-            // Step 2: Get recent messages for context
-            const recentMessages = await this.conversationService.getRecentMessages(
-                conversation._id.toString()
-            );
+            // Load history
+            const historyMessages = await this.loadConversationMessages(conversationId);
 
-            // Step 3: Build messages array for Groq
+            // Create tools and bind to model
+            const tools = this.createTools(userContext);
+            const modelWithTools = this.model.bindTools(tools);
+
+            // Build messages with system prompt
             const messages: any[] = [
                 { role: 'system', content: buildSystemPrompt(userContext) },
-                ...recentMessages.map(m => ({
-                    role: m.role,
-                    content: m.content,
-                })),
-                { role: 'user', content: message },
+                ...historyMessages,
+                new HumanMessage(message),
             ];
 
-            // Step 4: Call LLM with tools
-            let response = await this.callLLMWithTools(messages);
+            // Call LLM with tool handling loop
+            let response = await modelWithTools.invoke(messages);
             let iterations = 0;
 
-            console.log('[ChatbotService] Initial response:', {
-                hasToolCalls: !!response.toolCalls,
-                toolCallCount: response.toolCalls?.length || 0,
-            });
-
-            // Step 5: Handle tool calls in a loop
-            while (response.toolCalls && response.toolCalls.length > 0 && iterations < this.MAX_TOOL_ITERATIONS) {
+            while (response.tool_calls && response.tool_calls.length > 0 && iterations < this.MAX_TOOL_ITERATIONS) {
                 iterations++;
-                console.log(`[ChatbotService] Tool call iteration ${iterations}`);
+                messages.push(response);
 
-                // Add assistant message WITH tool_calls attached (required by Groq)
-                messages.push({
-                    role: 'assistant',
-                    content: response.content || null,
-                    tool_calls: response.toolCalls.map(tc => ({
-                        id: tc.id,
-                        type: 'function',
-                        function: {
-                            name: tc.name,
-                            arguments: JSON.stringify(tc.arguments),
-                        },
-                    })),
-                });
+                // Execute tools
+                for (const toolCall of response.tool_calls) {
+                    const tool = tools.find(t => t.name === toolCall.name);
+                    let result: string;
 
-                // Execute each tool and add results
-                for (const toolCall of response.toolCalls) {
-                    console.log(`[ChatbotService] Executing tool: ${toolCall.name}`, toolCall.arguments);
+                    if (tool) {
+                        try {
+                            result = await tool.invoke(toolCall.args);
+                        } catch {
+                            result = JSON.stringify({ success: false, error: 'Tool failed' });
+                        }
+                    } else {
+                        result = JSON.stringify({ success: false, error: 'Unknown tool' });
+                    }
 
-                    const result = await this.toolExecutor.executeTool(
-                        toolCall.name,
-                        toolCall.arguments,
-                        userContext
-                    );
-
-                    console.log(`[ChatbotService] Tool result:`, result.success ? 'success' : result.error);
-
-                    // Add tool result message
-                    messages.push({
-                        role: 'tool',
-                        content: JSON.stringify(result),
-                        tool_call_id: toolCall.id,
-                    });
+                    messages.push(new ToolMessage({
+                        content: result,
+                        tool_call_id: toolCall.id || toolCall.name,
+                    }));
                 }
 
-                // Call LLM again with tool results
-                response = await this.callLLMWithTools(messages);
+                response = await modelWithTools.invoke(messages);
             }
 
-            const finalResponse = response.content || 'I apologize, but I could not generate a response.';
+            const finalResponse = typeof response.content === 'string'
+                ? response.content
+                : 'I apologize, but I could not generate a response.';
 
-            // Step 6: Save to conversation history
-            await this.conversationService.addMessage(
-                conversation._id.toString(),
-                'user',
-                message
-            );
-            await this.conversationService.addMessage(
-                conversation._id.toString(),
-                'assistant',
-                finalResponse
-            );
-
-            // Step 7: Trim old messages
-            await this.conversationService.trimMessages(conversation._id.toString(), 20);
+            // Save to history
+            await this.conversationService.addMessage(conversationId, 'user', message);
+            await this.conversationService.addMessage(conversationId, 'assistant', finalResponse);
+            await this.conversationService.trimMessages(conversationId, 20);
 
             return finalResponse;
         } catch (error: any) {
-            console.error('[ChatbotService] ❌ Error:', error);
-
-            // Handle specific Groq API errors with clear logging
-            if (error?.error?.error?.code === 'tool_use_failed') {
-                console.error('[ChatbotService] ⚠️ TOOL_USE_FAILED - Model generated malformed tool call');
-                console.error('[ChatbotService] Failed generation:', error?.error?.error?.failed_generation);
-                return `${ERROR_MESSAGES.TOOL_FAILED}\n\n(Error: tool_use_failed - the AI tried to call a function but the format was incorrect)`;
-            }
-
-            if (error?.status === 429) {
-                console.error('[ChatbotService] ⚠️ RATE_LIMIT - Too many requests');
-                return 'I\'m receiving too many requests right now. Please wait a moment and try again.';
-            }
-
-            if (error?.status === 503 || error?.status === 502) {
-                return ERROR_MESSAGES.LLM_UNAVAILABLE;
-            }
-
-            // For any other error, log it and return user-friendly message
-            return `${ERROR_MESSAGES.UNKNOWN_ERROR}\n\n(Error: ${error?.message || 'Unknown'})`;
+            return this.handleError(error);
         }
-    }
-
-    /**
-     * Call LLM with tool definitions
-     */
-    private async callLLMWithTools(messages: any[]): Promise<{
-        content: string | null;
-        toolCalls: Array<{ id: string; name: string; arguments: any }> | null;
-    }> {
-        const tools = getToolDefinitions();
-
-        const completion = await this.groq!.chat.completions.create({
-            messages,
-            model: this.modelName,
-            tools: tools as any,
-            tool_choice: 'auto',
-            temperature: 0.7,
-            max_tokens: 1000,
-        });
-
-        const choice = completion.choices[0];
-        const assistantMessage = choice.message;
-
-        // Check for tool calls
-        if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-            console.log('[ChatbotService] LLM requested tool calls:',
-                assistantMessage.tool_calls.map(tc => tc.function.name));
-
-            return {
-                content: assistantMessage.content,
-                toolCalls: assistantMessage.tool_calls.map(tc => ({
-                    id: tc.id,
-                    name: tc.function.name,
-                    arguments: JSON.parse(tc.function.arguments || '{}'),
-                })),
-            };
-        }
-
-        return {
-            content: assistantMessage.content,
-            toolCalls: null,
-        };
-    }
-
-    /**
-     * Start a new conversation
-     */
-    async startNewConversation(userId: string): Promise<void> {
-        const conversation = await this.conversationService.getOrCreateConversation(userId);
-        await this.conversationService.endConversation(conversation._id.toString());
     }
 }

@@ -60,3 +60,4 @@ export const ERROR_MESSAGES = {
     TOOL_FAILED: 'I tried to look up that information, but encountered an error. Please try rephrasing your question.',
     UNKNOWN_ERROR: 'Something unexpected happened. Please try again.',
 };
+

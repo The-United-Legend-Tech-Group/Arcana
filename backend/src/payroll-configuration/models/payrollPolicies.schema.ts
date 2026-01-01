@@ -54,6 +54,10 @@ export class payrollPolicies {
   approvedBy?: mongoose.Types.ObjectId;
   @Prop({})
   approvedAt?: Date;
+
+  // RAG embedding vector (384 dimensions for all-MiniLM-L6-v2)
+  @Prop({ type: [Number], default: [] })
+  embedding: number[];
 }
 
 export const payrollPoliciesSchema =

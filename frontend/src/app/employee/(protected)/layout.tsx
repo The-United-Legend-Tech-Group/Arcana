@@ -26,6 +26,7 @@ import { decryptData } from '../../../common/utils/encryption';
 import { AuthProvider } from '../../../context/AuthContext';
 import { SystemRole } from '../../../types/auth';
 import { ToastProvider } from '../../../lib/hooks/useToast';
+import ChatBot from '../../../components/ChatBot/ChatBot';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -171,6 +172,9 @@ export default function EmployeeLayout({ children }: LayoutProps) {
                             </Stack>
                         </Box>
                     </Box>
+
+                    {/* AI ChatBot - Floating on all protected pages */}
+                    <ChatBot />
                 </AppTheme>
             </ToastProvider>
         </AuthProvider>

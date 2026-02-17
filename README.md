@@ -3,9 +3,7 @@
   <p align="center">
     A modular, full-lifecycle Human Resource Management System built with modern web technologies.
     <br />
-    <strong>German International University · Faculty of Informatics and Computer Science</strong>
-    <br />
-    Software Project I — Winter 2025
+    <strong>Built by the Arcana Team</strong>
   </p>
 </p>
 
@@ -38,7 +36,6 @@
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
 - [Future Work](#-future-work)
-- [Supervisors](#-supervisors)
 
 ---
 
@@ -570,23 +567,6 @@ A future enhancement is planned to design and implement a full **Applicant Track
 
 ---
 
-## 👥 Supervisors
-
-| Name | Role |
-|------|------|
-| Dr. Nada Sharaf | Supervisor |
-| Eng. Donia Ali | Supervisor |
-| AL. Amany Hussein | Supervisor |
-| Eng. Rahma Ameen | Supervisor |
-| TA. Menna Singergy | Supervisor |
-| Eng. Mohamed Ashraf | Supervisor |
-| Eng. Hassan Osama | Supervisor |
-| TA. Omaima Abdulsalam | Supervisor |
-
----
-
 <p align="center">
-  <strong>Built with ❤️ at the German International University</strong>
-  <br />
-  Faculty of Informatics and Computer Science — Software Project I, Winter 2025
+  <strong>Built with ❤️ by the Arcana Team</strong>
 </p>

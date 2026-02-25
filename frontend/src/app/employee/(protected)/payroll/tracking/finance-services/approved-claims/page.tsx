@@ -113,7 +113,7 @@ export default function ApprovedClaimsPage() {
     setError(null);
     setSuccess(null);
     
-    const response = await apiClient.post<{ refundId?: string }>(
+    const response = await apiClient.post<{ _id?: string; refundId?: string }>(
       `/tracking/claims/${selectedClaim.claimId}/generate-refund`,
       { description: description || `Refund for approved expense claim ${selectedClaim.claimId}` }
     );
@@ -121,7 +121,8 @@ export default function ApprovedClaimsPage() {
     if (response.error) {
       setError(response.error);
     } else if (response.data) {
-      setSuccess(`Refund generated successfully! Refund ID: ${response.data.refundId || 'N/A'}. It will be included in the next payroll cycle.`);
+      const refundId = response.data._id || response.data.refundId || 'Generated';
+      setSuccess(`Refund generated successfully! Refund ID: ${refundId}. It will be included in the next payroll cycle.`);
       setOpenDialog(false);
       setSelectedClaim(null);
       setDescription('');

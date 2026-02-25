@@ -20,8 +20,8 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
+import TextField from '@mui/material/TextField';
 import { useTheme, alpha } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -37,21 +37,39 @@ import { isAuthenticated } from '@/lib/auth-utils';
 interface Dispute {
   _id: string;
   disputeId: string;
-  payslipId: string | { _id: string; payrollPeriod?: string };
+  payslipId: string | {
+    _id: string;
+    payrollRunId?: string | {
+      _id: string;
+      payrollPeriod?: Date | string;
+    };
+  };
   description: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  approvedRefundAmount?: number;
   resolutionComment?: string;
   employeeId?: string | {
     _id: string;
     firstName?: string;
     lastName?: string;
     employeeNumber?: string;
-    fullName?: string;
   };
+  payrollSpecialistId?: string | { _id: string; firstName?: string; lastName?: string };
+  payrollManagerId?: string | { _id: string; firstName?: string; lastName?: string };
+  financeStaffId?: string | { _id: string; firstName?: string; lastName?: string };
+  fullName?: string;
 }
+
+// Helper to extract refund amount from resolution comment
+const extractRefundAmount = (comment?: string): number | null => {
+  if (!comment) return null;
+  const finalMatch = comment.match(/Final refund amount: ([\d.]+)/);
+  if (finalMatch && finalMatch[1]) return parseFloat(finalMatch[1]);
+  const proposedMatch = comment.match(/Proposed refund amount: ([\d.]+)/);
+  if (proposedMatch && proposedMatch[1]) return parseFloat(proposedMatch[1]);
+  return null;
+};
 
 export default function ApprovedDisputesPage() {
   const router = useRouter();
@@ -61,8 +79,8 @@ export default function ApprovedDisputesPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [selectedDispute, setSelectedDispute] = React.useState<Dispute | null>(null);
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [refundAmount, setRefundAmount] = React.useState<string>('');
   const [processing, setProcessing] = React.useState(false);
+  const [refundAmount, setRefundAmount] = React.useState<string>('');
 
   // Table filters
   const {
@@ -100,7 +118,11 @@ export default function ApprovedDisputesPage() {
 
       if (response.ok) {
         const disputesData = await response.json();
-        setDisputes(disputesData || []);
+        // Filter to only show disputes that haven't been refunded yet (no financeStaffId)
+        const unrefundedDisputes = (disputesData || []).filter(
+          (dispute: Dispute) => !dispute.financeStaffId
+        );
+        setDisputes(unrefundedDisputes);
       } else {
         const errorText = await response.text();
         setError(`Failed to load approved disputes: ${response.status} ${response.statusText}`);
@@ -115,19 +137,14 @@ export default function ApprovedDisputesPage() {
 
   const handleGenerateRefund = (dispute: Dispute) => {
     setSelectedDispute(dispute);
+    // Pre-fill with the proposed refund amount from resolution comment
+    const proposedAmount = extractRefundAmount(dispute.resolutionComment);
+    setRefundAmount(proposedAmount ? proposedAmount.toString() : '');
     setOpenDialog(true);
-    // Pre-fill refund amount if backend provides a suggested value; otherwise empty
-    setRefundAmount(dispute.approvedRefundAmount ? dispute.approvedRefundAmount.toString() : '');
   };
 
   const handleSubmitRefund = async () => {
     if (!selectedDispute) return;
-
-    const parsedAmount = parseFloat(refundAmount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('Please enter a valid refund amount greater than 0.');
-      return;
-    }
 
     setProcessing(true);
     setError(null);
@@ -139,6 +156,8 @@ export default function ApprovedDisputesPage() {
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50000';
+      const finalRefundAmount = refundAmount ? parseFloat(refundAmount) : (extractRefundAmount(selectedDispute.resolutionComment) || 0);
+      
       const response = await fetch(
         `${apiUrl}/tracking/disputes/${selectedDispute.disputeId}/generate-refund`,
         {
@@ -148,7 +167,7 @@ export default function ApprovedDisputesPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            refundAmount: parsedAmount,
+            refundAmount: finalRefundAmount,
             comment: `Refund processed for approved dispute ${selectedDispute.disputeId}`,
           }),
         }
@@ -172,17 +191,25 @@ export default function ApprovedDisputesPage() {
   };
 
 
-  const getPayslipPeriod = (payslipId: string | { _id: string; payrollPeriod?: string } | undefined) => {
+  const getPayslipPeriod = (payslipId: string | { _id: string; payrollRunId?: string | { _id: string; payrollPeriod?: Date | string } } | undefined) => {
     if (!payslipId) return 'N/A';
     if (typeof payslipId === 'string') return 'N/A';
-    if (payslipId.payrollPeriod) {
+    
+    // Navigate the nested structure: payslipId.payrollRunId.payrollPeriod
+    const payrollRun = payslipId.payrollRunId;
+    if (!payrollRun) return 'N/A';
+    
+    // payrollRun could be a string or an object
+    if (typeof payrollRun === 'string') return 'N/A';
+    
+    if (payrollRun.payrollPeriod) {
       try {
-        return new Date(payslipId.payrollPeriod).toLocaleDateString('en-US', {
+        return new Date(payrollRun.payrollPeriod).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
         });
       } catch {
-        return payslipId.payrollPeriod;
+        return payrollRun.payrollPeriod.toString();
       }
     }
     return 'N/A';
@@ -508,42 +535,72 @@ export default function ApprovedDisputesPage() {
                         {getEmployeeName(selectedDispute.employeeId)}
                       </Typography>
                     </Box>
+                    {selectedDispute.payrollSpecialistId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Reviewed by Specialist
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedDispute.payrollSpecialistId === 'string'
+                            ? selectedDispute.payrollSpecialistId
+                            : `${selectedDispute.payrollSpecialistId.firstName || ''} ${selectedDispute.payrollSpecialistId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
+                    {selectedDispute.payrollManagerId && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Approved by Manager
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {typeof selectedDispute.payrollManagerId === 'string'
+                            ? selectedDispute.payrollManagerId
+                            : `${selectedDispute.payrollManagerId.firstName || ''} ${selectedDispute.payrollManagerId.lastName || ''}`.trim() || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
+                  {extractRefundAmount(selectedDispute.resolutionComment) && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
+                      This amount will be included in the next payroll cycle
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
 
-              {selectedDispute.resolutionComment && (
-                <Card
-                  sx={{
-                    mb: 3,
-                    background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.05)} 0%, ${alpha(theme.palette.warning.main, 0.02)} 100%)`,
-                    border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
-                    borderRadius: 2,
-                  }}
-                >
-                  <CardContent sx={{ py: 2.5, '&:last-child': { pb: 2.5 } }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, color: 'text.secondary' }}>
-                      Resolution Comment
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', color: 'text.primary' }}>
-                      {selectedDispute.resolutionComment}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Box sx={{ mt: 1 }}>
-                <TextField
-                  label="Refund Amount"
-                  type="number"
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(e.target.value)}
-                  fullWidth
-                  required
-                  inputProps={{ min: 0, step: 0.01 }}
-                  helperText="Enter the refund amount that should be paid to the employee"
-                />
-              </Box>
+              {/* Refund Amount Input */}
+              <Card
+                sx={{
+                  mb: 3,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  borderRadius: 2,
+                }}
+              >
+                <CardContent>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: 'text.secondary' }}>
+                    Refund Amount to Process
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Refund Amount"
+                    placeholder="Enter refund amount"
+                    value={refundAmount}
+                    onChange={(e) => setRefundAmount(e.target.value)}
+                    inputProps={{
+                      step: '0.01',
+                      min: '0',
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                      },
+                    }}
+                    helperText="Enter the amount to be refunded to the employee"
+                  />
+                </CardContent>
+              </Card>
             </>
           )}
         </DialogContent>
@@ -564,12 +621,7 @@ export default function ApprovedDisputesPage() {
           <Button
             onClick={handleSubmitRefund}
             variant="contained"
-            disabled={
-              processing ||
-              !refundAmount ||
-              isNaN(parseFloat(refundAmount)) ||
-              parseFloat(refundAmount) <= 0
-            }
+            disabled={processing || !selectedDispute || !refundAmount || parseFloat(refundAmount) <= 0}
             sx={{
               minWidth: 140,
               borderRadius: 2,
